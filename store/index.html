@@ -213,6 +213,22 @@ td.r { text-align:right; }
 .compact-table th, .compact-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .compact-table td.wrap { white-space: normal; word-break: break-word; }
 
+/* RESIZABLE COLUMNS */
+.compact-table th { position: relative; }
+.col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 10;
+}
+.col-resizer:hover, .col-resizer.active {
+  background-color: rgba(34, 45, 101, 0.2);
+}
+
 /* BADGES */
 .badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:20px; font-size:9.5px; font-weight:600; white-space:nowrap; border:1px solid transparent; }
 .badge.crit { background:var(--red-l); color:var(--red); border-color:var(--red-b); }
@@ -559,6 +575,10 @@ function startApp(){
   document.getElementById('sb-store-label').textContent=storeCode+' · '+storeName;
   document.getElementById('ptitle-sub').textContent=storeName+' ('+storeCode+')';
   go('dashboard'); loadData();
+  
+  // Initialize resizable columns for the two dashboard tables
+  makeTableResizable('t-expired');
+  makeTableResizable('t-exp7');
 }
 
 window.onload=()=>{
@@ -943,6 +963,63 @@ function xlDown(rows, filename){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Data');
   XLSX.writeFile(wb, filename+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// ── RESIZABLE COLUMNS LOGIC ──
+function makeTableResizable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const cols = table.querySelectorAll('th');
+  const colElements = table.querySelectorAll('colgroup col');
+
+  // Load saved widths
+  const savedWidths = JSON.parse(localStorage.getItem('gala_col_widths_' + tableId) || '[]');
+  if (savedWidths.length === cols.length) {
+    cols.forEach((th, i) => {
+      th.style.width = savedWidths[i];
+      if (colElements[i]) colElements[i].style.width = savedWidths[i];
+    });
+  }
+
+  cols.forEach((th, i) => {
+    // Create resizer element
+    const resizer = document.createElement('div');
+    resizer.classList.add('col-resizer');
+    th.appendChild(resizer);
+
+    let startX, startWidth;
+
+    resizer.addEventListener('mousedown', function(e) {
+      startX = e.pageX;
+      startWidth = parseInt(window.getComputedStyle(th).width, 10);
+      document.body.style.cursor = 'col-resize';
+      resizer.classList.add('active');
+      e.preventDefault(); // Prevent text selection
+
+      function onMouseMove(e) {
+        const newWidth = startWidth + (e.pageX - startX);
+        if (newWidth > 30) { // Minimum width constraint
+          th.style.width = newWidth + 'px';
+          if (colElements[i]) colElements[i].style.width = newWidth + 'px';
+        }
+      }
+
+      function onMouseUp() {
+        document.body.style.cursor = '';
+        resizer.classList.remove('active');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        
+        // Save widths automatically
+        const widths = Array.from(cols).map(c => c.style.width || 'auto');
+        localStorage.setItem('gala_col_widths_' + tableId, JSON.stringify(widths));
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
 }
 </script>
 </body>
