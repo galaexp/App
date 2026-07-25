@@ -4,215 +4,276 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gala · Store Expiry Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="https://i.ibb.co/rfGVJp3F/Gala-EXP-2-removebg-preview-2.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
-  --bg:#f4f3ef;--surface:#ffffff;--surface2:#faf9f6;
-  --border:#e6e3db;--border2:#d2cdc0;
-  --text:#1a1916;--t2:#6a6458;--t3:#b2ac9c;--ink:#1a1916;
-  --green:#1b6840;--green-l:#edf7f2;
-  --red:#c02b2b;--red-l:#fdf1f1;
-  --orange:#c25e18;--orange-l:#fef5ee;
-  --yellow:#9a790f;--yellow-l:#fefaed;
-  --blue:#1a47a0;--blue-l:#eef2fc;
-  --purple:#6b38c2;--purple-l:#f4f0fc;
-  --mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;
-  --r:10px;--rs:7px;
-  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.05);
+  --bg:            #f8fafd;
+  --bg-tint:       #ffffff;
+  --surface:       rgba(255,255,255,0.95);
+  --surface-solid: #ffffff;
+  --surface3:      #f1f4f9;
+  --border:        rgba(28,25,23,0.08);
+  --border-strong: rgba(28,25,23,0.14);
+
+  --text:          #1c1917;
+  --t2:            #57534e;
+  --t3:            #a8a29e;
+
+  --accent:        #222d65;
+  --accent2:       #1a2350;
+  --accent-soft:   #32408a;
+  --accent-glow:   rgba(34,45,101,0.12);
+  --accent-grad:   linear-gradient(135deg, #2c3a7f 0%, #222d65 55%, #1a2350 100%);
+
+  --amber:         #4a5a9e;
+  --amber-l:       #ebedf5;
+  --amber-b:       #c5cbdf;
+
+  --red:           #dc2626;
+  --red-l:         #fef2f2;
+  --red-b:         #fecaca;
+  --orange:        #ea580c;
+  --orange-l:      #fff7ed;
+  --orange-b:      #fed7aa;
+  --yellow:        #ca8a04;
+  --yellow-l:      #fefce8;
+  --yellow-b:      #fde68a;
+  --green:         #047857;
+  --green-l:       #ecfdf5;
+  --green-b:       #a7f3d0;
+
+  --display:       'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --sans:          'Onest', ui-sans-serif, system-ui, sans-serif;
+  --mono:          'JetBrains Mono', ui-monospace, monospace;
+
+  --r:             14px;
+  --rs:            9px;
+  --sidebar-w:     228px;
+  --top-h:         56px;
+
+  --shadow-sm:     0 1px 2px rgba(28,25,23,0.04);
+  --shadow:        0 6px 14px -4px rgba(28,25,23,0.06), 0 2px 6px -2px rgba(28,25,23,0.04);
+  --shadow-lg:     0 18px 40px -10px rgba(28,25,23,0.12), 0 6px 14px -6px rgba(28,25,23,0.06);
+  --shadow-xl:     0 32px 60px -14px rgba(28,25,23,0.18), 0 12px 24px -10px rgba(28,25,23,0.08);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13.5px;min-height:100vh}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:100%; min-height:100%; overflow-x:hidden; }
+body {
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  font-size:12px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  position:relative;
+  min-height:100vh;
+}
+
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    radial-gradient(720px 480px at 6% 4%,  rgba(34,45,101,0.10), transparent 62%),
+    radial-gradient(680px 500px at 96% 88%,rgba(74,90,158,0.08), transparent 66%);
+  pointer-events:none; z-index:-2;
+}
+
+::selection { background:var(--accent); color:#fff; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(28,25,23,0.16); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
 
 /* LOGIN */
-#login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--ink);position:relative;overflow:hidden}
-#login-page::before{content:'GALA';position:absolute;font-family:var(--sans);font-weight:800;font-size:220px;color:rgba(255,255,255,.03);right:-30px;bottom:-40px;line-height:1;letter-spacing:-8px;pointer-events:none;user-select:none}
-.login-card{background:var(--surface);border-radius:16px;padding:44px 40px;width:100%;max-width:380px;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative;z-index:1}
-.login-brand{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.login-mark{width:36px;height:36px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
-.login-brand-name{font-size:16px;font-weight:700}
-.login-brand-sub{font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
-.login-title{font-size:22px;font-weight:800;margin-bottom:6px}
-.login-sub{font-size:12px;color:var(--t2);margin-bottom:28px;line-height:1.5}
-.login-field{margin-bottom:14px}
-.login-label{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
-.login-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s}
-.login-input:focus{border-color:var(--green);background:#fff}
-.login-input.err{border-color:var(--red)}
-.login-error{font-size:11px;color:var(--red);margin-top:8px;display:none}
-.login-error.show{display:block}
-.login-btn{width:100%;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:var(--rs);font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
-.login-btn:hover{background:#333}
-.login-btn:disabled{opacity:.5;cursor:not-allowed}
-.login-spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+#login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); position:relative; }
+.login-card { background:var(--surface); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); padding:40px; width:100%; max-width:380px; box-shadow:var(--shadow-xl); position:relative; z-index:1; }
+.login-brand { display:flex; align-items:center; gap:11px; margin-bottom:32px; }
+.login-mark { width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.login-mark img { width:100%; height:100%; object-fit:contain; }
+.login-title { font-family:var(--display); font-size:22px; font-weight:700; margin-bottom:6px; letter-spacing:-.5px; }
+.login-sub { font-size:12px; color:var(--t2); margin-bottom:28px; line-height:1.5; }
+.login-field { margin-bottom:14px; }
+.login-label { display:block; font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--t3); margin-bottom:6px; }
+.login-input { width:100%; padding:10px 13px; border:1px solid var(--border); border-radius:var(--rs); font-family:var(--sans); font-size:13px; color:var(--text); background:rgba(255,255,255,0.9); outline:none; transition:all .15s; }
+.login-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); background:#fff; }
+.login-btn { width:100%; padding:11px; background:var(--accent-grad); color:#fff; border:none; border-radius:var(--rs); font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; margin-top:8px; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 16px -4px rgba(34,45,101,0.4); }
+.login-btn:hover { background:#ffffff; color:var(--accent); box-shadow:0 6px 16px -4px rgba(34,45,101,0.3); border:1px solid var(--accent); }
+.login-spinner { display:none; width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
+.login-check { display:flex; align-items:center; gap:8px; margin-bottom:16px; margin-top:-4px; }
+.login-check input { width:16px; height:16px; accent-color: var(--accent); cursor:pointer; }
+.login-check label { font-size:11px; color:var(--t2); cursor:pointer; user-select:none; font-weight:500; }
 
 /* APP */
-#app-page{display:none}
-.app-layout{display:grid;grid-template-columns:210px 1fr;min-height:100vh}
+#app-page { display:none; }
+.layout { display:flex; width:100%; min-height:100vh; position:relative; z-index:0; }
 
 /* SIDEBAR */
-.sidebar{position:fixed;top:0;bottom:0;left:0;width:210px;background:var(--ink);display:flex;flex-direction:column;z-index:100}
-.sb-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
-.sb-mark{width:28px;height:28px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;flex-shrink:0}
-.sb-name{font-size:13px;font-weight:700;color:#fff}
-.sb-store{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;font-family:var(--mono)}
-.sb-nav{padding:8px 0;flex:1}
-.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;background:none;border:none;border-left:2px solid transparent;width:100%;text-align:left;font-family:var(--sans);font-size:12px;font-weight:500;color:rgba(255,255,255,.42);transition:all .15s}
-.sb-item:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.04)}
-.sb-item.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:var(--green)}
-.sb-ico{font-size:12px;width:14px;text-align:center;flex-shrink:0}
-.sb-sep{height:1px;background:rgba(255,255,255,.06);margin:5px 18px}
-.sb-foot{padding:12px 18px;border-top:1px solid rgba(255,255,255,.06)}
-.sb-logout{width:100%;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);color:rgba(255,255,255,.45);font-family:var(--sans);font-size:11px;cursor:pointer;transition:all .15s;text-align:center}
-.sb-logout:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width:var(--sidebar-w); min-width:var(--sidebar-w); flex-shrink:0; background:rgba(255,255,255,0.85); backdrop-filter:blur(24px) saturate(1.6); border-right:1px solid var(--border); height:100vh; display:flex; flex-direction:column; z-index:100; }
+.brand { padding:16px 18px 14px; display:flex; align-items:center; gap:11px; border-bottom:1px solid var(--border); }
+.brand-mark { width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.brand-mark img { width:100%; height:100%; object-fit:contain; }
+.brand-name { font-family:var(--display); font-size:15px; font-weight:700; color:var(--text); letter-spacing:-.4px; }
+.brand-sub { font-size:9.5px; color:var(--t3); font-family:var(--mono); margin-top:1px; letter-spacing:.5px; text-transform:uppercase; }
+.nav { flex:1; overflow-y:auto; padding:12px 10px 14px; }
+.nav-item { display:flex; align-items:center; gap:11px; padding:9px 11px; cursor:pointer; border:none; background:none; width:100%; text-align:left; font-family:var(--sans); font-size:12px; font-weight:500; color:var(--t2); border-radius:9px; transition:all .15s; white-space:nowrap; position:relative; margin-bottom:1px; }
+.nav-item:hover { color:var(--text); background:rgba(28,25,23,0.045); }
+.nav-item.active { color:var(--accent); background:rgba(34,45,101,0.09); font-weight:600; }
+.nav-item.active::before { content:''; position:absolute; left:-10px; top:7px; bottom:7px; width:3px; border-radius:0 3px 3px 0; background:var(--accent-grad); }
+.nav-ico { width:16px; text-align:center; font-size:13px; color:var(--t3); transition:color .18s; }
+.nav-item:hover .nav-ico { color:var(--t2); }
+.nav-item.active .nav-ico { color:var(--accent); }
+.sidebar-foot { padding:12px 18px 14px; border-top:1px solid var(--border); }
+.logout-btn { width:100%; padding:8px 11px; background:transparent; border:1px solid var(--border); color:var(--t3); font-family:var(--sans); font-size:11px; font-weight:500; border-radius:7px; cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--red); color:var(--red); background:var(--red-l); }
 
 /* MAIN */
-.main{flex:1;margin-left:196px;width:calc(100vw - 210px);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
-.topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--border);padding:11px 22px;display:flex;align-items:center;gap:12px}
-.topbar-title{font-size:14px;font-weight:700;flex:1}
-.topbar-sub{font-size:10px;color:var(--t3);margin-top:1px}
-.content{padding:16px 22px;flex:1}
-.page{display:none}
-.page.active{display:block;animation:fadeUp .2s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.main { flex:1; margin-left: var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; overflow-x:hidden; min-width:0; }
+.topbar { position:sticky; top:0; z-index:50; height:var(--top-h); background:rgba(255,255,255,0.90); backdrop-filter:blur(18px) saturate(1.6); border-bottom:1px solid var(--border); padding:0 24px; display:flex; align-items:center; gap:14px; }
+.topbar-left { flex:1; display:flex; flex-direction:column; justify-content:center; }
+.topbar-title { font-family:var(--display); font-size:20px; font-weight:700; letter-spacing:-.5px; color:var(--text); line-height:1.1; }
+.topbar-sub { font-size:11px; color:var(--t3); margin-top:2px; font-family:var(--mono); }
+.refresh-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 13px; border-radius:9px; border:1px solid var(--border); background:rgba(255,255,255,0.9); color:var(--t2); font-family:var(--sans); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; }
+.refresh-btn:hover { border-color:var(--accent); color:var(--accent); }
+.refresh-btn .spin { display:inline-flex; }
+.refresh-btn.loading .spin { animation:spin .9s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.content { padding:18px 24px 32px; flex:1; }
+.page { display:none; }
+.page.active { display:block; animation:fadeUp .32s cubic-bezier(.22,1,.36,1); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--surface);color:var(--t2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn:hover{border-color:var(--green);color:var(--green)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
-.btn-green:hover{background:#155734;border-color:#155734;color:#fff}
-.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-red:hover{background:#a82424;border-color:#a82424;color:#fff}
-.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-ink{background:var(--ink);color:#fff;border-color:var(--ink)}
-.btn-ink:hover{background:#333;border-color:#333;color:#fff}
-.btn.loading .spin{animation:spin .7s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
+.btn { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:9px; border:1px solid var(--border); background:rgba(255,255,255,0.95); color:var(--t2); font-family:var(--sans); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.btn:hover { border-color:var(--accent); color:var(--accent); background:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -4px rgba(34,45,101,0.25); }
+.btn-green { background:var(--green-l); color:var(--green); border-color:var(--green-b); }
+.btn-green:hover { background:var(--green); color:#fff; border-color:var(--green); }
+.btn-red { background:var(--red-l); color:var(--red); border-color:var(--red-b); }
+.btn-red:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.btn-accent { background:var(--accent-grad); color:#fff; border-color:transparent; box-shadow:0 6px 16px -4px rgba(34,45,101,0.4); }
+.btn-accent:hover { background:#ffffff; color:var(--accent); border:1px solid var(--accent); box-shadow:0 6px 16px -4px rgba(34,45,101,0.3); }
+.btn-sm { padding:5px 10px; font-size:11px; border-radius:7px; }
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
-.kpi{background:var(--surface);border:1px solid var(--border);border-top:2px solid transparent;border-radius:var(--rs);padding:13px}
-.kpi-label{font-size:9.5px;font-weight:600;color:var(--t3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;line-height:1.4}
-.kpi-value{font-family:var(--mono);font-size:24px;font-weight:600;line-height:1}
-.kpi-sub{font-size:9.5px;color:var(--t3);margin-top:3px}
-.kpi.red{border-top-color:var(--red)}.kpi.red .kpi-value{color:var(--red)}
-.kpi.ora{border-top-color:var(--orange)}.kpi.ora .kpi-value{color:var(--orange)}
-.kpi.grn{border-top-color:var(--green)}.kpi.grn .kpi-value{color:var(--green)}
-.kpi.blu{border-top-color:var(--blue)}.kpi.blu .kpi-value{color:var(--blue)}
-.kpi.neu{border-top-color:var(--t3)}
-.kpi.pur{border-top-color:var(--purple)}.kpi.pur .kpi-value{color:var(--purple)}
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:12px; margin-bottom:16px; }
+.kpi { background:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); padding:14px 16px; position:relative; overflow:hidden; box-shadow:var(--shadow-sm); }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--border); }
+.kpi::after { content:''; position:absolute; right:-30px; top:-30px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle at center, rgba(34,45,101,0.08), transparent 70%); pointer-events:none; }
+.kpi.red::before { background:linear-gradient(90deg, var(--red), #f87171); }
+.kpi.ora::before { background:linear-gradient(90deg, var(--orange), #fb923c); }
+.kpi.yel::before { background:linear-gradient(90deg, var(--yellow), var(--amber-b)); }
+.kpi.grn::before { background:var(--accent-grad); }
+.kpi.blu::before, .kpi.acc::before { background:var(--accent-grad); }
+.kpi.neu::before { background:linear-gradient(90deg, var(--t2), var(--t3)); }
+.kpi.red::after { background:radial-gradient(circle at center, rgba(220,38,38,0.10), transparent 70%); }
+.kpi.ora::after { background:radial-gradient(circle at center, rgba(234,88,12,0.10), transparent 70%); }
+.kpi-label { font-size:9.5px; font-weight:600; color:var(--t3); letter-spacing:.8px; text-transform:uppercase; margin-bottom:8px; }
+.kpi-value { font-family:var(--display); font-size:26px; font-weight:700; line-height:1; letter-spacing:-.6px; color:var(--text); }
+.kpi-sub { font-size:10.5px; color:var(--t3); margin-top:6px; font-weight:500; }
 
 /* PANELS */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
-.panel-head{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.panel-title{font-size:12px;font-weight:700}
-.panel-sub{font-size:10px;color:var(--t3);margin-top:1px}
-.panel-badge{font-family:var(--mono);font-size:9.5px;color:var(--t2);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px}
-.panel-body{padding:14px 15px}
+.panel { background:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); overflow:hidden; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.panel-head { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:rgba(255,255,255,0.60); }
+.panel-title { font-family:var(--display); font-size:14.5px; font-weight:700; letter-spacing:-.3px; color:var(--text); }
+.panel-title-sub { font-size:11px; color:var(--t3); margin-top:3px; font-weight:500; }
+.panel-badge { font-family:var(--mono); font-size:10px; color:var(--t2); background:rgba(28,25,23,0.05); border:1px solid var(--border); border-radius:10px; padding:3px 10px; font-weight:600; }
+.panel-body { padding:18px; }
 
 /* FILTER BAR */
-.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;box-shadow:var(--shadow)}
-.fg{display:flex;flex-direction:column;gap:3px}
-.fl{font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t3)}
-.fs{background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:var(--rs);padding:6px 24px 6px 9px;font-family:var(--sans);font-size:12px;cursor:pointer;min-width:105px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23b2ac9c'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
-.fs:focus{outline:none;border-color:var(--green)}
-.rbtn{padding:6px 10px;border-radius:var(--rs);background:none;border:1px solid var(--border2);color:var(--t3);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;align-self:flex-end}
-.rbtn:hover{border-color:var(--red);color:var(--red)}
+.filter-bar { position: relative; z-index: 20; background:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.filter-bar-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fl { font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--t3); }
+.fs { background:rgba(255,255,255,0.95); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:7px 28px 7px 11px; font-family:var(--sans); font-size:12px; cursor:pointer; min-width:100px; outline:none; appearance:none; font-weight:500; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a8a29e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:all .15s; }
+.fs:hover { border-color:var(--t3); background-color:#fff; }
+.fs:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); background-color:#fff; }
+.rbtn { padding:7px 11px; border-radius:7px; background:transparent; border:1px solid var(--border); color:var(--t3); font-size:11px; cursor:pointer; font-family:var(--sans); transition:all .15s; align-self:flex-end; font-weight:500; }
+.rbtn:hover { border-color:var(--red); color:var(--red); background:var(--red-l); }
 
 /* TABLE */
-.tw{overflow-x:auto}
-.ts{max-height:420px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:11.5px}
-thead th{background:var(--surface2);color:var(--t2);font-size:9.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:8px 10px;text-align:left;position:sticky;top:0;border-bottom:1px solid var(--border2);white-space:nowrap;z-index:1}
-tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
-tbody tr:hover{background:var(--surface2)}
-tbody td{padding:8px 10px;color:var(--t2);vertical-align:middle}
-td.b{color:var(--text);font-weight:500}
-.mono{font-family:var(--mono)}
+.tw { overflow-x:auto; }
+.ts { max-height:480px; overflow-y:auto; }
+table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; min-width:600px; }
+thead th { background:rgba(241,244,249,0.95); backdrop-filter:blur(8px); color:var(--t2); font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; padding:9px 12px; text-align:left; position:sticky; top:0; border-bottom:1px solid var(--border); white-space:nowrap; z-index:1; }
+thead th:first-child, tbody td:first-child { width:32px; text-align:center; }
+tbody tr { border-bottom:1px solid rgba(28,25,23,0.05); transition:background .12s; }
+tbody tr:hover { background:rgba(34,45,101,0.045); }
+tbody td { padding:9px 12px; vertical-align:middle; color:var(--text); border-bottom:1px solid rgba(28,25,23,0.05); }
+td.b { font-weight:600; }
+td.mono { font-family:var(--mono); font-size:11px; }
+td.r { text-align:right; }
 
-/* FORM CARD */
-.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
-.form-section{padding:14px 18px;border-bottom:1px solid var(--border)}
-.form-section:last-child{border-bottom:none}
-.form-section-title{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-group{display:flex;flex-direction:column;gap:4px}
-.form-group.full{grid-column:1/-1}
-.form-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
-.form-input{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s;width:100%}
-.form-input:focus{border-color:var(--green);background:#fff}
-.form-input[readonly]{color:var(--t2);background:var(--bg);cursor:default}
-.form-input[readonly]:focus{border-color:var(--border)}
-.form-actions{display:flex;gap:8px;padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border)}
+/* COMPACT TABLE for Dashboard Cards (No Side Scroll) */
+.compact-table { width: 100% !important; min-width: 0 !important; table-layout: fixed; }
+.compact-table th, .compact-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compact-table td.wrap { white-space: normal; word-break: break-word; }
 
 /* BADGES */
-.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:9.5px;font-weight:600;white-space:nowrap;border:1px solid}
-.badge.crit{background:var(--red-l);color:var(--red);border-color:#f0c8c8}
-.badge.high{background:var(--orange-l);color:var(--orange);border-color:#f0d5b5}
-.badge.med{background:var(--yellow-l);color:var(--yellow);border-color:#f0e5a8}
-.badge.low{background:var(--green-l);color:var(--green);border-color:#b5dfc5}
-.badge.na{background:var(--bg);color:var(--t3);border-color:var(--border)}
-
-/* FOLLOW UP LIST */
-.fu-list{display:flex;flex-direction:column;gap:8px}
-.fu-item{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
-.fu-item:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(26,71,160,.1)}
-.fu-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
-.fu-item-article{font-size:12.5px;font-weight:700;font-family:var(--mono)}
-.fu-item-stock{font-size:11px;font-weight:600;color:var(--green);background:var(--green-l);border:1px solid #b5dfc5;border-radius:6px;padding:2px 8px}
-.fu-item-desc{font-size:11.5px;color:var(--text);margin-bottom:2px}
-.fu-item-meta{font-size:10.5px;color:var(--t3)}
+.badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:20px; font-size:9.5px; font-weight:600; white-space:nowrap; border:1px solid transparent; }
+.badge.crit { background:var(--red-l); color:var(--red); border-color:var(--red-b); }
+.badge.high { background:var(--orange-l); color:var(--orange); border-color:var(--orange-b); }
+.badge.med { background:var(--yellow-l); color:var(--yellow); border-color:var(--yellow-b); }
+.badge.low { background:var(--green-l); color:var(--green); border-color:var(--green-b); }
+.badge.na { background:rgba(28,25,23,0.05); color:var(--t3); border-color:var(--border); }
 
 /* OVERLAY / POPUP */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:500;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
-.overlay.open{display:flex}
-.popup{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.18);animation:popIn .2s ease}
-@keyframes popIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-.popup-head{padding:14px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--surface);z-index:1}
-.popup-title{font-size:14px;font-weight:700}
-.popup-sub{font-size:10.5px;color:var(--t3);margin-top:2px}
-.popup-close{background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px;transition:.15s;line-height:1;flex-shrink:0}
-.popup-close:hover{background:var(--bg);color:var(--text)}
-.popup-body{padding:16px 18px}
-.popup-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+.overlay { display:none; position:fixed; inset:0; background:rgba(15,15,10,0.42); backdrop-filter:blur(8px); z-index:500; align-items:center; justify-content:center; padding:24px; }
+.overlay.open { display:flex; }
+.popup { background:rgba(255,255,255,0.98); border:1px solid rgba(255,255,255,0.7); outline:1px solid var(--border); outline-offset:-1px; border-radius:18px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-xl); animation:popIn .28s cubic-bezier(.22,1,.36,1); position:relative; }
+@keyframes popIn { from{opacity:0; transform:scale(.96) translateY(14px)} to{opacity:1; transform:scale(1) translateY(0)} }
+.popup::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; background:var(--accent-grad); border-radius:18px 18px 0 0; }
+.popup-head { padding:20px 24px 14px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.popup-title { font-family:var(--display); font-size:18px; font-weight:700; letter-spacing:-.4px; color:var(--text); }
+.popup-sub { font-size:11px; color:var(--t3); margin-top:4px; font-family:var(--mono); }
+.popup-close { background:rgba(28,25,23,0.05); border:1px solid var(--border); color:var(--t2); font-size:13px; cursor:pointer; width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:9px; transition:.15s; flex-shrink:0; }
+.popup-close:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.popup-body { padding:20px 24px; }
+.popup-foot { padding:14px 24px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; }
 
-/* STATUS */
-.status-banner{display:flex;gap:8px;flex-wrap:wrap;padding:10px 22px 0}
-.status-chip{display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:var(--rs);background:var(--surface);border:1px solid var(--border);font-size:11px}
-.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.sdot.ok{background:var(--green)}.sdot.err{background:var(--red)}.sdot.loading{background:var(--yellow);animation:blink .8s ease infinite}
-@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
-
-/* TOAST */
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--ink);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;padding:10px 18px;border-radius:50px;z-index:9999;opacity:0;pointer-events:none;transition:all .25s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 20px rgba(0,0,0,.25);white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{background:var(--green)}
-.toast.error{background:var(--red)}
-
-/* CONFIRM */
-.confirm-box{background:var(--surface);border-radius:14px;width:100%;max-width:360px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .2s ease}
-.confirm-box h3{font-size:15px;font-weight:700;margin-bottom:8px}
-.confirm-box p{font-size:12px;color:var(--t2);margin-bottom:20px;line-height:1.6}
-.confirm-btns{display:flex;gap:8px;justify-content:flex-end}
-
-/* NOTICE */
-.notice{display:flex;gap:8px;background:var(--orange-l);border:1px solid #f0d5b5;border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--orange);font-weight:500;margin-bottom:12px}
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-group { display:flex; flex-direction:column; gap:4px; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--t3); }
+.form-input { padding:10px 12px; border:1px solid var(--border); border-radius:9px; font-family:var(--sans); font-size:13px; color:var(--text); background:rgba(255,255,255,0.95); outline:none; transition:all .15s; width:100%; }
+.form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); background:#fff; }
 
 /* WEEK COMPARE */
-.wk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:7px}
-.wk-cell{padding:11px 8px;border-radius:var(--rs);background:var(--bg);border:1px solid var(--border);text-align:center}
-.wk-cell-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
-.wk-cell-val{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);line-height:1}
-.wk-cell-trend{font-size:9px;color:var(--t3);margin-top:3px}
-.wk-cell.up{border-color:#f0c8c8;background:var(--red-l)}.wk-cell.up .wk-cell-val{color:var(--red)}
-.wk-cell.dn{border-color:#b5dfc5;background:var(--green-l)}.wk-cell.dn .wk-cell-val{color:var(--green)}
+.wk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:11px; }
+.wk-cell { padding:12px 11px; border-radius:11px; background:rgba(255,255,255,0.95); border:1px solid var(--border); text-align:center; }
+.wk-cell-label { font-size:9.5px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:var(--t3); margin-bottom:7px; font-family:var(--mono); }
+.wk-cell-val { font-family:var(--display); font-size:23px; font-weight:700; color:var(--text); line-height:1; }
+.wk-cell-trend { font-size:10px; color:var(--t3); margin-top:5px; font-weight:500; }
+.wk-cell.up { border-color:var(--red-b); background:var(--red-l); }
+.wk-cell.up .wk-cell-val { color:var(--red); }
+.wk-cell.dn { border-color:var(--green-b); background:var(--green-l); }
+.wk-cell.dn .wk-cell-val { color:var(--green); }
 
-@media(max-width:860px){
-  .app-layout{grid-template-columns:1fr}
-  .sidebar{display:none}
-  .main{margin-left:0}
-  .form-grid{grid-template-columns:1fr}
+/* STATUS */
+.status-bar { display:flex; gap:8px; padding:14px 24px 0; flex-wrap:wrap; }
+.status-chip { display:inline-flex; align-items:center; gap:8px; padding:5px 11px; border-radius:20px; background:rgba(255,255,255,0.90); border:1px solid var(--border); font-size:11px; font-weight:500; color:var(--t2); }
+.sdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.sdot.ok { background:var(--accent-soft); box-shadow:0 0 0 3px rgba(34,45,101,0.18); }
+.sdot.err { background:var(--red); box-shadow:0 0 0 3px rgba(220,38,38,0.18); }
+.sdot.loading { background:var(--amber); animation:pulse 1.2s ease infinite; }
+@keyframes pulse { 0%,100% { opacity:.4; transform:scale(.85); } 50% { opacity:1; transform:scale(1); } }
+
+/* TOAST */
+.toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(28,25,23,0.94); color:#fff; font-family:var(--sans); font-size:12.5px; font-weight:500; padding:11px 20px; border-radius:11px; z-index:99999; opacity:0; pointer-events:none; transition:all .3s cubic-bezier(.22,1,.36,1); box-shadow:var(--shadow-xl); border:1px solid rgba(255,255,255,0.1); }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.success { background:linear-gradient(135deg, #047857, #059669); }
+.toast.error { background:linear-gradient(135deg, #b91c1c, #dc2626); }
+
+@media(max-width:900px) {
+  :root { --sidebar-w:100%; }
+  .layout { flex-direction:column; }
+  .sidebar { width:100%; height:auto; position:relative; }
+  .main { margin-left:0; }
+  .form-grid { grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -222,8 +283,13 @@ td.b{color:var(--text);font-weight:500}
 <div id="login-page">
   <div class="login-card">
     <div class="login-brand">
-      <div class="login-mark">G</div>
-      <div><div class="login-brand-name">Gala Markets</div><div class="login-brand-sub">Store Expiry Dashboard</div></div>
+      <div class="login-mark">
+        <img src="https://i.ibb.co/rfGVJp3F/Gala-EXP-2-removebg-preview-2.png" alt="Gala Markets Logo">
+      </div>
+      <div>
+        <div class="brand-name">Gala Markets</div>
+        <div class="brand-sub">Store Expiry Dashboard</div>
+      </div>
     </div>
     <div class="login-title">Store Login</div>
     <div class="login-sub">Enter your Store Code and password to access your expiry dashboard.</div>
@@ -235,7 +301,11 @@ td.b{color:var(--text);font-weight:500}
       <label class="login-label">Password</label>
       <input class="login-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <div class="login-error" id="login-error"></div>
+    <div class="login-check">
+      <input type="checkbox" id="remember-me">
+      <label for="remember-me">Remember my credentials on this device</label>
+    </div>
+    <div id="login-error" style="font-size:11px; color:var(--red); margin-top:8px; display:none;"></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">
       <div class="login-spinner" id="login-spinner"></div>
       Sign In →
@@ -245,182 +315,140 @@ td.b{color:var(--text);font-weight:500}
 
 <!-- APP -->
 <div id="app-page">
-<div class="app-layout">
+<div class="layout">
 
 <nav class="sidebar">
-  <div class="sb-brand">
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
-      <div class="sb-mark">G</div>
-      <div class="sb-name">Gala Markets</div>
+  <div class="brand">
+    <div class="brand-mark">
+      <img src="https://i.ibb.co/rfGVJp3F/Gala-EXP-2-removebg-preview-2.png" alt="Gala Markets Logo">
     </div>
-    <div class="sb-store" id="sb-store-label">—</div>
+    <div>
+      <div class="brand-name">Gala Markets</div>
+      <div class="brand-sub" id="sb-store-label">—</div>
+    </div>
   </div>
-  <div class="sb-nav">
-    <button class="sb-item active" onclick="go('dashboard')" id="n-dashboard"><span class="sb-ico">◉</span>Dashboard</button>
-    <button class="sb-item" onclick="go('additem')" id="n-additem"><span class="sb-ico">＋</span>Add Item</button>
-    <button class="sb-item" onclick="go('followup')" id="n-followup"><span class="sb-ico">↺</span>Follow Up</button>
-    <div class="sb-sep"></div>
-    <button class="sb-item" onclick="go('review')" id="n-review"><span class="sb-ico">≡</span>Review / This Week</button>
-    <button class="sb-item" onclick="go('history')" id="n-history"><span class="sb-ico">▤</span>History</button>
+  <div class="nav">
+    <button class="nav-item active" onclick="go('dashboard')" id="n-dashboard">
+      <i class="fa-solid fa-gauge-high nav-ico"></i><span>Overview</span>
+    </button>
+    <button class="nav-item" onclick="go('review')" id="n-review">
+      <i class="fa-solid fa-clipboard-check nav-ico"></i><span>Review / This Week</span>
+    </button>
+    <button class="nav-item" onclick="go('history')" id="n-history">
+      <i class="fa-solid fa-database nav-ico"></i><span>History</span>
+    </button>
   </div>
-  <div class="sb-foot">
-    <button class="sb-logout" onclick="logout()">← Sign Out</button>
+  <div class="sidebar-foot">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</button>
   </div>
 </nav>
 
 <div class="main">
   <div class="topbar">
-    <div style="flex:1">
-      <div class="topbar-title" id="ptitle">Dashboard</div>
+    <div class="topbar-left">
+      <div class="topbar-title" id="ptitle">Overview</div>
       <div class="topbar-sub" id="ptitle-sub">—</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div style="font-size:10.5px;color:var(--t3);font-family:var(--mono)" id="last-refresh">—</div>
-      <button class="btn loading" onclick="loadData()" id="rfbtn"><span class="spin">↻</span> Refresh</button>
-    </div>
+    <button class="refresh-btn" onclick="loadData()" id="rfbtn">
+      <i class="fa-solid fa-arrows-rotate spin"></i> Refresh
+    </button>
   </div>
 
-  <div class="status-banner">
+  <div class="status-bar">
     <div class="status-chip"><div class="sdot loading" id="sdot"></div><span id="sinfo" style="color:var(--t2)">Loading…</span></div>
   </div>
 
   <div class="content">
 
-    <!-- ══ DASHBOARD ══ -->
+    <!-- ══ OVERVIEW ══ -->
     <div class="page active" id="page-dashboard">
-
-      <!-- ✅ NEW: Dashboard filters -->
-      <div class="fbar">
-        <div class="fg">
-          <div class="fl">Month</div>
-          <select class="fs" id="dash-ym" onchange="renderDashboard()"><option value="">All Months</option></select>
+      <div class="filter-bar">
+        <div class="filter-bar-row">
+          <div class="fg"><div class="fl">Month</div><select class="fs" id="dash-ym" onchange="renderDashboard()"><option value="">All Months</option></select></div>
+          <div class="fg"><div class="fl">Week</div>
+            <select class="fs" id="dash-week" onchange="renderDashboard()">
+              <option value="">All Weeks</option>
+              <option value="Week 1 (1–7)">Week 1</option>
+              <option value="Week 2 (8–14)">Week 2</option>
+              <option value="Week 3 (15–21)">Week 3</option>
+              <option value="Week 4 (22–31)">Week 4</option>
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Department</div><select class="fs" id="dash-dept" onchange="renderDashboard()"><option value="">All Departments</option></select></div>
+          <button class="rbtn" onclick="resetDash()"><i class="fa-solid fa-xmark"></i> Reset</button>
+          <button class="btn btn-green" onclick="exportDashXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
         </div>
-        <div class="fg">
-          <div class="fl">Week</div>
-          <select class="fs" id="dash-week" onchange="renderDashboard()">
-            <option value="">All Weeks</option>
-            <option value="Week 1 (1–7)">Week 1</option>
-            <option value="Week 2 (8–14)">Week 2</option>
-            <option value="Week 3 (15–21)">Week 3</option>
-            <option value="Week 4 (22–31)">Week 4</option>
-          </select>
-        </div>
-        <div class="fg">
-          <div class="fl">Department</div>
-          <select class="fs" id="dash-dept" onchange="renderDashboard()"><option value="">All Departments</option></select>
-        </div>
-        <button class="rbtn" onclick="resetDash()">✕ Reset</button>
-        <!-- ✅ NEW: Dashboard Excel export -->
-        <button class="btn" onclick="exportDashXL()" style="align-self:flex-end">⬇ Excel</button>
       </div>
 
       <div class="kpi-grid" id="kpi-dash"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <!-- Expired Items -->
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><i class="fa-solid fa-ban" style="color:var(--red)"></i> Expired Items</div><div class="panel-title-sub">Remove from shelf immediately</div></div>
+            <span class="panel-badge" id="exp-badge">—</span>
+          </div>
+          <div class="tw ts" style="max-height:280px;">
+            <table id="t-expired" class="compact-table">
+              <colgroup>
+                <col style="width:15%"><col style="width:55%"><col style="width:15%"><col style="width:15%">
+              </colgroup>
+              <thead><tr><th>Article</th><th>Description</th><th>Stock</th><th>Expiry</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Expiring within 7 days -->
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--orange)"></i> Expiring Within 7 Days</div><div class="panel-title-sub">Action needed soon</div></div>
+            <span class="panel-badge" id="exp7-badge">—</span>
+          </div>
+          <div class="tw ts" style="max-height:280px;">
+            <table id="t-exp7" class="compact-table">
+              <colgroup>
+                <col style="width:15%"><col style="width:45%"><col style="width:15%"><col style="width:15%"><col style="width:10%">
+              </colgroup>
+              <thead><tr><th>Article</th><th>Description</th><th>Stock</th><th>Expiry</th><th>Days Left</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
         <div class="panel"><div class="panel-head"><div class="panel-title">Stock by Risk Bucket</div></div><div class="panel-body" id="dash-chart"></div></div>
         <div class="panel"><div class="panel-head"><div class="panel-title">Week-over-Week</div><span class="panel-badge" id="dash-wk-badge">—</span></div><div class="panel-body"><div class="wk-grid" id="dash-wk"></div></div></div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <div><div class="panel-title">Items</div><div class="panel-sub" id="dash-filter-label">All data for this store</div></div>
-          <span class="panel-badge" id="dash-items-badge">—</span>
-        </div>
-        <div class="tw ts"><table id="t-dash">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </div>
-    </div>
-
-    <!-- ══ ADD ITEM ══ -->
-    <div class="page" id="page-additem">
-      <div class="fbar">
-        <div class="fg"><div class="fl">Week</div>
-          <select class="fs" id="add-week">
-            <option value="">-- Select Week --</option>
-            <option value="Week 1 (1–7)">Week 1 (Days 1–7)</option>
-            <option value="Week 2 (8–14)">Week 2 (Days 8–14)</option>
-            <option value="Week 3 (15–21)">Week 3 (Days 15–21)</option>
-            <option value="Week 4 (22–31)">Week 4 (Days 22–31)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-card">
-        <div class="form-section">
-          <div class="form-section-title">Article Lookup</div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Article Code</label><input class="form-input" id="add-article" placeholder="Type article code…" autocomplete="off" oninput="matchArticle()"></div>
-            <div class="form-group"><label class="form-label">Barcode</label><input class="form-input" id="add-barcode" placeholder="Type or scan barcode…" autocomplete="off" oninput="matchBarcode()"></div>
-          </div>
-        </div>
-        <div class="form-section">
-          <div class="form-section-title">Item Details</div>
-          <div class="form-grid">
-            <div class="form-group full"><label class="form-label">Description</label><input class="form-input" id="add-desc" readonly placeholder="Auto-filled from article"></div>
-            <div class="form-group"><label class="form-label">Department</label><input class="form-input" id="add-dept" readonly placeholder="Auto-filled"></div>
-            <div class="form-group"><label class="form-label">Stock Quantity</label><input class="form-input" type="number" id="add-stock" placeholder="0" min="0"></div>
-            <div class="form-group"><label class="form-label">Expiry Date</label><input class="form-input" type="date" id="add-expiry"></div>
-          </div>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-green" id="add-submit-btn" onclick="submitItem()">✓ Submit Item</button>
-          <button class="btn" onclick="clearAddForm()">Clear</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ FOLLOW UP ══ -->
-    <div class="page" id="page-followup">
-      <div class="fbar">
-        <div class="fg"><div class="fl">Current Week (following up FROM)</div>
-          <select class="fs" id="fu-week" onchange="loadFollowUp()">
-            <option value="">-- Select Current Week --</option>
-            <option value="Week 1 (1–7)">Week 1 (Days 1–7)</option>
-            <option value="Week 2 (8–14)">Week 2 (Days 8–14)</option>
-            <option value="Week 3 (15–21)">Week 3 (Days 15–21)</option>
-            <option value="Week 4 (22–31)">Week 4 (Days 22–31)</option>
-          </select>
-        </div>
-        <div style="align-self:flex-end;font-size:11px;color:var(--t3)" id="fu-prev-label">Last week items will appear below</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div>
-          <div style="font-size:15px;font-weight:700">Follow Up Items</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px" id="fu-sub">Select a week above to load last week's items</div>
-        </div>
-        <button class="btn btn-blue" onclick="go('review')">Review This Week →</button>
-      </div>
-      <div id="fu-list"><div style="text-align:center;padding:40px;color:var(--t3);font-size:13px">Select a week above to load last week's items for follow up.</div></div>
     </div>
 
     <!-- ══ REVIEW ══ -->
     <div class="page" id="page-review">
-      <div class="fbar">
-        <div class="fg"><div class="fl">Week</div>
-          <select class="fs" id="rev-week" onchange="renderReview()">
-            <option value="">All Weeks</option>
-            <option value="Week 1 (1–7)">Week 1</option>
-            <option value="Week 2 (8–14)">Week 2</option>
-            <option value="Week 3 (15–21)">Week 3</option>
-            <option value="Week 4 (22–31)">Week 4</option>
-          </select>
+      <div class="filter-bar">
+        <div class="filter-bar-row">
+          <div class="fg"><div class="fl">Week</div>
+            <select class="fs" id="rev-week" onchange="renderReview()">
+              <option value="">All Weeks</option>
+              <option value="Week 1 (1–7)">Week 1</option>
+              <option value="Week 2 (8–14)">Week 2</option>
+              <option value="Week 3 (15–21)">Week 3</option>
+              <option value="Week 4 (22–31)">Week 4</option>
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Month</div><select class="fs" id="rev-ym" onchange="renderReview()"><option value="">All Months</option></select></div>
+          <div class="fg"><div class="fl">Department</div><select class="fs" id="rev-dept" onchange="renderReview()"><option value="">All Departments</option></select></div>
+          <button class="btn btn-green" onclick="exportRevXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
         </div>
-        <div class="fg"><div class="fl">Month</div><select class="fs" id="rev-ym" onchange="renderReview()"><option value="">All Months</option></select></div>
-        <!-- ✅ NEW: Review Excel export -->
-        <button class="btn" onclick="exportRevXL()" style="align-self:flex-end">⬇ Excel</button>
       </div>
-      <div class="notice"><span>📧</span><span>Review items for this period, then send submission email to Buyer &amp; Area Manager.</span></div>
       <div class="kpi-grid" id="kpi-rev"></div>
       <div class="panel">
         <div class="panel-head">
-          <div><div class="panel-title">Submitted Items</div><div class="panel-sub">Click ✏ to edit · Click 🗑 to delete</div></div>
-          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
-            <span class="panel-badge" id="b-rev">—</span>
-            <button class="btn btn-red" id="send-email-btn" onclick="sendEmail()">⚡ Send to Buyer</button>
-          </div>
+          <div><div class="panel-title">Submitted Items</div><div class="panel-title-sub">Review your expiry submissions for this period</div></div>
+          <span class="panel-badge" id="b-rev">—</span>
         </div>
-        <div id="rev-sbox" style="display:none;padding:10px 14px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)"></div>
         <div class="tw ts"><table id="t-rev">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th><th>Edit</th><th>Delete</th></tr></thead>
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -428,12 +456,14 @@ td.b{color:var(--text);font-weight:500}
 
     <!-- ══ HISTORY ══ -->
     <div class="page" id="page-history">
-      <div class="fbar">
-        <div class="fg"><div class="fl">Month</div><select class="fs" id="hist-ym" onchange="renderHistory()"><option value="">All Months</option></select></div>
-        <div class="fg"><div class="fl">Week</div><select class="fs" id="hist-week" onchange="renderHistory()"><option value="">All Weeks</option></select></div>
-        <div class="fg"><div class="fl">Department</div><select class="fs" id="hist-dept" onchange="renderHistory()"><option value="">All Departments</option></select></div>
-        <button class="rbtn" onclick="resetHist()">✕ Reset</button>
-        <button class="btn" onclick="exportHistXL()" style="align-self:flex-end">⬇ Excel</button>
+      <div class="filter-bar">
+        <div class="filter-bar-row">
+          <div class="fg"><div class="fl">Month</div><select class="fs" id="hist-ym" onchange="renderHistory()"><option value="">All Months</option></select></div>
+          <div class="fg"><div class="fl">Week</div><select class="fs" id="hist-week" onchange="renderHistory()"><option value="">All Weeks</option></select></div>
+          <div class="fg"><div class="fl">Department</div><select class="fs" id="hist-dept" onchange="renderHistory()"><option value="">All Departments</option></select></div>
+          <button class="rbtn" onclick="resetHist()"><i class="fa-solid fa-xmark"></i> Reset</button>
+          <button class="btn btn-green" onclick="exportHistXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
+        </div>
       </div>
       <div class="kpi-grid" id="kpi-hist"></div>
       <div class="panel">
@@ -442,7 +472,7 @@ td.b{color:var(--text);font-weight:500}
       </div>
       <div class="panel">
         <div class="panel-head">
-          <div><div class="panel-title">All History — This Store</div><div class="panel-sub">Complete expiry submission history</div></div>
+          <div><div class="panel-title">All History — This Store</div><div class="panel-title-sub">Complete expiry submission history</div></div>
           <span class="panel-badge" id="b-hist">—</span>
         </div>
         <div class="tw ts"><table id="t-hist">
@@ -457,90 +487,15 @@ td.b{color:var(--text);font-weight:500}
 </div>
 </div>
 
-<!-- FOLLOW UP POPUP -->
-<div class="overlay" id="fu-popup">
-  <div class="popup">
-    <div class="popup-head">
-      <div><div class="popup-title">Update Stock</div><div class="popup-sub">Expiry date carries over from last week</div></div>
-      <button class="popup-close" onclick="closeFuPopup()">✕</button>
-    </div>
-    <div class="popup-body">
-      <div class="form-grid" style="margin-bottom:14px">
-        <div class="form-group"><label class="form-label">Article</label><input class="form-input" id="fu-article" readonly></div>
-        <div class="form-group"><label class="form-label">Barcode</label><input class="form-input" id="fu-barcode" readonly></div>
-        <div class="form-group full"><label class="form-label">Description</label><input class="form-input" id="fu-desc" readonly></div>
-        <div class="form-group"><label class="form-label">Expiry Date (unchanged)</label><input class="form-input" id="fu-expiry" readonly></div>
-        <div class="form-group"><label class="form-label">Last Week Stock</label><input class="form-input" id="fu-last-stock" readonly></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="font-size:11px;font-weight:700;color:var(--green)">New Stock Count (This Week)</label>
-        <input class="form-input" type="number" id="fu-new-stock" placeholder="Enter new quantity…" min="0" style="font-size:18px;font-weight:700;color:var(--green);border-color:var(--green)">
-      </div>
-    </div>
-    <div class="popup-foot">
-      <button class="btn btn-green" id="fu-submit-btn" onclick="submitFollowUp()">✓ Save &amp; Continue</button>
-      <button class="btn" onclick="closeFuPopup()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDIT POPUP -->
-<div class="overlay" id="edit-popup">
-  <div class="popup">
-    <div class="popup-head">
-      <div><div class="popup-title">Edit Item</div><div class="popup-sub" id="edit-popup-sub">—</div></div>
-      <button class="popup-close" onclick="closeEditPopup()">✕</button>
-    </div>
-    <div class="popup-body">
-      <div class="form-grid">
-        <div class="form-group full"><label class="form-label">Article · Description (read-only)</label><input class="form-input" id="edit-info" readonly></div>
-        <div class="form-group"><label class="form-label">Stock Quantity</label><input class="form-input" type="number" id="edit-stock" min="0" style="font-size:16px;font-weight:600"></div>
-        <div class="form-group"><label class="form-label">Expiry Date</label><input class="form-input" type="date" id="edit-expiry" style="font-size:14px;font-weight:500"></div>
-      </div>
-    </div>
-    <div class="popup-foot">
-      <button class="btn btn-green" id="edit-submit-btn" onclick="submitEdit()">✓ Save Changes</button>
-      <button class="btn" onclick="closeEditPopup()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- DELETE CONFIRM -->
-<div class="overlay" id="del-overlay">
-  <div class="confirm-box">
-    <h3>Delete Item</h3>
-    <p id="del-desc">Are you sure? This cannot be undone.</p>
-    <div class="confirm-btns">
-      <button class="btn" onclick="document.getElementById('del-overlay').classList.remove('open')">Cancel</button>
-      <button class="btn btn-red" id="del-ok-btn" onclick="executeDelete()">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- WEEK/MONTH REQUIRED ERROR -->
-<div class="overlay" id="wm-error-overlay">
-  <div class="confirm-box" style="max-width:400px;text-align:center">
-    <div style="font-size:36px;margin-bottom:12px">📅</div>
-    <h3 style="margin-bottom:10px">Select Week &amp; Month First</h3>
-    <p style="margin-bottom:6px">To edit or delete an item, you must first filter by a specific <strong>Week</strong> and <strong>Month</strong>.</p>
-    
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;margin-bottom:20px;text-align:left;font-size:12px">
-      <div style="margin-bottom:6px;font-weight:600;color:var(--t2)">How to fix:</div>
-      <div style="color:var(--t2);line-height:1.8">1. Choose a <strong>Week</strong> from the filter (e.g. Week 2)<br>2. Choose a <strong>Month</strong> from the filter (e.g. May 2026)<br>3. The table will reload — then edit or delete</div>
-    </div>
-    <button class="btn btn-green" onclick="closeWMError()" style="width:100%;justify-content:center">Got it</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-const API = "https://expiry-api.gala-it1.workers.dev/";
+const API = "https://exptracker.galabonus.com";
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
 let storeCode='', storeName='', articles=[], storeData=[];
-let fuCurrentItem=null, editCurrentRow=null, deleteRowIndex=null;
+let editCurrentRow=null, deleteRowIndex=null, reviewRows=[];
 
 // ── TOAST ──
 function toast(msg,type='',ms=2600){
@@ -556,23 +511,33 @@ async function doLogin(){
   const errEl=document.getElementById('login-error');
   const btn=document.getElementById('login-btn');
   const spinner=document.getElementById('login-spinner');
-  errEl.classList.remove('show');
-  ['login-code','login-pass'].forEach(id=>document.getElementById(id).classList.remove('err'));
-  if(!code||!pass){errEl.textContent='Please enter Store Code and password.';errEl.classList.add('show');return;}
+  const remember = document.getElementById('remember-me').checked;
+  
+  errEl.style.display='none';
+  if(!code||!pass){errEl.textContent='Please enter Store Code and password.';errEl.style.display='block';return;}
   btn.disabled=true; spinner.style.display='block';
   try{
     const r=await fetch(API+'?action=storeAuth&_t='+Date.now());
     const stores=await r.json();
-    // CF returns objects: {storeCode, storeName, password}
-    const match=stores.find(s=>String(s.storeCode||s[0]||'').trim().toUpperCase()===code);
-    if(!match){errEl.textContent='Store Code not found.';errEl.classList.add('show');document.getElementById('login-code').classList.add('err');return;}
-    const storedPass=String(match.password||match[2]||'').trim();
-    if(storedPass!==pass){errEl.textContent='Incorrect password.';errEl.classList.add('show');document.getElementById('login-pass').classList.add('err');return;}
-    storeCode=String(match.storeCode||match[0]||'').trim();
-    storeName=String(match.storeName||match[1]||'').trim();
+    const match=stores.find(s=>String(s.storeCode||'').trim().toUpperCase()===code);
+    if(!match){errEl.textContent='Store Code not found.';errEl.style.display='block';return;}
+    const storedPass=String(match.password||'').trim();
+    if(storedPass!==pass){errEl.textContent='Incorrect password.';errEl.style.display='block';return;}
+    
+    // Save or clear credentials based on checkbox
+    if(remember){
+      localStorage.setItem('gala_saved_sc', code);
+      localStorage.setItem('gala_saved_pass', pass);
+    } else {
+      localStorage.removeItem('gala_saved_sc');
+      localStorage.removeItem('gala_saved_pass');
+    }
+
+    storeCode=String(match.storeCode||'').trim();
+    storeName=String(match.storeName||'').trim();
     sessionStorage.setItem('sc',storeCode); sessionStorage.setItem('sn',storeName);
     startApp();
-  }catch(e){errEl.textContent='Connection error. Please try again.';errEl.classList.add('show');}
+  }catch(e){errEl.textContent='Connection error. Please try again.';errEl.style.display='block';}
   finally{btn.disabled=false;spinner.style.display='none';}
 }
 
@@ -581,7 +546,11 @@ function logout(){
   storeCode=''; storeName=''; storeData=[]; articles=[];
   document.getElementById('login-page').style.display='flex';
   document.getElementById('app-page').style.display='none';
-  ['login-code','login-pass'].forEach(id=>document.getElementById(id).value='');
+  // Keep inputs if remember me is checked, otherwise clear them
+  if(!document.getElementById('remember-me').checked) {
+    document.getElementById('login-code').value='';
+    document.getElementById('login-pass').value='';
+  }
 }
 
 function startApp(){
@@ -595,23 +564,33 @@ function startApp(){
 window.onload=()=>{
   const sc=sessionStorage.getItem('sc'),sn=sessionStorage.getItem('sn');
   if(sc&&sn){storeCode=sc;storeName=sn;startApp();}
+  
+  // Pre-fill saved credentials
+  const savedSc = localStorage.getItem('gala_saved_sc');
+  const savedPass = localStorage.getItem('gala_saved_pass');
+  if(savedSc && savedPass) {
+    document.getElementById('login-code').value = savedSc;
+    document.getElementById('login-pass').value = savedPass;
+    document.getElementById('remember-me').checked = true;
+  }
 };
 
 // ── NAV ──
-const TITLES={dashboard:'Dashboard',additem:'Add Item',followup:'Follow Up',review:'Review / This Week',history:'History'};
+const TITLES={dashboard:'Overview',review:'Review / This Week',history:'History'};
 function go(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+n).classList.add('active');
   document.getElementById('n-'+n).classList.add('active');
   document.getElementById('ptitle').textContent=TITLES[n];
   if(storeData.length>0) renderPage(n);
 }
-function renderPage(n){({dashboard:renderDashboard,additem:()=>{},followup:()=>{},review:renderReview,history:renderHistory})[n]?.();}
+function renderPage(n){({dashboard:renderDashboard,review:renderReview,history:renderHistory})[n]?.();}
 
 // ── LOAD DATA ──
 async function loadData(){
-  const btn=document.getElementById('rfbtn'); btn.classList.add('loading');
+  const btn=document.getElementById('rfbtn'); 
+  if(btn) btn.classList.add('loading');
   setStatus('loading','Loading store data…');
   try{
     const [artsR,dataR]=await Promise.all([
@@ -619,34 +598,31 @@ async function loadData(){
       fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&_t='+Date.now()).then(r=>r.json())
     ]);
     articles=(artsR||[]).map(a=>({
-      article: String(a.article||a[0]||''),
-      barcode:  String(a.barcode ||a[1]||''),
-      desc:     String(a.description||a[2]||''),
-      dept:     String(a.department ||a[3]||'')
+      article: String(a.article||''),
+      barcode:  String(a.barcode ||''),
+      desc:     String(a.description||''),
+      dept:     String(a.department ||'')
     }));
     storeData=processStoreData(dataR.rows||[]);
     setStatus('ok',`<strong>${storeData.length}</strong> items for ${storeName}`);
-    document.getElementById('last-refresh').textContent='Refreshed '+new Date().toLocaleTimeString();
     populateAllFilters();
-    renderPage(document.querySelector('.sb-item.active')?.id?.replace('n-','')||'dashboard');
+    renderPage(document.querySelector('.nav-item.active')?.id?.replace('n-','')||'dashboard');
   }catch(e){setStatus('err','❌ '+e.message);}
-  btn.classList.remove('loading');
+  if(btn) btn.classList.remove('loading');
 }
 
 function setStatus(s,m){document.getElementById('sdot').className='sdot '+s;document.getElementById('sinfo').innerHTML=m;}
 
 function processStoreData(rows){
-  const MS2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return rows.map((r,i)=>{
     const expDate=parseDate(r.ExpiryDate);
     let daysLeft=null;
     if(r.DaysLeft!==undefined&&r.DaysLeft!==''){const p=parseInt(r.DaysLeft,10);if(!isNaN(p))daysLeft=p;}
     if(daysLeft===null&&expDate)daysLeft=Math.round((expDate-TODAY)/86400000);
-    // Derive SubMonth from Timestamp if not provided
     let subMonth=r.SubMonth||'';
     if(!subMonth&&r.Timestamp)subMonth=String(r.Timestamp).slice(0,7);
-    let subMonthDisp=r.SubMonthDisp||'';
-    if(!subMonthDisp&&subMonth){const mm=subMonth.match(/^(\d{4})-(\d{2})$/);if(mm)subMonthDisp=MS2[+mm[2]-1]+' '+mm[1];}
+    let subMonthDisp='';
+    if(subMonth){const mm=subMonth.match(/^(\d{4})-(\d{2})$/);if(mm)subMonthDisp=MS[+mm[2]-1]+' '+mm[1];}
     return{
       _idx:i, RowIndex:r.RowIndex,
       Timestamp:r.Timestamp||'', Week:r.Week||'', Article:r.Article||'',
@@ -678,6 +654,17 @@ function fmtDate(v){if(!v)return'—';const d=parseDate(v);return d?String(d.get
 function daysColor(d){if(d===null)return'var(--t3)';if(d<=7)return'var(--red)';if(d<=30)return'var(--orange)';if(d<=60)return'var(--yellow)';return'var(--green)';}
 function KPI(label,cls,val,sub=''){return`<div class="kpi ${cls}"><div class="kpi-label">${label}</div><div class="kpi-value">${typeof val==='number'?val.toLocaleString():val}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`;}
 function gv(id){const el=document.getElementById(id);return el?el.value:'';}
+function currentYM(){
+  const n=new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+}
+function getCurrentWeekStr() {
+  const day = new Date().getDate();
+  if (day <= 7) return 'Week 1 (1–7)';
+  if (day <= 14) return 'Week 2 (8–14)';
+  if (day <= 21) return 'Week 3 (15–21)';
+  return 'Week 4 (22–31)';
+}
 
 // ── POPULATE ALL FILTERS ──
 function populateAllFilters(){
@@ -686,33 +673,31 @@ function populateAllFilters(){
   const depts=[...new Set(storeData.map(r=>r.Department).filter(Boolean))].sort();
   const mOpts=months.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
 
-  // Dashboard filters — month and dept are dynamic, week is static
-  fillOpts('dash-ym', mOpts);
-  fillVals('dash-dept', depts);
-
-  // Review / History
+  fillOpts('dash-ym', mOpts); fillVals('dash-dept', depts);
+  
+  // Default Review Filters to Current Month & Week
   fillOpts('rev-ym', mOpts);
-  fillOpts('hist-ym', mOpts);
-  fillVals('hist-week', weeks);
-  fillVals('hist-dept', depts);
+  fillVals('rev-dept', depts); // Populate Review Department Filter
+  document.getElementById('rev-ym').value = currentYM();
+  document.getElementById('rev-week').value = getCurrentWeekStr();
+  
+  fillOpts('hist-ym', mOpts); fillVals('hist-week', weeks); fillVals('hist-dept', depts);
 }
 
 function fillVals(id,vals){
   const el=document.getElementById(id); if(!el)return;
-  const cur=el.value;
-  el.innerHTML='<option value="">All</option>';
+  const cur=el.value; el.innerHTML='<option value="">All</option>';
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});
   if(vals.includes(cur))el.value=cur;
 }
 function fillOpts(id,opts){
   const el=document.getElementById(id); if(!el)return;
-  const cur=el.value;
-  el.innerHTML='<option value="">All</option>';
+  const cur=el.value; el.innerHTML='<option value="">All</option>';
   opts.forEach(({val,lbl})=>{const o=document.createElement('option');o.value=val;o.textContent=lbl;el.appendChild(o);});
   if(opts.some(o=>o.val===cur))el.value=cur;
 }
 
-// ── DASHBOARD ──
+// ── OVERVIEW ──
 function getDashData(){
   let d=[...storeData];
   const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept');
@@ -731,25 +716,49 @@ function renderDashboard(){
   const d=getDashData();
   const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept');
 
-  // Filter label
-  const parts=[];
-  if(ym){const m=ym.match(/^(\d{4})-(\d{2})$/);parts.push(m?MS[+m[2]-1]+' '+m[1]:ym);}
-  if(week) parts.push(week);
-  if(dept) parts.push(dept);
-  document.getElementById('dash-filter-label').textContent=parts.length?'Filtered: '+parts.join(' · '):'All data for this store';
-
-  const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket)};
+  const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket), exp:r=>r.DaysLeft!==null&&r.DaysLeft<=0};
   const totalStock=d.reduce((s,r)=>{const v=parseFloat(r.Stock);return s+(isNaN(v)||v<=0?0:v);},0);
+  
   document.getElementById('kpi-dash').innerHTML=
     KPI('Items',          'neu', d.length)+
-    KPI('Total Stock',    'blu', totalStock)+
-    KPI('Critical ≤7 Days','red', d.filter(F.le7).length,'Immediate action')+
-    KPI('≤30 Days',       'ora', d.filter(F.le30).length)+
-    KPI('All Time Total', 'grn', storeData.length,'This store');
+    KPI('Total Stock',    'acc', totalStock)+
+    KPI('Expired Items',  'red', d.filter(F.exp).length, 'Remove from shelf')+
+    KPI('Expiring ≤7 Days','red', d.filter(F.le7).length, 'Immediate action')+
+    KPI('≤30 Days',       'ora', d.filter(F.le30).length);
+
+  // Expired Items Table
+  const expItems = d.filter(r => r.DaysLeft !== null && r.DaysLeft <= 0);
+  document.getElementById('exp-badge').textContent = expItems.length + ' items';
+  document.querySelector('#t-expired tbody').innerHTML = expItems.length === 0 
+    ? '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--t3)">No expired items</td></tr>'
+    : expItems.map(r => {
+        return `<tr>
+          <td class="mono b">${r.Article||'—'}</td>
+          <td class="wrap">${r.Description||'—'}</td>
+          <td class="mono b">${r.Stock||'—'}</td>
+          <td class="mono" style="color:var(--red)">${fmtDate(r.ExpiryDate)}</td>
+        </tr>`;
+      }).join('');
+
+  // Expiring within 7 days Table
+  const exp7Items = d.filter(r => r.DaysLeft !== null && r.DaysLeft > 0 && r.DaysLeft <= 7);
+  document.getElementById('exp7-badge').textContent = exp7Items.length + ' items';
+  document.querySelector('#t-exp7 tbody').innerHTML = exp7Items.length === 0 
+    ? '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--t3)">No items expiring soon</td></tr>'
+    : exp7Items.map(r => {
+        const dlc = daysColor(r.DaysLeft);
+        return `<tr>
+          <td class="mono b">${r.Article||'—'}</td>
+          <td class="wrap">${r.Description||'—'}</td>
+          <td class="mono b">${r.Stock||'—'}</td>
+          <td class="mono">${fmtDate(r.ExpiryDate)}</td>
+          <td class="mono b" style="color:${dlc}">${r.DaysLeft!==null?r.DaysLeft:'—'}</td>
+        </tr>`;
+      }).join('');
 
   // Risk bucket chart
   const buckets=['<7 Days','7–30 Days','31–60 Days','61–90 Days','>90 Days'];
-  const colors=['var(--red)','var(--orange)','var(--yellow)','var(--green)','var(--blue)'];
+  const colors=['var(--red)','var(--orange)','var(--yellow)','var(--green)','var(--accent)'];
   const counts=buckets.map(b=>d.filter(r=>r.Bucket===b).length);
   const max=Math.max(...counts,1);
   document.getElementById('dash-chart').innerHTML=buckets.map((b,i)=>
@@ -773,168 +782,24 @@ function renderDashboard(){
     const trend=prev?(w.count>prev.count?'↑ Rising':w.count<prev.count?'↓ Falling':'→ Same'):'';
     return`<div class="wk-cell ${cls}"><div class="wk-cell-label">${w.week}</div><div class="wk-cell-val">${w.count}</div><div class="wk-cell-trend">${trend}</div></div>`;
   }).join('');
-
-  // Table — now includes Month column
-  document.getElementById('dash-items-badge').textContent=d.length+' items';
-  document.querySelector('#t-dash tbody').innerHTML=d.map(r=>{
-    const dlc=daysColor(r.DaysLeft);
-    return`<tr>
-      <td class="mono">${r.Week||'—'}</td>
-      <td>${r.SubMonthDisp||r.SubMonth||'—'}</td>
-      <td class="mono b">${r.Article||'—'}</td>
-      <td>${r.Description||'—'}</td>
-      <td>${r.Department||'—'}</td>
-      <td class="mono">${r.Stock||'—'}</td>
-      <td class="mono">${fmtDate(r.ExpiryDate)}</td>
-      <td class="mono b" style="color:${dlc}">${r.DaysLeft!==null?r.DaysLeft:'—'}</td>
-      <td><span class="badge ${bktCls(r.Bucket)}">${r.Bucket||'—'}</span></td>
-    </tr>`;
-  }).join('');
 }
 
-// ✅ Dashboard Excel export
 function exportDashXL(){
   const d=getDashData();
   if(!d.length){toast('No data to export','error');return;}
   const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket,Timestamp:r.Timestamp}));
   const ym=gv('dash-ym'),week=gv('dash-week'),dept=gv('dash-dept');
   const tag=[ym,week,dept].filter(Boolean).join('_')||'All';
-  xlDown(rows, storeName+'_Dashboard_'+tag);
-}
-
-// ── ADD ITEM ──
-function matchArticle(){
-  const v=document.getElementById('add-article').value.trim();
-  const m=articles.find(a=>a.article===v);
-  if(m){document.getElementById('add-barcode').value=m.barcode;document.getElementById('add-desc').value=m.desc;document.getElementById('add-dept').value=m.dept;}
-}
-function matchBarcode(){
-  const v=document.getElementById('add-barcode').value.trim();
-  const m=articles.find(a=>a.barcode===v);
-  if(m){document.getElementById('add-article').value=m.article;document.getElementById('add-desc').value=m.desc;document.getElementById('add-dept').value=m.dept;}
-}
-function clearAddForm(){
-  ['add-article','add-barcode','add-desc','add-dept','add-stock','add-expiry'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-}
-async function submitItem(){
-  const week=gv('add-week'),desc=gv('add-desc'),stock=gv('add-stock'),expiry=gv('add-expiry');
-  if(!week){toast('⚠ Select a week','error');return;}
-  if(!desc||!stock||!expiry){toast('⚠ Complete all fields','error');return;}
-  const btn=document.getElementById('add-submit-btn');btn.textContent='Submitting…';btn.disabled=true;
-  try{
-    const res=await fetch(API+'?action=addExpiry',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        action:'addExpiry',
-        storeCode,storeName,week,
-        article:gv('add-article'),barcode:gv('add-barcode'),
-        description:desc,department:gv('add-dept'),stock,expiry
-      })
-    });
-    const result=await res.json();
-    if(result.success!==false){
-      toast('✅ Item submitted successfully','success');
-      clearAddForm();
-      setTimeout(()=>loadData(),1500);
-    }else{toast('❌ '+(result.message||'Submit failed'),'error');}
-  }catch(e){toast('❌ '+e.message,'error');}
-  btn.innerHTML='✓ Submit Item';btn.disabled=false;
-}
-
-// ── FOLLOW UP ──
-function getPrevWeek(currentWeek,currentYM){
-  const wMap={
-    'Week 1 (1–7)':{prev:'Week 4 (22–31)',samemonth:false},
-    'Week 2 (8–14)':{prev:'Week 1 (1–7)',samemonth:true},
-    'Week 3 (15–21)':{prev:'Week 2 (8–14)',samemonth:true},
-    'Week 4 (22–31)':{prev:'Week 3 (15–21)',samemonth:true}
-  };
-  const entry=wMap[currentWeek];if(!entry)return null;
-  let ym=currentYM;
-  if(!entry.samemonth){const[y,m]=currentYM.split('-').map(Number);const prev=new Date(y,m-2,1);ym=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');}
-  return{week:entry.prev,month:ym};
-}
-
-async function loadFollowUp(){
-  const week=gv('fu-week');
-  if(!week){document.getElementById('fu-list').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Select a week above.</div>';return;}
-  const curYM=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const prev=getPrevWeek(week,curYM);
-  if(!prev){document.getElementById('fu-list').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">No previous week.</div>';return;}
-  document.getElementById('fu-prev-label').textContent='Showing: '+prev.week+' ('+prev.month+')';
-  document.getElementById('fu-sub').textContent='Last week: '+prev.week+' · '+prev.month;
-  document.getElementById('fu-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--t3)">Loading…</div>';
-  try{
-    const r=await fetch(`${API}?action=lastWeekData&storeCode=${encodeURIComponent(storeCode)}&week=${encodeURIComponent(prev.week)}&submissionMonth=${prev.month}`);
-    const d=await r.json();
-    renderFuList(d.rows||[],week);
-  }catch(e){document.getElementById('fu-list').innerHTML=`<div style="text-align:center;padding:24px;color:var(--red)">${e.message}</div>`;}
-}
-
-function renderFuList(rows,thisWeek){
-  if(!rows.length){document.getElementById('fu-list').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">No items from last week.</div>';return;}
-  document.getElementById('fu-list').innerHTML=`<div class="fu-list">${rows.map((r,i)=>`
-    <div class="fu-item" onclick="openFuPopup(${i},'${encodeURIComponent(thisWeek)}')">
-      <div class="fu-item-top"><span class="fu-item-article">${r.Article||'—'} <span style="font-weight:400;color:var(--t3);font-size:10.5px">${r.Barcode||''}</span></span><span class="fu-item-stock">Stock: ${r.Stock}</span></div>
-      <div class="fu-item-desc">${r.Description||'—'}</div>
-      <div class="fu-item-meta">📅 Expiry: ${fmtDate(r.ExpiryDate)} &nbsp;|&nbsp; Dept: ${r.Department||'—'}</div>
-    </div>`).join('')}</div>`;
-  window._fuRows=rows;
-}
-
-function openFuPopup(idx,encodedWeek){
-  const r=window._fuRows[idx];fuCurrentItem={...r,_thisWeek:decodeURIComponent(encodedWeek)};
-  document.getElementById('fu-article').value=r.Article+(r.Barcode?' ('+r.Barcode+')':'');
-  document.getElementById('fu-barcode').value=r.Barcode||'';
-  document.getElementById('fu-desc').value=r.Description||'';
-  document.getElementById('fu-expiry').value=fmtDate(r.ExpiryDate);
-  document.getElementById('fu-last-stock').value=r.Stock;
-  document.getElementById('fu-new-stock').value='';
-  document.getElementById('fu-popup').classList.add('open');
-  setTimeout(()=>document.getElementById('fu-new-stock').focus(),300);
-}
-function closeFuPopup(){document.getElementById('fu-popup').classList.remove('open');fuCurrentItem=null;}
-
-async function submitFollowUp(){
-  const newStock=document.getElementById('fu-new-stock').value;
-  if(!newStock&&newStock!=='0'){toast('⚠ Enter new stock count','error');return;}
-  if(!fuCurrentItem){toast('⚠ No item selected','error');return;}
-  const btn=document.getElementById('fu-submit-btn');btn.textContent='Saving…';btn.disabled=true;
-  try{
-    const res=await fetch(API+'?action=followUpUpdate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        action:'followUpUpdate',storeCode,storeName,
-        week:fuCurrentItem._thisWeek,
-        article:fuCurrentItem.Article,barcode:fuCurrentItem.Barcode||'',
-        description:fuCurrentItem.Description,department:fuCurrentItem.Department||'',
-        stock:newStock,expiry:fuCurrentItem.ExpiryDate
-      })
-    });
-    const result=await res.json();
-    if(result.success!==false){
-      toast('✅ Stock updated for '+fuCurrentItem.Article,'success');
-      closeFuPopup();
-      setTimeout(()=>loadData(),1500);
-    }else{toast('❌ '+(result.message||'Update failed'),'error');}
-  }catch(e){toast('❌ '+e.message,'error');}
-  btn.innerHTML='✓ Save &amp; Continue';btn.disabled=false;
+  xlDown(rows, storeName+'_Overview_'+tag);
 }
 
 // ── REVIEW ──
-// reviewRows holds rows fetched from thisWeekReview (with real DB ids)
-let reviewRows = [];
-
 async function renderReview(){
   const week=gv('rev-week');
   const ym=gv('rev-ym')||currentYM();
-  document.getElementById('rev-sbox').style.display='none';
 
-  // If a specific week+month selected, fetch from API to get real DB ids for edit/delete
   if(week && ym){
-    document.querySelector('#t-rev tbody').innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--t3)">Loading…</td></tr>';
+    document.querySelector('#t-rev tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--t3)">Loading…</td></tr>';
     try{
       const r=await fetch(`${API}?action=thisWeekReview&storeCode=${encodeURIComponent(storeCode)}&week=${encodeURIComponent(week)}&submissionMonth=${encodeURIComponent(ym)}&_t=${Date.now()}`);
       const d=await r.json();
@@ -947,12 +812,15 @@ async function renderReview(){
       });
     }catch(e){toast('❌ Failed to load review: '+e.message,'error');reviewRows=[];}
   } else {
-    // Fallback to local storeData filtered — edit/delete will use RowIndex from thisStoreData
     let d=[...storeData];
     if(week) d=d.filter(r=>r.Week===week);
     if(ym)   d=d.filter(r=>r.SubMonth===ym);
     reviewRows=d.map(r=>({...r}));
   }
+  
+  // Apply Department Filter for Review
+  const dept = gv('rev-dept');
+  if(dept) reviewRows = reviewRows.filter(r => r.Department === dept);
 
   const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket)};
   document.getElementById('kpi-rev').innerHTML=
@@ -962,10 +830,9 @@ async function renderReview(){
   document.getElementById('b-rev').textContent=reviewRows.length+' items';
 
   document.querySelector('#t-rev tbody').innerHTML=reviewRows.length===0
-    ?'<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--t3)">No items found for this period.</td></tr>'
+    ?'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--t3)">No items found for this period.</td></tr>'
     :reviewRows.map((r,i)=>{
       const dlc=daysColor(r.DaysLeft);
-      const dbId=r.RowIndex; // real DB id from thisWeekReview
       return`<tr>
         <td class="mono">${r.Week||'—'}</td>
         <td>${r.SubMonthDisp||r.SubMonth||ymToDisp(ym)||'—'}</td>
@@ -976,136 +843,25 @@ async function renderReview(){
         <td class="mono">${fmtDate(r.ExpiryDate)}</td>
         <td class="mono b" style="color:${dlc}">${r.DaysLeft!==null?r.DaysLeft:'—'}</td>
         <td><span class="badge ${bktCls(r.Bucket)}">${r.Bucket||'—'}</span></td>
-        <td><button class="btn" style="padding:4px 9px;font-size:11px"
-              onclick="openEditPopup(${dbId},${i})">✏ Edit</button></td>
-        <td><button class="btn btn-red" style="padding:4px 9px;font-size:11px"
-              onclick="openDeleteConfirm(${dbId},${i})">🗑 Del</button></td>
       </tr>`;
     }).join('');
 }
 
-function currentYM(){
-  const n=new Date();
-  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
-}
 function ymToDisp(ym){
   if(!ym)return'';
   const m=ym.match(/^(\d{4})-(\d{2})$/);
   return m?MS[+m[2]-1]+' '+m[1]:ym;
 }
 
-// ✅ Review Excel export
 function exportRevXL(){
-  const week=gv('rev-week'),ym=gv('rev-ym');
+  const week=gv('rev-week'),ym=gv('rev-ym'),dept=gv('rev-dept');
   let d=[...storeData];
   if(week)d=d.filter(r=>r.Week===week);
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
+  if(dept)d=d.filter(r=>r.Department===dept);
   if(!d.length){toast('No data to export','error');return;}
   const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
   xlDown(rows, storeName+'_Review_'+(week||'AllWeeks')+'_'+(ym||'AllMonths'));
-}
-
-// ── WEEK/MONTH REQUIRED ERROR ──
-function showWeekMonthError(){
-  document.getElementById('wm-error-overlay').classList.add('open');
-}
-function closeWMError(){
-  document.getElementById('wm-error-overlay').classList.remove('open');
-}
-
-// ── EDIT ──
-function openEditPopup(dbId, listIdx){
-  if(!gv('rev-week')||!gv('rev-ym')){showWeekMonthError();return;}
-  const r=reviewRows[listIdx]||storeData.find(x=>x.RowIndex===dbId);
-  if(!r)return;
-  editCurrentRow={rowIndex:dbId};
-  document.getElementById('edit-popup-sub').textContent=r.Article+' · '+r.Description;
-  document.getElementById('edit-info').value=r.Article+' — '+r.Description;
-  document.getElementById('edit-stock').value=r.Stock||'';
-  const d=parseDate(r.ExpiryDate);
-  document.getElementById('edit-expiry').value=d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):'';
-  document.getElementById('edit-popup').classList.add('open');
-}
-function closeEditPopup(){document.getElementById('edit-popup').classList.remove('open');editCurrentRow=null;}
-
-async function submitEdit(){
-  if(!editCurrentRow){toast('⚠ No item','error');return;}
-  const stock=document.getElementById('edit-stock').value;
-  const expiry=document.getElementById('edit-expiry').value;
-  if(!stock&&stock!=='0'){toast('⚠ Enter stock quantity','error');return;}
-  if(!expiry){toast('⚠ Select expiry date','error');return;}
-  const btn=document.getElementById('edit-submit-btn');btn.textContent='Saving…';btn.disabled=true;
-  try{
-    const url=API+'?action=editRow&rowIndex='+encodeURIComponent(editCurrentRow.rowIndex)+'&stock='+encodeURIComponent(stock)+'&expiry='+encodeURIComponent(expiry)+'&_t='+Date.now();
-    const result=await (await fetch(url)).json();
-    if(result.success){
-      toast('✅ Item updated','success');
-      closeEditPopup();
-      // Refresh both review table and full store data
-      await renderReview();
-      setTimeout(()=>loadData(),800);
-    }else toast('❌ '+(result.message||'Update failed'),'error');
-  }catch(e){toast('❌ '+e.message,'error');}
-  btn.innerHTML='✓ Save Changes';btn.disabled=false;
-}
-
-// ── DELETE ──
-function openDeleteConfirm(dbId, listIdx){
-  if(!gv('rev-week')||!gv('rev-ym')){showWeekMonthError();return;}
-  const r=reviewRows[listIdx]||storeData.find(x=>x.RowIndex===dbId);
-  deleteRowIndex=dbId;
-  document.getElementById('del-desc').textContent=`Delete "${r?r.Article:''} — ${r?r.Description:''}"? This cannot be undone.`;
-  document.getElementById('del-overlay').classList.add('open');
-}
-async function executeDelete(){
-  if(!deleteRowIndex)return;
-  const btn=document.getElementById('del-ok-btn');btn.textContent='Deleting…';btn.disabled=true;
-  try{
-    const result=await (await fetch(API+'?action=deleteRow&rowIndex='+encodeURIComponent(deleteRowIndex)+'&_t='+Date.now())).json();
-    if(result.success){
-      toast('🗑 Item deleted','success');
-      document.getElementById('del-overlay').classList.remove('open');
-      // Refresh review table immediately, then full data
-      await renderReview();
-      setTimeout(()=>loadData(),800);
-    }else toast('❌ '+(result.message||'Delete failed'),'error');
-  }catch(e){toast('❌ '+e.message,'error');}
-  btn.innerHTML='Delete';btn.disabled=false;deleteRowIndex=null;
-}
-
-// ── SEND EMAIL ──
-async function sendEmail(){
-  const week=gv('rev-week');
-  const ym=gv('rev-ym')||currentYM();
-  const sbox=document.getElementById('rev-sbox');
-
-  // Week is required — the worker queries WHERE week = ? AND substr(timestamp,1,7) = ?
-  if(!week){
-    sbox.style.cssText='display:block;background:var(--orange-l);color:var(--orange);padding:10px 14px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)';
-    sbox.textContent='⚠ Please select a specific Week before sending the email.';
-    return;
-  }
-
-  const btn=document.getElementById('send-email-btn');btn.textContent='Sending…';btn.disabled=true;
-  sbox.style.display='none';
-  try{
-    const url=API+'?action=sendRTCEmail'
-      +'&storeCode='+encodeURIComponent(storeCode)
-      +'&storeName='+encodeURIComponent(storeName)
-      +'&week='+encodeURIComponent(week)
-      +'&submissionMonth='+encodeURIComponent(ym)
-      +'&_t='+Date.now();
-    const result=await (await fetch(url)).json();
-    if(result.success){
-      sbox.style.cssText='display:block;background:var(--green-l);color:var(--green);padding:10px 14px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)';
-      sbox.textContent='✅ Email sent successfully! Week: '+week+' · Month: '+ymToDisp(ym);
-      toast('✅ Email sent!','success',3000);
-    }else{
-      sbox.style.cssText='display:block;background:var(--red-l);color:var(--red);padding:10px 14px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)';
-      sbox.textContent='❌ '+(result.message||'Email failed');
-    }
-  }catch(e){toast('❌ '+e.message,'error');}
-  btn.innerHTML='⚡ Send to Buyer';btn.disabled=false;
 }
 
 // ── HISTORY ──
@@ -1119,8 +875,8 @@ function renderHistory(){
   document.getElementById('kpi-hist').innerHTML=
     KPI('Total Items','neu',d.length)+KPI('≤7 Days','red',d.filter(F.le7).length)+
     KPI('≤30 Days','ora',d.filter(F.le30).length)+
-    KPI('Months','blu',[...new Set(d.map(r=>r.SubMonth).filter(Boolean))].length)+
-    KPI('Weeks','pur',[...new Set(d.map(r=>r.Week).filter(Boolean))].length);
+    KPI('Months','acc',[...new Set(d.map(r=>r.SubMonth).filter(Boolean))].length)+
+    KPI('Weeks','neu',[...new Set(d.map(r=>r.Week).filter(Boolean))].length);
 
   const weeks=[...new Set(d.map(r=>r.Week).filter(Boolean))].sort();
   const wkTotals=weeks.map(w=>({week:w,count:d.filter(r=>r.Week===w).length}));
@@ -1169,15 +925,25 @@ function exportHistXL(){
 
 // ── SHARED EXCEL HELPER ──
 function xlDown(rows, filename){
-  const ws=XLSX.utils.json_to_sheet(rows);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Data');
+  if(!rows.length) return;
+  const ws = XLSX.utils.json_to_sheet(rows);
+  
+  // Auto-fit columns logic
+  const cols = Object.keys(rows[0]);
+  const colWidths = cols.map(col => {
+    let maxLen = col.length;
+    rows.forEach(row => {
+      const valLen = String(row[col] || '').length;
+      if (valLen > maxLen) maxLen = valLen;
+    });
+    return { wch: maxLen + 2 }; // Add padding
+  });
+  ws['!cols'] = colWidths;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Data');
   XLSX.writeFile(wb, filename+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){['fu-popup','edit-popup','del-overlay','wm-error-overlay'].forEach(id=>document.getElementById(id).classList.remove('open'));}
-});
 </script>
 </body>
 </html>
