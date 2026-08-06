@@ -468,8 +468,9 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
             <div class="active-filters" id="ac-active-filters"></div>
           </div>
           <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
-            <label class="tick-label"><input type="checkbox" id="ac-exc-zero" onchange="renderActions()"> Hide 0 Stock</label>
+            <label class="tick-label"><input type="checkbox" id="ac-exc-low" onchange="renderActions()"> Hide 0-4 Stock</label>
             <label class="tick-label"><input type="checkbox" id="ac-exc-expired" onchange="renderActions()"> Hide Expired</label>
+            <label class="tick-label"><input type="checkbox" id="ac-hide-actioned-before" onchange="renderActions()"> Hide Actioned Before</label>
             <span class="panel-badge" id="b-ac">—</span>
             <button class="btn btn-sm" onclick="selectAllVisible()">Select All</button>
             <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
@@ -511,6 +512,12 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
           <div class="fg"><div class="fl">Month</div><select class="fs" id="nf-ym" onchange="renderNotify()"><option value="">All</option></select></div>
           <div class="fg"><div class="fl">Week</div><select class="fs" id="nf-week" onchange="renderNotify()"><option value="">All</option></select></div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="nf-dept" onchange="renderNotify()"><option value="">All</option></select></div>
+          <div class="fg" style="flex-direction:row; align-items:center; gap:10px; margin-top:5px;">
+            <label class="tick-label"><input type="checkbox" id="nf-rtc" checked onchange="renderNotify()"> RTC Price Change</label>
+            <label class="tick-label"><input type="checkbox" id="nf-transfer" checked onchange="renderNotify()"> Store Transfer</label>
+            <label class="tick-label"><input type="checkbox" id="nf-monitor" onchange="renderNotify()"> Monitor</label>
+            <label class="tick-label"><input type="checkbox" id="nf-clear" onchange="renderNotify()"> Clear In Normal Price</label>
+          </div>
           <button class="btn btn-sm btn-accent" onclick="sendNotifyEmail()" style="align-self:flex-end"><i class="fa-solid fa-envelope"></i> Copy Table & Open Email</button>
         </div>
       </div>
@@ -984,7 +991,11 @@ function daysBar(d){
 const F={le7:r=>r['Expiry Risk Bucket']==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r['Expiry Risk Bucket']),b7:r=>r['Expiry Risk Bucket']==='<7 Days',b30:r=>r['Expiry Risk Bucket']==='7–30 Days',b60:r=>r['Expiry Risk Bucket']==='31–60 Days',b90:r=>r['Expiry Risk Bucket']==='61–90 Days',pend:r=>r['Action Status']==='Pending Action',comp:r=>r['Action Status']==='Action Taken',soldout:r=>{const s=parseFloat(r.Stock);return!isNaN(s)&&s===0;},expired:r=>r['Expiry Risk Bucket']==='Expired'};
 const cnt=(d,f)=>f?d.filter(f).length:d.length;
 function gv(id){const el=document.getElementById(id);return el?el.value:'';}
-function getWeekSortKey(r) { return `${r.Year || '0000'}-${String(r.MonthNum || '00').padStart(2,'0')}-${r.Week || ''}`; }
+function getWeekSortKey(r) {
+  const wkNum = parseInt(String(r.Week || '').replace(/\D/g, '')) || 0;
+  const mn = String(r.MonthNum || '00').padStart(2, '0');
+  return `${r.Year || '0000'}-${mn}-${String(wkNum).padStart(2, '0')}`;
+}
 
 // ══ MULTI-SELECT LOGIC ══
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
@@ -1049,6 +1060,25 @@ function populateFilters(){
   fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd',depts);
   fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar',depts);
   updateStoreDisp('ss');updateStoreDisp('ac');updateStoreDisp('dd');
+
+  // Set Default Current Month and Week
+  const d = new Date();
+  const currentMonth = d.toISOString().slice(0,7);
+  const currentWeek = 'Week ' + Math.ceil(d.getDate() / 7);
+
+  function setDefaultSelect(id, val) {
+    const el = document.getElementById(id);
+    if(el && [...el.options].some(o => o.value === val)) el.value = val;
+  }
+
+  setDefaultSelect('ac-ym', currentMonth);
+  setDefaultSelect('ac-week', currentWeek);
+  setDefaultSelect('ss-ym', currentMonth);
+  setDefaultSelect('ss-week', currentWeek);
+  setDefaultSelect('dd-ym', currentMonth);
+  setDefaultSelect('dd-week', currentWeek);
+  setDefaultSelect('sub-ym', currentMonth);
+  setDefaultSelect('sub-week', currentWeek);
 }
 function fill(id,vals,allLabel='All'){const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML=`<option value="">${allLabel}</option>`;vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});if(vals.includes(cur))el.value=cur;}
 function fillOpts(id,opts){const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">All</option>';opts.forEach(({val,lbl})=>{const o=document.createElement('option');o.value=val;o.textContent=lbl;el.appendChild(o);});if(opts.some(o=>o.val===cur))el.value=cur;}
@@ -1196,35 +1226,67 @@ function populateNotifyFilters() {
   document.getElementById('nf-week').value = 'Week ' + wk;
   document.getElementById('nf-ym').value = new Date().toISOString().slice(0,7);
 }
+function getNotifyActionFilter() {
+  const showRTC = document.getElementById('nf-rtc')?.checked;
+  const showTransfer = document.getElementById('nf-transfer')?.checked;
+  const showMonitor = document.getElementById('nf-monitor')?.checked;
+  const showClear = document.getElementById('nf-clear')?.checked;
+  
+  return (r) => {
+    const actions = r['Action Taken'] || '';
+    if(showRTC && actions.includes('RTC Price Change')) return true;
+    if(showTransfer && actions.includes('Store Transfer')) return true;
+    if(showMonitor && actions.includes('Monitor')) return true;
+    if(showClear && actions.includes('Clear In Normal Price')) return true;
+    return false;
+  };
+}
+function getNotifyCols() {
+  const showRTC = document.getElementById('nf-rtc')?.checked;
+  const showTransfer = document.getElementById('nf-transfer')?.checked;
+  
+  let cols = ['Article', 'Barcode', 'Description', 'Expiry Date'];
+  if (showRTC) cols.push('RTC Price', 'Start', 'End');
+  if (showTransfer) cols.push('Transfer To', 'Transfer Qty');
+  return cols;
+}
 function renderNotify(){
   const code = gv('nf-code'), ym = gv('nf-ym'), week = gv('nf-week'), dept = gv('nf-dept');
   const disp = document.getElementById('nf-store-disp');
   if(disp) disp.textContent = code ? (codeToStore[code] || code) : '—';
   
+  const cols = getNotifyCols();
+  
   if(!code) {
-    document.querySelector('#t-nf tbody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:28px">Please select a store to view actioned items</td></tr>';
+    document.querySelector('#t-nf tbody').innerHTML = `<tr><td colspan="${cols.length}" style="text-align:center;color:var(--t3);padding:28px">Please select a store to view actioned items</td></tr>`;
     document.getElementById('b-nf').textContent = '0 items';
+    document.getElementById('t-nf-hdr').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
     return;
   }
   
   let d = proc.filter(r => r.StoreCode === code && r['Action Status'] === 'Action Taken');
+  const actionFilter = getNotifyActionFilter();
+  d = d.filter(actionFilter);
   if(ym) d = d.filter(r => r['Submission Month'] === ym);
   if(week) d = d.filter(r => r.Week === week);
   if(dept) d = d.filter(r => r.Department === dept);
   
-  const cols = ['Article','Barcode','Description','Expiry Date','RTC Price','Start','End','Transfer To','Transfer Qty'];
   document.getElementById('t-nf-hdr').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
-  document.querySelector('#t-nf tbody').innerHTML = d.length ? d.map(r => `<tr>
-    <td class="mono b">${r.Article||'—'}</td>
-    <td class="mono">${r.Barcode||'—'}</td>
-    <td>${r.Description||'—'}</td>
-    <td class="mono">${r.ExpiryDate||'—'}</td>
-    <td class="mono">${r['RTC Price']?'AED '+r['RTC Price']:'—'}</td>
-    <td class="mono">${r.Start||'—'}</td>
-    <td class="mono">${r.End||'—'}</td>
-    <td>${r['Transfer To']||'—'}</td>
-    <td class="mono">${r['Transfer Qty']||'—'}</td>
-  </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:28px">No actioned items found for selected filters</td></tr>';
+  document.querySelector('#t-nf tbody').innerHTML = d.length ? d.map(r => {
+    let tds = `<tr>`;
+    cols.forEach(c => {
+      if (c === 'Article') tds += `<td class="mono b">${r.Article||'—'}</td>`;
+      else if (c === 'Barcode') tds += `<td class="mono">${r.Barcode||'—'}</td>`;
+      else if (c === 'Description') tds += `<td>${r.Description||'—'}</td>`;
+      else if (c === 'Expiry Date') tds += `<td class="mono">${r.ExpiryDate||'—'}</td>`;
+      else if (c === 'RTC Price') tds += `<td class="mono">${r['RTC Price']?'AED '+r['RTC Price']:'—'}</td>`;
+      else if (c === 'Start') tds += `<td class="mono">${r.Start||'—'}</td>`;
+      else if (c === 'End') tds += `<td class="mono">${r.End||'—'}</td>`;
+      else if (c === 'Transfer To') tds += `<td>${r['Transfer To']||'—'}</td>`;
+      else if (c === 'Transfer Qty') tds += `<td class="mono">${r['Transfer Qty']||'—'}</td>`;
+    });
+    return tds + `</tr>`;
+  }).join('') : `<tr><td colspan="${cols.length}" style="text-align:center;color:var(--t3);padding:28px">No actioned items found for selected filters</td></tr>`;
   
   document.getElementById('b-nf').textContent = d.length + ' items';
 }
@@ -1240,32 +1302,41 @@ function sendNotifyEmail() {
   
   const ym = gv('nf-ym'), week = gv('nf-week'), dept = gv('nf-dept');
   let d = proc.filter(r => r.StoreCode === code && r['Action Status'] === 'Action Taken');
+  const actionFilter = getNotifyActionFilter();
+  d = d.filter(actionFilter);
   if(ym) d = d.filter(r => r['Submission Month'] === ym);
   if(week) d = d.filter(r => r.Week === week);
   if(dept) d = d.filter(r => r.Department === dept);
   
   if(d.length === 0) { toast('No actioned items to send', 'error'); return; }
   
+  const cols = getNotifyCols();
   const storeName = codeToStore[code] || code;
-  const subject = `Expiry Actions Updated – ${storeName} – ${week || 'All Weeks'}`;
+  const subject = `RTC Price Updated – ${storeName} – ${week || 'All Weeks'}`;
   
   let htmlBody = "Dear Manager,<br><br>";
   htmlBody += "Please find the near expiry items updated price list. Make sure all the prices updated on shelf edges.<br><br>";
   
   htmlBody += "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;font-family:Arial;font-size:12px;'>";
-  htmlBody += "<tr style='background:#f3f4f6'><th>Article</th><th>Barcode</th><th>Description</th><th>Expiry Date</th><th>RTC Price</th><th>Start</th><th>End</th><th>Transfer To</th><th>Transfer Qty</th></tr>";
+  htmlBody += "<tr style='background:#f3f4f6'>";
+  cols.forEach(c => htmlBody += `<th>${c}</th>`);
+  htmlBody += "</tr>";
   
   d.forEach(r => {
     htmlBody += `<tr>`;
-    htmlBody += `<td>${r.Article || '-'}</td>`;
-    htmlBody += `<td>${r.Barcode || '-'}</td>`;
-    htmlBody += `<td>${r.Description || '-'}</td>`;
-    htmlBody += `<td>${r.ExpiryDate || '-'}</td>`;
-    htmlBody += `<td>${r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-'}</td>`;
-    htmlBody += `<td>${r.Start || '-'}</td>`;
-    htmlBody += `<td>${r.End || '-'}</td>`;
-    htmlBody += `<td>${r['Transfer To'] || '-'}</td>`;
-    htmlBody += `<td>${r['Transfer Qty'] || '-'}</td>`;
+    cols.forEach(c => {
+      let val = '-';
+      if (c === 'Article') val = r.Article || '-';
+      else if (c === 'Barcode') val = r.Barcode || '-';
+      else if (c === 'Description') val = r.Description || '-';
+      else if (c === 'Expiry Date') val = r.ExpiryDate || '-';
+      else if (c === 'RTC Price') val = r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-';
+      else if (c === 'Start') val = r.Start || '-';
+      else if (c === 'End') val = r.End || '-';
+      else if (c === 'Transfer To') val = r['Transfer To'] || '-';
+      else if (c === 'Transfer Qty') val = r['Transfer Qty'] || '-';
+      htmlBody += `<td>${val}</td>`;
+    });
     htmlBody += `</tr>`;
   });
   htmlBody += "</table><br><br>Regards,<br>Gala Markets Team";
@@ -1275,27 +1346,40 @@ function sendNotifyEmail() {
     const item = new ClipboardItem({ 'text/html': blob });
     navigator.clipboard.write([item]).then(() => {
       
-      const bodyHint = "Table copied to clipboard! Press Ctrl+V (or Cmd+V on Mac) here to paste the formatted table.";
-      const mailtoLink = `mailto:${emailEntry.ccEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyHint)}`;
+      
+      const mailtoLink = `mailto:${emailEntry.ccEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("")}`;
       window.location.href = mailtoLink;
       
       toast('Table copied! Outlook is opening. Press Ctrl+V in the email body.', 'success', 6000);
       
     }).catch(err => {
-      fallbackToPlainText(emailEntry.ccEmail, subject, d);
+      fallbackToPlainText(emailEntry.ccEmail, subject, d, cols);
     });
   } catch (err) {
-    fallbackToPlainText(emailEntry.ccEmail, subject, d);
+    fallbackToPlainText(emailEntry.ccEmail, subject, d, cols);
   }
 }
 
-function fallbackToPlainText(toEmail, subject, d) {
+function fallbackToPlainText(toEmail, subject, d, cols) {
   let textBody = "Dear Manager,\n\nPlease find the near expiry items updated price list. Make sure all the prices updated on shelf edges.\n\n";
-  textBody += "Article | Barcode | Description | Expiry Date | RTC Price | Start | End | Transfer To | Transfer Qty\n";
-  textBody += "-------------------------------------------------------------------------------------------\n";
+  
+  textBody += cols.join(' | ') + "\n";
+  textBody += "-".repeat(cols.join(' | ').length) + "\n";
   
   d.forEach(r => {
-    textBody += `${r.Article || '-'} | ${r.Barcode || '-'} | ${r.Description || '-'} | ${r.ExpiryDate || '-'} | ${r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-'} | ${r.Start || '-'} | ${r.End || '-'} | ${r['Transfer To'] || '-'} | ${r['Transfer Qty'] || '-'}\n`;
+    let rowVals = cols.map(c => {
+      if (c === 'Article') return r.Article || '-';
+      else if (c === 'Barcode') return r.Barcode || '-';
+      else if (c === 'Description') return r.Description || '-';
+      else if (c === 'Expiry Date') return r.ExpiryDate || '-';
+      else if (c === 'RTC Price') return r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-';
+      else if (c === 'Start') return r.Start || '-';
+      else if (c === 'End') return r.End || '-';
+      else if (c === 'Transfer To') return r['Transfer To'] || '-';
+      else if (c === 'Transfer Qty') return r['Transfer Qty'] || '-';
+      return '-';
+    });
+    textBody += rowVals.join(' | ') + "\n";
   });
   
   textBody += "\nRegards,\nGala Markets Team";
@@ -1310,11 +1394,26 @@ function renderActions(){
   let d=fData('ac');
   
   // Apply exclude filters
-  const hideZero = document.getElementById('ac-exc-zero')?.checked;
+  const hideLow = document.getElementById('ac-exc-low')?.checked;
   const hideExpired = document.getElementById('ac-exc-expired')?.checked;
+  const hideActionedBefore = document.getElementById('ac-hide-actioned-before')?.checked;
   
-  if(hideZero) d = d.filter(r => parseFloat(r.Stock) > 0);
+  if(hideLow) d = d.filter(r => parseFloat(r.Stock) > 4);
   if(hideExpired) d = d.filter(r => r['Expiry Risk Bucket'] !== 'Expired');
+  
+  if(hideActionedBefore) {
+    const actionedKeys = new Set();
+    proc.forEach(p => {
+      if(p['Action Status'] === 'Action Taken') {
+        actionedKeys.add(`${p.StoreCode}|${p.Barcode}|${p.ExpiryDate}`);
+      }
+    });
+    d = d.filter(r => {
+      if(r['Action Status'] === 'Action Taken') return true; // Keep the actioned row itself
+      const key = `${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
+      return !actionedKeys.has(key); // Hide pending if it was actioned before
+    });
+  }
   
   const st=gv('globalSearch').toLowerCase();
   const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)):d;
@@ -1646,7 +1745,42 @@ function autoFitAndTable(ws,data,cols){
   }
   return ws;
 }
-const flat=r=>{const o={};EXP_COLS.forEach(c=>{if(c==='RowIndex')o[c]=r._idx;else o[c]=r[c]??'';});return o;};
+// Flat mapping with strict data type casting
+const flat = r => {
+  const o = {};
+  const numCols = ['Stock', 'DaysLeft', 'Transfer Qty', 'RowIndex'];
+  const dateCols = ['ExpiryDate', 'Start', 'End', 'Action Date'];
+  EXP_COLS.forEach(c => {
+    let val = c === 'RowIndex' ? r._idx : r[c] ?? '';
+    if (numCols.includes(c)) {
+      val = val === '' || val === null ? '' : Number(val);
+    } else if (dateCols.includes(c)) {
+      const parsed = parseDate(val);
+      val = parsed ? parsed : '';
+    }
+    o[c] = val;
+  });
+  return o;
+};
+
+// Applies dd.mm.yyyy format to date cells
+function applyDateFormat(ws, cols) {
+  const dateCols = ['ExpiryDate', 'Start', 'End', 'Action Date'];
+  dateCols.forEach(colName => {
+    const colIdx = cols.indexOf(colName);
+    if(colIdx > -1) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for(let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const cellAddress = XLSX.utils.encode_cell({r: R, c: colIdx});
+        const cell = ws[cellAddress];
+        if(cell && cell.t === 'd') { // 'd' is date type when cellDates is true
+          cell.z = 'dd.mm.yyyy';
+        }
+      }
+    }
+  });
+}
+
 function exportXL(type){
   let data,fname,cols;
   if(type==='raw-e'){data=rawE;fname='ExpiryData_Raw';cols=rawE.length?Object.keys(rawE[0]).filter(c=>!c.startsWith('_')):[];}
@@ -1655,9 +1789,38 @@ function exportXL(type){
   else if(type==='stores'){data=fData('ss').map(flat);fname='StoreSummary';cols=EXP_COLS;}
   else if(type==='drilldown'){data=fDataDrilldown().map(flat);fname=drilldownMode==='soldout'?'SoldOutItems':'ExpiredItems';cols=EXP_COLS;}
   else if(type==='actions'){
-    data=fData('ac').map(flat);fname='ActionCenter';cols=EXP_COLS;
+    // Get exact filtered data matching the on-screen table
+    let d = fData('ac');
+    const st = gv('globalSearch').toLowerCase();
+    if(st) d = d.filter(r => (r.Article||'').toLowerCase().includes(st) || (r.Description||'').toLowerCase().includes(st) || (r.Barcode||'').toLowerCase().includes(st));
+
+    const hideLow = document.getElementById('ac-exc-low')?.checked;
+    const hideExpired = document.getElementById('ac-exc-expired')?.checked;
+    const hideActionedBefore = document.getElementById('ac-hide-actioned-before')?.checked;
+
+    if(hideLow) d = d.filter(r => parseFloat(r.Stock) > 4);
+    if(hideExpired) d = d.filter(r => r['Expiry Risk Bucket'] !== 'Expired');
+
+    if(hideActionedBefore) {
+      const actionedKeys = new Set();
+      proc.forEach(p => {
+        if(p['Action Status'] === 'Action Taken') {
+          actionedKeys.add(`${p.StoreCode}|${p.Barcode}|${p.ExpiryDate}`);
+        }
+      });
+      d = d.filter(r => {
+        if(r['Action Status'] === 'Action Taken') return true;
+        const key = `${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
+        return !actionedKeys.has(key);
+      });
+    }
+
+    data = d.map(flat); fname='ActionCenter'; cols=EXP_COLS;
     if(!data.length){alert('No data to export.');return;}
-    const ws=XLSX.utils.json_to_sheet(data,{header:cols});autoFitAndTable(ws,data,cols);
+    const ws = XLSX.utils.json_to_sheet(data, {header: cols, cellDates: true});
+    applyDateFormat(ws, cols);
+    autoFitAndTable(ws, data, cols);
+    
     const atColIdx = cols.indexOf('Action Taken');
     if(atColIdx >= 0) {
       const colLetter = XLSX.utils.encode_col(atColIdx);
@@ -1669,8 +1832,8 @@ function exportXL(type){
         style: { fill: { fgColor: { rgb: "FFC7CE" } }, font: { color: { rgb: "9C0006" } } }
       });
     }
-    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Actions');
-    XLSX.writeFile(wb,fname+'_'+new Date().toISOString().slice(0,10)+'.xlsx');return;
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Actions');
+    XLSX.writeFile(wb, fname + '_' + new Date().toISOString().slice(0,10) + '.xlsx'); return;
   }
   else if(type==='articles'){
     const d=fData('ar');const st=gv('ar-search').toLowerCase();const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)):d;
@@ -1702,7 +1865,9 @@ function exportXL(type){
   }
   if(!data||!data.length){alert('No data to export.');return;}
   if(!cols||!cols.length)cols=Object.keys(data[0]).filter(c=>!c.startsWith('_'));
-  const ws=XLSX.utils.json_to_sheet(data,{header:cols});autoFitAndTable(ws,data,cols);
+  const ws=XLSX.utils.json_to_sheet(data,{header:cols, cellDates: true});
+  applyDateFormat(ws, cols);
+  autoFitAndTable(ws,data,cols);
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Data');
   XLSX.writeFile(wb,fname+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
