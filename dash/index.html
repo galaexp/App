@@ -118,7 +118,7 @@ body::after { content:''; position:fixed; inset:0; background-image:url("data:im
 .panel-badge { font-family:var(--mono); font-size:10px; color:var(--t2); background:rgba(28,25,23,0.05); border:1px solid var(--border); border-radius:10px; padding:3px 10px; font-weight:600; }
 .panel-body { padding:18px; }
 .filter-bar { position: relative; z-index: 20; background:rgba(255,255,255,0.95); backdrop-filter:blur(16px) saturate(1.4); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
-.filter-bar-row { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-end; }
+.filter-bar-row { display:flex; gap:4px; flex-wrap:wrap; align-items:flex-end; }
 .fg { display:flex; flex-direction:column; gap:5px; }
 .fl { font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--t3); font-family:var(--sans); }
 .fs { background:rgba(255,255,255,0.95); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:7px 28px 7px 11px; font-family:var(--sans); font-size:12px; cursor:pointer; min-width:100px; outline:none; appearance:none; font-weight:500; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a8a29e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:all .15s; }
@@ -446,7 +446,15 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
               <option value="">All</option><option value="Pending Action">Pending</option><option value="Action Taken">Actioned</option>
             </select>
           </div>
-          <div class="fg"><div class="fl">Risk</div><select class="fs" id="ac-bucket" onchange="renderActions()"><option value="">All</option></select></div>
+          
+          <div class="fg">
+            <div class="fl">Risk</div>
+            <div class="ms-container" id="ac-bucket-ms">
+              <div class="ms-display" id="ac-bucket-display" onclick="toggleMultiSelect('ac-bucket')">All Risks</div>
+              <div class="ms-dropdown" id="ac-bucket-dropdown"></div>
+            </div>
+          </div>
+
           <button class="rbtn" onclick="resetF('ac')"><i class="fa-solid fa-xmark"></i> Reset</button>
           <button class="btn btn-sm btn-export" onclick="exportXL('actions')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
         </div>
@@ -914,7 +922,7 @@ let rawE=[],rawL=[],proc=[],allStoreCodes=[],codeToStore={},emailMapData=[];
 let curPage='overview',selectedIndices=new Set(),pendingAction='';
 let inspMode='e',inspExportType='raw-e';
 let ADMIN_KEY=null;
-let multiDeptSelections={ac:new Set(),ss:new Set(),ar:new Set(),dd:new Set()};
+let multiDeptSelections={ac:new Set(),ss:new Set(),ar:new Set(),dd:new Set(),'ac-bucket':new Set()};
 let drilldownMode='soldout';
 let editingIdx=null,editingMode=null;
 let searchDebounce; 
@@ -944,7 +952,7 @@ const AC_COLS=[
   {key:'adate',label:'Action Date',render:(r)=>`<td class="mono" style="font-size:10px">${r['Action Date']?String(r['Action Date']).slice(0,10):'—'}</td>`,filterKey:null}
 ];
 
-const FILTER_COL_MAP={'ac-code':['code','store'],'ac-week':['week'],'ac-ym':['month'],'ac-bucket':['risk'],'ac-status':['status']};
+const FILTER_COL_MAP={'ac-code':['code','store'],'ac-week':['week'],'ac-ym':['month'],'ac-status':['status']};
 const FILTER_LABELS={'ac-code':'Store','ac-week':'Week','ac-ym':'Month','ac-status':'Status','ac-bucket':'Risk','dd-code':'Store','dd-week':'Week','dd-ym':'Month','dd-status':'Status'};
 
 // ══ NAV ══
@@ -975,7 +983,8 @@ function toast(msg,type='',dur=2500){
 
 // ══ HELPERS ══
 function cv(r,...keys){for(const k of keys){if(r[k]!==undefined&&r[k]!==null&&r[k]!=='')return String(r[k]);}return'';}
-function parseDate(v){if(!v||v===''||v==='—')return null;const n=parseFloat(v);if(!isNaN(n)&&n>40000&&n<60000){const d=new Date(Date.UTC(1899,11,30)+n*86400000);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());}let m=v.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const fd=new Date(v);if(!isNaN(fd))return new Date(fd.getFullYear(),fd.getMonth(),fd.getDate());return null;}
+function parseDate(v){if(!v||v===''||v==='—')return null;const n=parseFloat(v);if(!isNaN(n)&&n>40000&&n<60000){const d=new Date(Date.UTC(1899,11,30)+n*86400000);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());}let m=v.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=v.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);if(m){let day=+m[1],mon=+m[2],yr=+m[3];if(yr<100)yr+=2000;return new Date(yr,mon-1,day);}const fd=new Date(v);if(!isNaN(fd))return new Date(fd.getFullYear(),fd.getMonth(),fd.getDate());return null;}
+function formatDateToStr(dt){if(!dt)return '';const d=String(dt.getDate()).padStart(2,'0');const m=String(dt.getMonth()+1).padStart(2,'0');const y=dt.getFullYear();return `${d}.${m}.${y}`;}
 function parseSM(v){if(!v||!v.trim())return{ym:'',year:null,monthNum:null,disp:''};v=v.trim();let m;m=v.match(/^(\d{4})-(\d{1,2})$/);if(m){const y=+m[1],mn=+m[2],i=mn-1;return{ym:`${y}-${String(mn).padStart(2,'0')}`,year:y,monthNum:mn,disp:MS[i]+' '+y};}m=v.match(/^([A-Za-z]+)\s+(\d{4})$/);if(m){const idx=MS.findIndex(x=>x.toLowerCase()===m[1].slice(0,3).toLowerCase());if(idx>=0){const y=+m[2];return{ym:`${y}-${String(idx+1).padStart(2,'0')}`,year:y,monthNum:idx+1,disp:MS[idx]+' '+y};}}return{ym:v,year:null,monthNum:null,disp:v};}
 function calcBucket(d){if(d===null||d===''||isNaN(Number(d)))return'';d=Number(d);if(d<=0)return'Expired';if(d<=7)return'<7 Days';if(d<=30)return'7–30 Days';if(d<=60)return'31–60 Days';if(d<=90)return'61–90 Days';return'>90 Days';}
 function bktCls(b){if(!b)return'na';if(b==='<7 Days'||b==='Expired')return'crit';if(b==='7–30 Days')return'high';if(b==='31–60 Days')return'med';return'low';}
@@ -1000,9 +1009,9 @@ function getWeekSortKey(r) {
 // ══ MULTI-SELECT LOGIC ══
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-container')){document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));}});
-function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac')renderActions();else if(pfx==='ss')renderStores();else if(pfx==='ar')renderArticles();else if(pfx==='dd')renderDrilldown();}
-function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-dept-display`);if(!display)return;const count=multiDeptSelections[pfx].size;if(count===0)display.textContent='All Depts';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Depts Selected`;}
-function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dept-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}-dept')">Done</button>`;}
+function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac')renderActions();else if(pfx==='ss')renderStores();else if(pfx==='ar')renderArticles();else if(pfx==='dd')renderDrilldown();else if(pfx==='ac-bucket')renderActions();}
+function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;if(pfx==='ac-bucket'){if(count===0)display.textContent='All Risks';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Risks Selected`;}else{if(count===0)display.textContent='All Depts';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Depts Selected`;}}
+function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;}
 
 // ══ PROCESS ROWS ══
 function processRows(rawExpiry){
@@ -1056,7 +1065,7 @@ function populateFilters(){
   const ymSet=[...new Set(proc.map(r=>r['Submission Month']).filter(Boolean))].sort();
   const ymOpts=ymSet.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
   fill('ss-code',codes);fill('ss-week',weeks);fillOpts('ss-ym',ymOpts);renderMultiSelectOpts('ss',depts);
-  fill('ac-code',codes);fill('ac-week',weeks);fill('ac-bucket',buckets);fillOpts('ac-ym',ymOpts);renderMultiSelectOpts('ac',depts);
+  fill('ac-code',codes);fill('ac-week',weeks);renderMultiSelectOpts('ac',depts);renderMultiSelectOpts('ac-bucket',buckets);
   fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd',depts);
   fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar',depts);
   updateStoreDisp('ss');updateStoreDisp('ac');updateStoreDisp('dd');
@@ -1088,7 +1097,11 @@ function fData(pfx){
   let d=[...proc];const code=gv(pfx+'-code'),ym=gv(pfx+'-ym'),week=gv(pfx+'-week');const depts=[...multiDeptSelections[pfx]];
   if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
   if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
-  if(pfx==='ac'){const st=gv('ac-status'),bk=gv('ac-bucket');if(st)d=d.filter(r=>r['Action Status']===st);if(bk)d=d.filter(r=>r['Expiry Risk Bucket']===bk);}
+  if(pfx==='ac'){
+    const st=gv('ac-status');if(st)d=d.filter(r=>r['Action Status']===st);
+    const buckets=[...multiDeptSelections['ac-bucket']];
+    if(buckets.length>0)d=d.filter(r=>buckets.includes(r['Expiry Risk Bucket']));
+  }
   return d;
 }
 function resetF(pfx){
@@ -1096,6 +1109,10 @@ function resetF(pfx){
   if(pfx==='ar')document.getElementById('ar-search').value='';
   if(multiDeptSelections[pfx]){multiDeptSelections[pfx].clear();updateMultiDeptDisplay(pfx);}
   document.querySelectorAll(`#${pfx}-dept-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  if(pfx==='ac'){
+    if(multiDeptSelections['ac-bucket']){multiDeptSelections['ac-bucket'].clear();updateMultiDeptDisplay('ac-bucket');}
+    document.querySelectorAll(`#ac-bucket-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  }
   if(pfx==='ss')renderStores();else if(pfx==='ac')renderActions();else if(pfx==='ar')renderArticles();else if(pfx==='dd')renderDrilldown();
 }
 function filterOverdue(){document.getElementById('ac-status').value='Pending Action';renderActions();}
@@ -1104,10 +1121,11 @@ function onSearch(){
   searchDebounce=setTimeout(()=>{if(curPage==='actions')renderActions();},250);
 }
 function buildActivePills(pfx,containerId){
-  const filterIds=(pfx==='ac')?['ac-code','ac-ym','ac-week','ac-status','ac-bucket']:(pfx==='ss')?['ss-code','ss-ym','ss-week']:(pfx==='dd')?['dd-code','dd-ym','dd-week','dd-status']:[]; 
+  const filterIds=(pfx==='ac')?['ac-code','ac-ym','ac-week','ac-status']:[]; 
   const container=document.getElementById(containerId);if(!container)return;
-  let pills=filterIds.map(fid=>{const val=gv(fid);if(!val)return'';const label=FILTER_LABELS[fid]||fid.split('-').pop();let dispVal=val;if(fid==='ac-ym'||fid==='ss-ym'||fid==='dd-ym'){const opt=document.querySelector(`#${fid} option[value="${val}"]`);if(opt)dispVal=opt.textContent;}return`<span class="filter-pill"><span class="filter-pill-label">${label}</span>${dispVal}</span>`;}).filter(Boolean);
+  let pills=filterIds.map(fid=>{const val=gv(fid);if(!val)return'';const label=FILTER_LABELS[fid]||fid.split('-').pop();return`<span class="filter-pill"><span class="filter-pill-label">${label}</span>${val}</span>`;}).filter(Boolean);
   const depts=[...multiDeptSelections[pfx]];if(depts.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Depts</span>${depts.join(', ')}</span>`);
+  if(pfx==='ac'){const buckets=[...multiDeptSelections['ac-bucket']];if(buckets.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Risks</span>${buckets.join(', ')}</span>`);}
   if(pfx==='ar'){const st=gv('ar-search');if(st)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Search</span>${st}</span>`);}
   container.innerHTML=pills.join('');
 }
@@ -1167,7 +1185,7 @@ function renderOverview(){
   document.getElementById('dist-body').innerHTML=distHtml;
 }
 function drillStore(code){const el=document.getElementById('ac-code');if(el){el.value=code;updateStoreDisp('ac');}go('actions');}
-function drillDownAction(type,val){go('actions');if(type==='risk')document.getElementById('ac-bucket').value=val;else if(type==='status')document.getElementById('ac-status').value=val;renderActions();}
+function drillDownAction(type,val){go('actions');if(type==='risk'){}else if(type==='status')document.getElementById('ac-status').value=val;renderActions();}
 
 // ══ DRILLDOWN PAGE (Sold Out / Expired) ══
 function openDrilldownPage(mode){
@@ -1312,7 +1330,7 @@ function sendNotifyEmail() {
   
   const cols = getNotifyCols();
   const storeName = codeToStore[code] || code;
-  const subject = `RTC Price Updated – ${storeName} – ${week || 'All Weeks'}`;
+  const subject = `Expiry Actions Updated – ${storeName} – ${week || 'All Weeks'}`;
   
   let htmlBody = "Dear Manager,<br><br>";
   htmlBody += "Please find the near expiry items updated price list. Make sure all the prices updated on shelf edges.<br><br>";
@@ -1339,7 +1357,7 @@ function sendNotifyEmail() {
     });
     htmlBody += `</tr>`;
   });
-  htmlBody += "</table><br><br>Regards,<br>Gala Markets Team";
+  
   
   try {
     const blob = new Blob([htmlBody], { type: 'text/html' });
@@ -1382,8 +1400,8 @@ function fallbackToPlainText(toEmail, subject, d, cols) {
     textBody += rowVals.join(' | ') + "\n";
   });
   
-  textBody += "\nRegards,\nGala Markets Team";
-  const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(textBody)}`;
+
+  const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("")}`;
   window.location.href = mailtoLink;
   toast('Opened email as plain text (Browser blocked HTML clipboard).', 'info', 5000);
 }
@@ -1882,10 +1900,19 @@ async function importActions(input){
     toast(`Importing ${actionRows.length} actions…`,'',0);
     const results=await Promise.allSettled(actionRows.map(row=>{
       const rowIndex=String(row['RowIndex']||'').trim();const actionTaken=String(row['Action Taken']||'').trim();if(!rowIndex||!actionTaken)return Promise.resolve({success:false});
-      return fetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowIndex,actionTaken,rtcPrice:String(row['RTC Price']||''),transferTo:String(row['Transfer To']||''),transferQty:String(row['Transfer Qty']||''),start:String(row['Start']||''),end:String(row['End']||''),actionDate:new Date().toISOString()})}).then(r=>r.json());
+      return fetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        rowIndex,
+        actionTaken,
+        rtcPrice:String(row['RTC Price']||''),
+        transferTo:String(row['Transfer To']||''),
+        transferQty:String(row['Transfer Qty']||''),
+        start:formatDateToStr(parseDate(String(row['Start']||''))),
+        end:formatDateToStr(parseDate(String(row['End']||''))),
+        actionDate:new Date().toISOString()
+      })}).then(r=>r.json());
     }));
     const successCount=results.filter(r=>r.status==='fulfilled'&&r.value?.success!==false).length;const failCount=actionRows.length-successCount;
-    actionRows.forEach(row=>{const rowIndex=String(row['RowIndex']||'').trim();const match=proc.find(r=>String(r._idx)===rowIndex);if(match){match['Action Taken']=String(row['Action Taken']||'').trim();match['Action Status']='Action Taken';match['RTC Price']=String(row['RTC Price']||'');match['Transfer To']=String(row['Transfer To']||'');match['Transfer Qty']=String(row['Transfer Qty']||'');match['Start']=String(row['Start']||'');match['End']=String(row['End']||'');match['Action Date']=new Date().toISOString();}});
+    actionRows.forEach(row=>{const rowIndex=String(row['RowIndex']||'').trim();const match=proc.find(r=>String(r._idx)===rowIndex);if(match){match['Action Taken']=String(row['Action Taken']||'').trim();match['Action Status']='Action Taken';match['RTC Price']=String(row['RTC Price']||'');match['Transfer To']=String(row['Transfer To']||'');match['Transfer Qty']=String(row['Transfer Qty']||'');match['Start']=formatDateToStr(parseDate(String(row['Start']||'')));match['End']=formatDateToStr(parseDate(String(row['End']||'')));match['Action Date']=new Date().toISOString();}});
     renderActions();
     if(successCount>0)toast(`${successCount} imported${failCount?' ('+failCount+' skipped)':''}`,'success');else toast('Import failed — check RowIndex','error');
   };reader.readAsArrayBuffer(file);
