@@ -118,7 +118,7 @@ body::after { content:''; position:fixed; inset:0; background-image:url("data:im
 .panel-badge { font-family:var(--mono); font-size:10px; color:var(--t2); background:rgba(28,25,23,0.05); border:1px solid var(--border); border-radius:10px; padding:3px 10px; font-weight:600; }
 .panel-body { padding:18px; }
 .filter-bar { position: relative; z-index: 20; background:rgba(255,255,255,0.95); backdrop-filter:blur(16px) saturate(1.4); border:1px solid rgba(255,255,255,0.9); outline:1px solid var(--border); outline-offset:-1px; border-radius:var(--r); padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
-.filter-bar-row { display:flex; gap:4px; flex-wrap:wrap; align-items:flex-end; }
+.filter-bar-row { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-end; }
 .fg { display:flex; flex-direction:column; gap:5px; }
 .fl { font-size:9.5px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--t3); font-family:var(--sans); }
 .fs { background:rgba(255,255,255,0.95); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:7px 28px 7px 11px; font-family:var(--sans); font-size:12px; cursor:pointer; min-width:100px; outline:none; appearance:none; font-weight:500; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a8a29e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:all .15s; }
@@ -922,7 +922,7 @@ let rawE=[],rawL=[],proc=[],allStoreCodes=[],codeToStore={},emailMapData=[];
 let curPage='overview',selectedIndices=new Set(),pendingAction='';
 let inspMode='e',inspExportType='raw-e';
 let ADMIN_KEY=null;
-let multiDeptSelections={ac:new Set(),ss:new Set(),ar:new Set(),dd:new Set(),'ac-bucket':new Set()};
+let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'ac-bucket':new Set()};
 let drilldownMode='soldout';
 let editingIdx=null,editingMode=null;
 let searchDebounce; 
@@ -1009,8 +1009,8 @@ function getWeekSortKey(r) {
 // ══ MULTI-SELECT LOGIC ══
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-container')){document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));}});
-function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac')renderActions();else if(pfx==='ss')renderStores();else if(pfx==='ar')renderArticles();else if(pfx==='dd')renderDrilldown();else if(pfx==='ac-bucket')renderActions();}
-function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;if(pfx==='ac-bucket'){if(count===0)display.textContent='All Risks';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Risks Selected`;}else{if(count===0)display.textContent='All Depts';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Depts Selected`;}}
+function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();}
+function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}
 function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;}
 
 // ══ PROCESS ROWS ══
@@ -1064,10 +1064,10 @@ function populateFilters(){
   const buckets=[...new Set(proc.map(r=>r['Expiry Risk Bucket']).filter(Boolean))];
   const ymSet=[...new Set(proc.map(r=>r['Submission Month']).filter(Boolean))].sort();
   const ymOpts=ymSet.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
-  fill('ss-code',codes);fill('ss-week',weeks);fillOpts('ss-ym',ymOpts);renderMultiSelectOpts('ss',depts);
-  fill('ac-code',codes);fill('ac-week',weeks);renderMultiSelectOpts('ac',depts);renderMultiSelectOpts('ac-bucket',buckets);
-  fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd',depts);
-  fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar',depts);
+  fill('ss-code',codes);fill('ss-week',weeks);fillOpts('ss-ym',ymOpts);renderMultiSelectOpts('ss-dept',depts);
+  fill('ac-code',codes);fill('ac-week',weeks);renderMultiSelectOpts('ac-dept',depts);renderMultiSelectOpts('ac-bucket',buckets);
+  fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd-dept',depts);
+  fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar-dept',depts);
   updateStoreDisp('ss');updateStoreDisp('ac');updateStoreDisp('dd');
 
   // Set Default Current Month and Week
@@ -1094,7 +1094,7 @@ function fillOpts(id,opts){const el=document.getElementById(id);if(!el)return;co
 function onCodeChange(pfx){updateStoreDisp(pfx);if(pfx==='ss')renderStores();else if(pfx==='ac')renderActions();else if(pfx==='dd')renderDrilldown();}
 function updateStoreDisp(pfx){const code=gv(pfx+'-code');const disp=document.getElementById(pfx+'-store-disp');if(disp)disp.textContent=code?(codeToStore[code]||code):'—';}
 function fData(pfx){
-  let d=[...proc];const code=gv(pfx+'-code'),ym=gv(pfx+'-ym'),week=gv(pfx+'-week');const depts=[...multiDeptSelections[pfx]];
+  let d=[...proc];const code=gv(pfx+'-code'),ym=gv(pfx+'-ym'),week=gv(pfx+'-week');const depts=[...multiDeptSelections[pfx+'-dept']];
   if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
   if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
   if(pfx==='ac'){
@@ -1107,7 +1107,7 @@ function fData(pfx){
 function resetF(pfx){
   document.querySelectorAll(`[id^="${pfx}-"]`).forEach(el=>{if(el.tagName==='SELECT')el.value='';});
   if(pfx==='ar')document.getElementById('ar-search').value='';
-  if(multiDeptSelections[pfx]){multiDeptSelections[pfx].clear();updateMultiDeptDisplay(pfx);}
+  if(multiDeptSelections[pfx+'-dept']){multiDeptSelections[pfx+'-dept'].clear();updateMultiDeptDisplay(pfx+'-dept');}
   document.querySelectorAll(`#${pfx}-dept-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
   if(pfx==='ac'){
     if(multiDeptSelections['ac-bucket']){multiDeptSelections['ac-bucket'].clear();updateMultiDeptDisplay('ac-bucket');}
@@ -1124,7 +1124,7 @@ function buildActivePills(pfx,containerId){
   const filterIds=(pfx==='ac')?['ac-code','ac-ym','ac-week','ac-status']:[]; 
   const container=document.getElementById(containerId);if(!container)return;
   let pills=filterIds.map(fid=>{const val=gv(fid);if(!val)return'';const label=FILTER_LABELS[fid]||fid.split('-').pop();return`<span class="filter-pill"><span class="filter-pill-label">${label}</span>${val}</span>`;}).filter(Boolean);
-  const depts=[...multiDeptSelections[pfx]];if(depts.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Depts</span>${depts.join(', ')}</span>`);
+  const depts=[...multiDeptSelections[pfx+'-dept']];if(depts.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Depts</span>${depts.join(', ')}</span>`);
   if(pfx==='ac'){const buckets=[...multiDeptSelections['ac-bucket']];if(buckets.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Risks</span>${buckets.join(', ')}</span>`);}
   if(pfx==='ar'){const st=gv('ar-search');if(st)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Search</span>${st}</span>`);}
   container.innerHTML=pills.join('');
@@ -1205,7 +1205,7 @@ function openDrilldownPage(mode){
 }
 function fDataDrilldown(){
   let d=[...proc];
-  const code=gv('dd-code'),ym=gv('dd-ym'),week=gv('dd-week'),st=gv('dd-status');const depts=[...multiDeptSelections.dd];
+  const code=gv('dd-code'),ym=gv('dd-ym'),week=gv('dd-week'),st=gv('dd-status');const depts=[...multiDeptSelections['dd-dept']];
   if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);if(st)d=d.filter(r=>r['Action Status']===st);
   if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
   if(drilldownMode==='soldout')d=d.filter(F.soldout);
@@ -1308,6 +1308,33 @@ function renderNotify(){
   
   document.getElementById('b-nf').textContent = d.length + ' items';
 }
+function buildTableHtml(title, items, cols) {
+  if(items.length === 0) return '';
+  let t = `<h3>${title}</h3>`;
+  t += "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;font-family:Arial;font-size:12px;'>";
+  t += "<tr style='background:#f3f4f6'>";
+  cols.forEach(c => t += `<th>${c}</th>`);
+  t += "</tr>";
+  items.forEach(r => {
+    t += `<tr>`;
+    cols.forEach(c => {
+      let val = '-';
+      if (c === 'Article') val = r.Article || '-';
+      else if (c === 'Barcode') val = r.Barcode || '-';
+      else if (c === 'Description') val = r.Description || '-';
+      else if (c === 'Expiry Date') val = r.ExpiryDate || '-';
+      else if (c === 'RTC Price') val = r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-';
+      else if (c === 'Start') val = r.Start || '-';
+      else if (c === 'End') val = r.End || '-';
+      else if (c === 'Transfer To') val = r['Transfer To'] || '-';
+      else if (c === 'Transfer Qty') val = r['Transfer Qty'] || '-';
+      t += `<td>${val}</td>`;
+    });
+    t += `</tr>`;
+  });
+  t += "</table><br>";
+  return t;
+}
 function sendNotifyEmail() {
   const code = gv('nf-code');
   if(!code) { toast('Please select a store first', 'error'); return; }
@@ -1328,53 +1355,48 @@ function sendNotifyEmail() {
   
   if(d.length === 0) { toast('No actioned items to send', 'error'); return; }
   
-  const cols = getNotifyCols();
+  const showRTC = document.getElementById('nf-rtc')?.checked;
+  const showTransfer = document.getElementById('nf-transfer')?.checked;
+  const showMonitor = document.getElementById('nf-monitor')?.checked;
+  const showClear = document.getElementById('nf-clear')?.checked;
+  
   const storeName = codeToStore[code] || code;
   const subject = `Expiry Actions Updated – ${storeName} – ${week || 'All Weeks'}`;
   
-  let htmlBody = "Dear Manager,<br><br>";
-  htmlBody += "Please find the near expiry items updated price list. Make sure all the prices updated on shelf edges.<br><br>";
+  let htmlBody = "Dear Manager,<br><br>Please find the near expiry items updated price list. Make sure all the prices updated on shelf edges.<br><br>";
   
-  htmlBody += "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;font-family:Arial;font-size:12px;'>";
-  htmlBody += "<tr style='background:#f3f4f6'>";
-  cols.forEach(c => htmlBody += `<th>${c}</th>`);
-  htmlBody += "</tr>";
+  const baseCols = ['Article', 'Barcode', 'Description', 'Expiry Date'];
   
-  d.forEach(r => {
-    htmlBody += `<tr>`;
-    cols.forEach(c => {
-      let val = '-';
-      if (c === 'Article') val = r.Article || '-';
-      else if (c === 'Barcode') val = r.Barcode || '-';
-      else if (c === 'Description') val = r.Description || '-';
-      else if (c === 'Expiry Date') val = r.ExpiryDate || '-';
-      else if (c === 'RTC Price') val = r['RTC Price'] ? 'AED ' + r['RTC Price'] : '-';
-      else if (c === 'Start') val = r.Start || '-';
-      else if (c === 'End') val = r.End || '-';
-      else if (c === 'Transfer To') val = r['Transfer To'] || '-';
-      else if (c === 'Transfer Qty') val = r['Transfer Qty'] || '-';
-      htmlBody += `<td>${val}</td>`;
-    });
-    htmlBody += `</tr>`;
-  });
-  
+  if(showRTC) {
+    const rtcItems = d.filter(r => (r['Action Taken']||'').includes('RTC Price Change'));
+    htmlBody += buildTableHtml("RTC Price Change", rtcItems, [...baseCols, 'RTC Price', 'Start', 'End']);
+  }
+  if(showTransfer) {
+    const transItems = d.filter(r => (r['Action Taken']||'').includes('Store Transfer'));
+    htmlBody += buildTableHtml("Store Transfer", transItems, [...baseCols, 'Transfer To', 'Transfer Qty']);
+  }
+  if(showMonitor) {
+    const monItems = d.filter(r => (r['Action Taken']||'').includes('Monitor'));
+    htmlBody += buildTableHtml("Monitor", monItems, [...baseCols]);
+  }
+  if(showClear) {
+    const clrItems = d.filter(r => (r['Action Taken']||'').includes('Clear In Normal Price'));
+    htmlBody += buildTableHtml("Clear In Normal Price", clrItems, [...baseCols]);
+  }
   
   try {
     const blob = new Blob([htmlBody], { type: 'text/html' });
     const item = new ClipboardItem({ 'text/html': blob });
     navigator.clipboard.write([item]).then(() => {
-      
-      
-      const mailtoLink = `mailto:${emailEntry.ccEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("")}`;
+      const bodyHint = "";
+      const mailtoLink = `mailto:${emailEntry.ccEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyHint)}`;
       window.location.href = mailtoLink;
-      
       toast('Table copied! Outlook is opening. Press Ctrl+V in the email body.', 'success', 6000);
-      
     }).catch(err => {
-      fallbackToPlainText(emailEntry.ccEmail, subject, d, cols);
+      fallbackToPlainText(emailEntry.ccEmail, subject, d, getNotifyCols());
     });
   } catch (err) {
-    fallbackToPlainText(emailEntry.ccEmail, subject, d, cols);
+    fallbackToPlainText(emailEntry.ccEmail, subject, d, getNotifyCols());
   }
 }
 
@@ -1400,8 +1422,7 @@ function fallbackToPlainText(toEmail, subject, d, cols) {
     textBody += rowVals.join(' | ') + "\n";
   });
   
-
-  const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("")}`;
+  const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(textBody)}`;
   window.location.href = mailtoLink;
   toast('Opened email as plain text (Browser blocked HTML clipboard).', 'info', 5000);
 }
@@ -1468,7 +1489,7 @@ function approveTransferSuggestion(idx,toCode){selectedIndices.clear();selectedI
 
 // ══ ARTICLE VIEW ══
 function renderArticles(){
-  let d=[...proc];const depts=[...multiDeptSelections.ar];if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
+  let d=[...proc];const depts=[...multiDeptSelections['ar-dept']];if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
   const st=gv('ar-search').toLowerCase();if(st)d=d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st));
   buildActivePills('ar','ar-active-filters');
   const storeLatestWeeks={};
@@ -1773,31 +1794,14 @@ const flat = r => {
     if (numCols.includes(c)) {
       val = val === '' || val === null ? '' : Number(val);
     } else if (dateCols.includes(c)) {
+      // Parse and format to dd.mm.yyyy string to prevent Excel serial conversion
       const parsed = parseDate(val);
-      val = parsed ? parsed : '';
+      val = parsed ? formatDateToStr(parsed) : (val || '');
     }
     o[c] = val;
   });
   return o;
 };
-
-// Applies dd.mm.yyyy format to date cells
-function applyDateFormat(ws, cols) {
-  const dateCols = ['ExpiryDate', 'Start', 'End', 'Action Date'];
-  dateCols.forEach(colName => {
-    const colIdx = cols.indexOf(colName);
-    if(colIdx > -1) {
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for(let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const cellAddress = XLSX.utils.encode_cell({r: R, c: colIdx});
-        const cell = ws[cellAddress];
-        if(cell && cell.t === 'd') { // 'd' is date type when cellDates is true
-          cell.z = 'dd.mm.yyyy';
-        }
-      }
-    }
-  });
-}
 
 function exportXL(type){
   let data,fname,cols;
@@ -1835,8 +1839,7 @@ function exportXL(type){
 
     data = d.map(flat); fname='ActionCenter'; cols=EXP_COLS;
     if(!data.length){alert('No data to export.');return;}
-    const ws = XLSX.utils.json_to_sheet(data, {header: cols, cellDates: true});
-    applyDateFormat(ws, cols);
+    const ws = XLSX.utils.json_to_sheet(data, {header: cols});
     autoFitAndTable(ws, data, cols);
     
     const atColIdx = cols.indexOf('Action Taken');
@@ -1883,8 +1886,7 @@ function exportXL(type){
   }
   if(!data||!data.length){alert('No data to export.');return;}
   if(!cols||!cols.length)cols=Object.keys(data[0]).filter(c=>!c.startsWith('_'));
-  const ws=XLSX.utils.json_to_sheet(data,{header:cols, cellDates: true});
-  applyDateFormat(ws, cols);
+  const ws=XLSX.utils.json_to_sheet(data,{header:cols});
   autoFitAndTable(ws,data,cols);
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Data');
   XLSX.writeFile(wb,fname+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
