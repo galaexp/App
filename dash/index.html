@@ -1065,7 +1065,7 @@ function populateFilters(){
   const ymSet=[...new Set(proc.map(r=>r['Submission Month']).filter(Boolean))].sort();
   const ymOpts=ymSet.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
   fill('ss-code',codes);fill('ss-week',weeks);fillOpts('ss-ym',ymOpts);renderMultiSelectOpts('ss-dept',depts);
-  fill('ac-code',codes);fill('ac-week',weeks);renderMultiSelectOpts('ac-dept',depts);renderMultiSelectOpts('ac-bucket',buckets);
+  fill('ac-code',codes);fill('ac-week',weeks);fillOpts('ac-ym',ymOpts);renderMultiSelectOpts('ac-dept',depts);renderMultiSelectOpts('ac-bucket',buckets);
   fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd-dept',depts);
   fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar-dept',depts);
   updateStoreDisp('ss');updateStoreDisp('ac');updateStoreDisp('dd');
@@ -1367,13 +1367,13 @@ function sendNotifyEmail() {
   
   const baseCols = ['Article', 'Barcode', 'Description', 'Expiry Date'];
   
-  if(showRTC) {
-    const rtcItems = d.filter(r => (r['Action Taken']||'').includes('RTC Price Change'));
-    htmlBody += buildTableHtml("RTC Price Change", rtcItems, [...baseCols, 'RTC Price', 'Start', 'End']);
-  }
   if(showTransfer) {
     const transItems = d.filter(r => (r['Action Taken']||'').includes('Store Transfer'));
     htmlBody += buildTableHtml("Store Transfer", transItems, [...baseCols, 'Transfer To', 'Transfer Qty']);
+  }
+  if(showRTC) {
+    const rtcItems = d.filter(r => (r['Action Taken']||'').includes('RTC Price Change'));
+    htmlBody += buildTableHtml("RTC Price Change", rtcItems, [...baseCols, 'RTC Price', 'Start', 'End']);
   }
   if(showMonitor) {
     const monItems = d.filter(r => (r['Action Taken']||'').includes('Monitor'));
