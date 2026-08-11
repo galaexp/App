@@ -127,6 +127,8 @@ body::before {
 .nav-ico { width:16px; text-align:center; font-size:13px; color:var(--t3); transition:color .18s; }
 .nav-item:hover .nav-ico { color:var(--t2); }
 .nav-item.active .nav-ico { color:var(--accent); }
+.nav-badge { margin-left:auto; background:var(--red); color:#fff; font-size:9px; font-weight:700; font-family:var(--mono); padding:2px 6px; border-radius:12px; display:none; box-shadow:0 2px 6px rgba(220,38,38,0.35); }
+.nav-badge.show { display:block; }
 .sidebar-foot { padding:12px 18px 14px; border-top:1px solid var(--border); }
 .logout-btn { width:100%; padding:8px 11px; background:transparent; border:1px solid var(--border); color:var(--t3); font-family:var(--sans); font-size:11px; font-weight:500; border-radius:7px; cursor:pointer; transition:all .15s; }
 .logout-btn:hover { border-color:var(--red); color:var(--red); background:var(--red-l); }
@@ -203,10 +205,15 @@ thead th { background:rgba(241,244,249,0.95); backdrop-filter:blur(8px); color:v
 thead th:first-child, tbody td:first-child { width:32px; text-align:center; }
 tbody tr { border-bottom:1px solid rgba(28,25,23,0.05); transition:background .12s; }
 tbody tr:hover { background:rgba(34,45,101,0.045); }
-tbody td { padding:9px 12px; vertical-align:middle; color:var(--text); border-bottom:1px solid rgba(28,25,23,0.05); }
+tbody td { padding:8px 12px; vertical-align:middle; color:var(--text); border-bottom:1px solid rgba(28,25,23,0.05); white-space: nowrap; }
 td.b { font-weight:600; }
 td.mono { font-family:var(--mono); font-size:11px; }
 td.r { text-align:right; }
+
+/* HIGHLIGHT PILLS */
+.pill { display:inline-flex; align-items:center; padding:3px 8px; border-radius:6px; font-size:10.5px; font-weight:600; border: 1px solid transparent; }
+.pill-transfer { background: rgba(34,45,101,0.08); color: var(--accent); border-color: rgba(34,45,101,0.15); }
+.pill-rtc { background: var(--red-l); color: var(--red); border-color: var(--red-b); }
 
 /* COMPACT TABLE for Dashboard Cards (No Side Scroll) */
 .compact-table { width: 100% !important; min-width: 0 !important; table-layout: fixed; }
@@ -350,6 +357,10 @@ td.r { text-align:right; }
     <button class="nav-item" onclick="go('review')" id="n-review">
       <i class="fa-solid fa-clipboard-check nav-ico"></i><span>Review / This Week</span>
     </button>
+    <button class="nav-item" onclick="go('buyerAction')" id="n-buyerAction">
+      <i class="fa-solid fa-bolt-lightning nav-ico"></i><span>Buyer's Action</span>
+      <span class="nav-badge" id="nb-buyerAction">0</span>
+    </button>
     <button class="nav-item" onclick="go('history')" id="n-history">
       <i class="fa-solid fa-database nav-ico"></i><span>History</span>
     </button>
@@ -384,10 +395,10 @@ td.r { text-align:right; }
           <div class="fg"><div class="fl">Week</div>
             <select class="fs" id="dash-week" onchange="renderDashboard()">
               <option value="">All Weeks</option>
-              <option value="Week 1 (1–7)">Week 1</option>
-              <option value="Week 2 (8–14)">Week 2</option>
-              <option value="Week 3 (15–21)">Week 3</option>
-              <option value="Week 4 (22–31)">Week 4</option>
+              <option value="Week 1">Week 1</option>
+              <option value="Week 2">Week 2</option>
+              <option value="Week 3">Week 3</option>
+              <option value="Week 4">Week 4</option>
             </select>
           </div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="dash-dept" onchange="renderDashboard()"><option value="">All Departments</option></select></div>
@@ -446,10 +457,10 @@ td.r { text-align:right; }
           <div class="fg"><div class="fl">Week</div>
             <select class="fs" id="rev-week" onchange="renderReview()">
               <option value="">All Weeks</option>
-              <option value="Week 1 (1–7)">Week 1</option>
-              <option value="Week 2 (8–14)">Week 2</option>
-              <option value="Week 3 (15–21)">Week 3</option>
-              <option value="Week 4 (22–31)">Week 4</option>
+              <option value="Week 1">Week 1</option>
+              <option value="Week 2">Week 2</option>
+              <option value="Week 3">Week 3</option>
+              <option value="Week 4">Week 4</option>
             </select>
           </div>
           <div class="fg"><div class="fl">Month</div><select class="fs" id="rev-ym" onchange="renderReview()"><option value="">All Months</option></select></div>
@@ -467,6 +478,70 @@ td.r { text-align:right; }
           <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th></tr></thead>
           <tbody></tbody>
         </table></div>
+      </div>
+    </div>
+
+    <!-- ══ BUYER'S ACTION ══ -->
+    <div class="page" id="page-buyerAction">
+      <div class="filter-bar">
+        <div class="filter-bar-row">
+          <div class="fg"><div class="fl">Month</div><select class="fs" id="ba-ym" onchange="renderBuyerAction()"><option value="">All Months</option></select></div>
+          <div class="fg"><div class="fl">Week</div>
+            <select class="fs" id="ba-week" onchange="renderBuyerAction()">
+              <option value="">All Weeks</option>
+              <option value="Week 1">Week 1</option>
+              <option value="Week 2">Week 2</option>
+              <option value="Week 3">Week 3</option>
+              <option value="Week 4">Week 4</option>
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Department</div><select class="fs" id="ba-dept" onchange="renderBuyerAction()"><option value="">All Departments</option></select></div>
+          <button class="rbtn" onclick="resetBuyerAction()"><i class="fa-solid fa-xmark"></i> Reset</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpi-ba"></div>
+
+      <!-- Store Transfer Panel -->
+      <div class="panel" id="panel-transfer" style="display:none;">
+        <div class="panel-head">
+          <div><div class="panel-title"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--accent);"></i> Store Transfer</div><div class="panel-title-sub">Items marked for transfer to other stores</div></div>
+          <span class="panel-badge" id="b-transfer">—</span>
+        </div>
+        <div class="tw ts"><table id="t-transfer">
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Transfer To</th><th>Transfer Qty</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <!-- RTC Price Change Panel -->
+      <div class="panel" id="panel-rtc" style="display:none;">
+        <div class="panel-head">
+          <div><div class="panel-title"><i class="fa-solid fa-tag" style="color:var(--red);"></i> RTC Price Change</div><div class="panel-title-sub">Items with Reduced To Clear pricing</div></div>
+          <span class="panel-badge" id="b-rtc">—</span>
+        </div>
+        <div class="tw ts"><table id="t-rtc">
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>RTC Price</th><th>Start Date</th><th>End Date</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <!-- Clear In Normal Price Panel -->
+      <div class="panel" id="panel-clear" style="display:none;">
+        <div class="panel-head">
+          <div><div class="panel-title"><i class="fa-solid fa-rotate-left" style="color:var(--green);"></i> Clear In Normal Price</div><div class="panel-title-sub">Clear the items in normal price</div></div>
+          <span class="panel-badge" id="b-clear">—</span>
+        </div>
+        <div class="tw ts"><table id="t-clear">
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Action Date</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div id="ba-empty" style="text-align:center;padding:40px;color:var(--t3);display:none;">
+          <i class="fa-solid fa-box-open" style="font-size:32px;margin-bottom:10px;"></i>
+          <div style="font-size:14px;font-weight:600;">No Buyer Actions Found</div>
+          <div style="font-size:12px;">There are no buyer actions recorded for the selected Week.</div>
       </div>
     </div>
 
@@ -510,7 +585,7 @@ const API = "https://expiry-api.gala-it1.workers.dev";
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
-let storeCode='', storeName='', articles=[], storeData=[];
+let storeCode='', storeName='', storeData=[];
 let editCurrentRow=null, deleteRowIndex=null, reviewRows=[];
 
 // ── TOAST ──
@@ -559,7 +634,7 @@ async function doLogin(){
 
 function logout(){
   sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn');
-  storeCode=''; storeName=''; storeData=[]; articles=[];
+  storeCode=''; storeName=''; storeData=[];
   document.getElementById('login-page').style.display='flex';
   document.getElementById('app-page').style.display='none';
   // Keep inputs if remember me is checked, otherwise clear them
@@ -596,7 +671,7 @@ window.onload=()=>{
 };
 
 // ── NAV ──
-const TITLES={dashboard:'Overview',review:'Review / This Week',history:'History'};
+const TITLES={dashboard:'Overview',review:'Review / This Week',buyerAction:"Buyer's Action",history:'History'};
 function go(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -605,7 +680,7 @@ function go(n){
   document.getElementById('ptitle').textContent=TITLES[n];
   if(storeData.length>0) renderPage(n);
 }
-function renderPage(n){({dashboard:renderDashboard,review:renderReview,history:renderHistory})[n]?.();}
+function renderPage(n){({dashboard:renderDashboard,review:renderReview,buyerAction:renderBuyerAction,history:renderHistory})[n]?.();}
 
 // ── LOAD DATA ──
 async function loadData(){
@@ -613,18 +688,10 @@ async function loadData(){
   if(btn) btn.classList.add('loading');
   setStatus('loading','Loading store data…');
   try{
-    const [artsR,dataR]=await Promise.all([
-      fetch(API+'?action=articles&_t='+Date.now()).then(r=>r.json()),
-      fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&_t='+Date.now()).then(r=>r.json())
-    ]);
-    articles=(artsR||[]).map(a=>({
-      article: String(a.article||''),
-      barcode:  String(a.barcode ||''),
-      desc:     String(a.description||''),
-      dept:     String(a.department ||'')
-    }));
+    const dataR = await fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&_t='+Date.now()).then(r=>r.json());
     storeData=processStoreData(dataR.rows||[]);
     setStatus('ok',`<strong>${storeData.length}</strong> items for ${storeName}`);
+    updateBuyerActionBadge();
     populateAllFilters();
     renderPage(document.querySelector('.nav-item.active')?.id?.replace('n-','')||'dashboard');
   }catch(e){setStatus('err','❌ '+e.message);}
@@ -632,6 +699,25 @@ async function loadData(){
 }
 
 function setStatus(s,m){document.getElementById('sdot').className='sdot '+s;document.getElementById('sinfo').innerHTML=m;}
+
+function cleanWeek(weekStr) {
+  if (!weekStr) return '';
+  const m = String(weekStr).match(/^(Week\s*\d+)/i);
+  return m ? m[1] : weekStr;
+}
+
+function updateBuyerActionBadge() {
+  const actionedCount = storeData.filter(r => r.ActionTaken && r.ActionTaken.trim() !== '').length;
+  const badge = document.getElementById('nb-buyerAction');
+  if (badge) {
+    if (actionedCount > 0) {
+      badge.textContent = actionedCount;
+      badge.classList.add('show');
+    } else {
+      badge.classList.remove('show');
+    }
+  }
+}
 
 function processStoreData(rows){
   return rows.map((r,i)=>{
@@ -645,10 +731,17 @@ function processStoreData(rows){
     if(subMonth){const mm=subMonth.match(/^(\d{4})-(\d{2})$/);if(mm)subMonthDisp=MS[+mm[2]-1]+' '+mm[1];}
     return{
       _idx:i, RowIndex:r.RowIndex,
-      Timestamp:r.Timestamp||'', Week:r.Week||'', Article:r.Article||'',
+      Timestamp:r.Timestamp||'', Week:cleanWeek(r.Week), Article:r.Article||'',
       Barcode:r.Barcode||'', Description:r.Description||'', Department:r.Department||'',
       Stock:r.Stock||'', ExpiryDate:r.ExpiryDate||'', DaysLeft:daysLeft,
-      Bucket:calcBucket(daysLeft), SubMonth:subMonth, SubMonthDisp:subMonthDisp
+      Bucket:calcBucket(daysLeft), SubMonth:subMonth, SubMonthDisp:subMonthDisp,
+      ActionTaken: r.ActionTaken || r.actionTaken || '',
+      RtcPrice: r.RtcPrice || r.rtcPrice || '',
+      TransferTo: r.TransferTo || r.transferTo || '',
+      TransferQty: r.TransferQty || r.transferQty || '',
+      Start: r.Start || r.startDate || '',
+      End: r.End || r.endDate || '',
+      ActionDate: r.ActionDate || r.actionDate || ''
     };
   });
 }
@@ -680,10 +773,16 @@ function currentYM(){
 }
 function getCurrentWeekStr() {
   const day = new Date().getDate();
-  if (day <= 7) return 'Week 1 (1–7)';
-  if (day <= 14) return 'Week 2 (8–14)';
-  if (day <= 21) return 'Week 3 (15–21)';
-  return 'Week 4 (22–31)';
+  if (day <= 7) return 'Week 1';
+  if (day <= 14) return 'Week 2';
+  if (day <= 21) return 'Week 3';
+  return 'Week 4';
+}
+
+// Helper to filter by week string safely
+function filterByWeek(d, weekVal) {
+  if (!weekVal) return d;
+  return d.filter(r => r.Week === weekVal);
 }
 
 // ── POPULATE ALL FILTERS ──
@@ -697,10 +796,16 @@ function populateAllFilters(){
   
   // Default Review Filters to Current Month & Week
   fillOpts('rev-ym', mOpts);
-  fillVals('rev-dept', depts); // Populate Review Department Filter
+  fillVals('rev-dept', depts);
   document.getElementById('rev-ym').value = currentYM();
   document.getElementById('rev-week').value = getCurrentWeekStr();
   
+  // Default Buyer Action Filters to Current Month & Week
+  fillOpts('ba-ym', mOpts);
+  fillVals('ba-dept', depts);
+  document.getElementById('ba-ym').value = currentYM();
+  document.getElementById('ba-week').value = getCurrentWeekStr();
+
   fillOpts('hist-ym', mOpts); fillVals('hist-week', weeks); fillVals('hist-dept', depts);
 }
 
@@ -722,7 +827,7 @@ function getDashData(){
   let d=[...storeData];
   const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept');
   if(ym)   d=d.filter(r=>r.SubMonth===ym);
-  if(week) d=d.filter(r=>r.Week===week);
+  d = filterByWeek(d, week);
   if(dept) d=d.filter(r=>r.Department===dept);
   return d;
 }
@@ -828,12 +933,12 @@ async function renderReview(){
         let daysLeft=null;
         if(r.DaysLeft!==undefined&&r.DaysLeft!==''){const p=parseInt(r.DaysLeft,10);if(!isNaN(p))daysLeft=p;}
         if(daysLeft===null&&expDate)daysLeft=Math.round((expDate-TODAY)/86400000);
-        return{...r,_idx:i,DaysLeft:daysLeft,Bucket:calcBucket(daysLeft),SubMonthDisp:ymToDisp(ym)};
+        return{...r,_idx:i,DaysLeft:daysLeft,Bucket:calcBucket(daysLeft),SubMonthDisp:ymToDisp(ym), Week:cleanWeek(r.Week)};
       });
     }catch(e){toast('❌ Failed to load review: '+e.message,'error');reviewRows=[];}
   } else {
     let d=[...storeData];
-    if(week) d=d.filter(r=>r.Week===week);
+    d = filterByWeek(d, week);
     if(ym)   d=d.filter(r=>r.SubMonth===ym);
     reviewRows=d.map(r=>({...r}));
   }
@@ -876,7 +981,7 @@ function ymToDisp(ym){
 function exportRevXL(){
   const week=gv('rev-week'),ym=gv('rev-ym'),dept=gv('rev-dept');
   let d=[...storeData];
-  if(week)d=d.filter(r=>r.Week===week);
+  d = filterByWeek(d, week);
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
   if(dept)d=d.filter(r=>r.Department===dept);
   if(!d.length){toast('No data to export','error');return;}
@@ -884,12 +989,116 @@ function exportRevXL(){
   xlDown(rows, storeName+'_Review_'+(week||'AllWeeks')+'_'+(ym||'AllMonths'));
 }
 
+// ── BUYER'S ACTION ──
+function getBuyerActionData(){
+  let d=[...storeData];
+  const ym=gv('ba-ym'), week=gv('ba-week'), dept=gv('ba-dept');
+  if(ym)   d=d.filter(r=>r.SubMonth===ym);
+  d = filterByWeek(d, week);
+  if(dept) d=d.filter(r=>r.Department===dept);
+  // Only include rows that have some action taken
+  return d.filter(r => r.ActionTaken && r.ActionTaken.trim() !== '');
+}
+
+function resetBuyerAction() {
+  ['ba-ym', 'ba-week', 'ba-dept'].forEach(id => { 
+    const el = document.getElementById(id); 
+    if(el) el.value = ''; 
+  });
+  renderBuyerAction();
+}
+
+function renderBuyerAction(){
+  const d = getBuyerActionData();
+  
+  const transferItems = d.filter(r => r.ActionTaken.includes('Store Transfer'));
+  const rtcItems = d.filter(r => r.ActionTaken.includes('RTC Price Change'));
+  const clearItems = d.filter(r => r.ActionTaken.includes('Clear In Normal Price'));
+  
+  const totalActions = transferItems.length + rtcItems.length + clearItems.length;
+
+  document.getElementById('kpi-ba').innerHTML = 
+    KPI('Total Actioned', 'acc', totalActions) +
+    KPI('Store Transfers', 'neu', transferItems.length) +
+    KPI('RTC Price Changes', 'neu', rtcItems.length) +
+    KPI('Clear In Normal Price', 'neu', clearItems.length);
+
+  // Store Transfer Table
+  const tPanel = document.getElementById('panel-transfer');
+  if(transferItems.length > 0) {
+    tPanel.style.display = 'block';
+    document.getElementById('b-transfer').textContent = transferItems.length + ' items';
+    document.querySelector('#t-transfer tbody').innerHTML = transferItems.map(r => `
+      <tr>
+        <td class="mono">${r.Week||'—'}</td>
+        <td>${r.SubMonthDisp||'—'}</td>
+        <td class="mono b">${r.Article||'—'}</td>
+        <td>${r.Description||'—'}</td>
+        <td>${r.Department||'—'}</td>
+        <td class="mono b">${r.Stock||'—'}</td>
+        <td class="mono">${fmtDate(r.ExpiryDate)}</td>
+        <td>${r.TransferTo ? `<span class="pill pill-transfer">${r.TransferTo}</span>` : '—'}</td>
+        <td class="mono">${r.TransferQty ? `<span class="pill pill-transfer">${r.TransferQty}</span>` : '—'}</td>
+      </tr>
+    `).join('');
+  } else {
+    tPanel.style.display = 'none';
+  }
+
+  // RTC Price Change Table
+  const rtcPanel = document.getElementById('panel-rtc');
+  if(rtcItems.length > 0) {
+    rtcPanel.style.display = 'block';
+    document.getElementById('b-rtc').textContent = rtcItems.length + ' items';
+    document.querySelector('#t-rtc tbody').innerHTML = rtcItems.map(r => `
+      <tr>
+        <td class="mono">${r.Week||'—'}</td>
+        <td>${r.SubMonthDisp||'—'}</td>
+        <td class="mono b">${r.Article||'—'}</td>
+        <td>${r.Description||'—'}</td>
+        <td>${r.Department||'—'}</td>
+        <td class="mono b">${r.Stock||'—'}</td>
+        <td class="mono">${fmtDate(r.ExpiryDate)}</td>
+        <td class="mono">${r.RtcPrice ? `<span class="pill pill-rtc">AED ${r.RtcPrice}</span>` : '—'}</td>
+        <td class="mono">${r.Start ? fmtDate(r.Start) : '—'}</td>
+        <td class="mono">${r.End ? fmtDate(r.End) : '—'}</td>
+      </tr>
+    `).join('');
+  } else {
+    rtcPanel.style.display = 'none';
+  }
+
+  // Clear In Normal Price Table
+  const clearPanel = document.getElementById('panel-clear');
+  if(clearItems.length > 0) {
+    clearPanel.style.display = 'block';
+    document.getElementById('b-clear').textContent = clearItems.length + ' items';
+    document.querySelector('#t-clear tbody').innerHTML = clearItems.map(r => `
+      <tr>
+        <td class="mono">${r.Week||'—'}</td>
+        <td>${r.SubMonthDisp||'—'}</td>
+        <td class="mono b">${r.Article||'—'}</td>
+        <td>${r.Description||'—'}</td>
+        <td>${r.Department||'—'}</td>
+        <td class="mono b">${r.Stock||'—'}</td>
+        <td class="mono">${fmtDate(r.ExpiryDate)}</td>
+        <td class="mono">${fmtDate(r.ActionDate) || '—'}</td>
+      </tr>
+    `).join('');
+  } else {
+    clearPanel.style.display = 'none';
+  }
+
+  // Show empty state if no actions at all
+  document.getElementById('ba-empty').style.display = totalActions === 0 ? 'block' : 'none';
+}
+
 // ── HISTORY ──
 function renderHistory(){
   const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept');
   let d=[...storeData];
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
-  if(week)d=d.filter(r=>r.Week===week);
+  d = filterByWeek(d, week);
   if(dept)d=d.filter(r=>r.Department===dept);
   const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket)};
   document.getElementById('kpi-hist').innerHTML=
@@ -935,7 +1144,7 @@ function exportHistXL(){
   const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept');
   let d=[...storeData];
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
-  if(week)d=d.filter(r=>r.Week===week);
+  d = filterByWeek(d, week);
   if(dept)d=d.filter(r=>r.Department===dept);
   if(!d.length){toast('No data to export','error');return;}
   const rows=d.map(r=>({Timestamp:r.Timestamp,Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
