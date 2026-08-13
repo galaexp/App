@@ -291,6 +291,10 @@ td.r { text-align:right; }
 .toast.success { background:linear-gradient(135deg, #047857, #059669); }
 .toast.error { background:linear-gradient(135deg, #b91c1c, #dc2626); }
 
+/* STAFF LIST */
+.staff-card { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:9px; margin-bottom:8px; }
+.staff-name { font-weight:600; font-size:13px; }
+
 @media(max-width:900px) {
   :root { --sidebar-w:100%; }
   .layout { flex-direction:column; }
@@ -361,6 +365,9 @@ td.r { text-align:right; }
       <i class="fa-solid fa-bolt-lightning nav-ico"></i><span>Buyer's Action</span>
       <span class="nav-badge" id="nb-buyerAction">0</span>
     </button>
+    <button class="nav-item" onclick="go('staff')" id="n-staff">
+      <i class="fa-solid fa-users nav-ico"></i><span>Manage Staff</span>
+    </button>
     <button class="nav-item" onclick="go('history')" id="n-history">
       <i class="fa-solid fa-database nav-ico"></i><span>History</span>
     </button>
@@ -402,6 +409,7 @@ td.r { text-align:right; }
             </select>
           </div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="dash-dept" onchange="renderDashboard()"><option value="">All Departments</option></select></div>
+          <div class="fg"><div class="fl">Staff</div><select class="fs" id="dash-staff" onchange="renderDashboard()"><option value="">All Staff</option></select></div>
           <button class="rbtn" onclick="resetDash()"><i class="fa-solid fa-xmark"></i> Reset</button>
           <button class="btn btn-green" onclick="exportDashXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
         </div>
@@ -465,6 +473,7 @@ td.r { text-align:right; }
           </div>
           <div class="fg"><div class="fl">Month</div><select class="fs" id="rev-ym" onchange="renderReview()"><option value="">All Months</option></select></div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="rev-dept" onchange="renderReview()"><option value="">All Departments</option></select></div>
+          <div class="fg"><div class="fl">Staff</div><select class="fs" id="rev-staff" onchange="renderReview()"><option value="">All Staff</option></select></div>
           <button class="btn btn-green" onclick="exportRevXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
         </div>
       </div>
@@ -475,7 +484,7 @@ td.r { text-align:right; }
           <span class="panel-badge" id="b-rev">—</span>
         </div>
         <div class="tw ts"><table id="t-rev">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th></tr></thead>
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th><th>Staff</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -496,6 +505,7 @@ td.r { text-align:right; }
             </select>
           </div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="ba-dept" onchange="renderBuyerAction()"><option value="">All Departments</option></select></div>
+          <div class="fg"><div class="fl">Staff</div><select class="fs" id="ba-staff" onchange="renderBuyerAction()"><option value="">All Staff</option></select></div>
           <button class="rbtn" onclick="resetBuyerAction()"><i class="fa-solid fa-xmark"></i> Reset</button>
         </div>
       </div>
@@ -509,7 +519,7 @@ td.r { text-align:right; }
           <span class="panel-badge" id="b-transfer">—</span>
         </div>
         <div class="tw ts"><table id="t-transfer">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Transfer To</th><th>Transfer Qty</th></tr></thead>
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Transfer To</th><th>Transfer Qty</th><th>Staff</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -521,7 +531,7 @@ td.r { text-align:right; }
           <span class="panel-badge" id="b-rtc">—</span>
         </div>
         <div class="tw ts"><table id="t-rtc">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>RTC Price</th><th>Start Date</th><th>End Date</th></tr></thead>
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>RTC Price</th><th>Start Date</th><th>End Date</th><th>Staff</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -533,7 +543,7 @@ td.r { text-align:right; }
           <span class="panel-badge" id="b-clear">—</span>
         </div>
         <div class="tw ts"><table id="t-clear">
-          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Action Date</th></tr></thead>
+          <thead><tr><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Action Date</th><th>Staff</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -545,6 +555,22 @@ td.r { text-align:right; }
       </div>
     </div>
 
+    <!-- ══ MANAGE STAFF ══ -->
+    <div class="page" id="page-staff">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title"><i class="fa-solid fa-users"></i> Manage Store Staff</div><div class="panel-title-sub">Add or remove staff members who submit expiry records</div></div>
+        </div>
+        <div class="panel-body">
+          <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="staff-input" class="form-input" placeholder="Enter staff name..." style="flex:1;" onkeydown="if(event.key==='Enter')addStaff()">
+            <button class="btn btn-accent" onclick="addStaff()"><i class="fa-solid fa-plus"></i> Add Staff</button>
+          </div>
+          <div id="staff-list"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ HISTORY ══ -->
     <div class="page" id="page-history">
       <div class="filter-bar">
@@ -552,6 +578,7 @@ td.r { text-align:right; }
           <div class="fg"><div class="fl">Month</div><select class="fs" id="hist-ym" onchange="renderHistory()"><option value="">All Months</option></select></div>
           <div class="fg"><div class="fl">Week</div><select class="fs" id="hist-week" onchange="renderHistory()"><option value="">All Weeks</option></select></div>
           <div class="fg"><div class="fl">Department</div><select class="fs" id="hist-dept" onchange="renderHistory()"><option value="">All Departments</option></select></div>
+          <div class="fg"><div class="fl">Staff</div><select class="fs" id="hist-staff" onchange="renderHistory()"><option value="">All Staff</option></select></div>
           <button class="rbtn" onclick="resetHist()"><i class="fa-solid fa-xmark"></i> Reset</button>
           <button class="btn btn-green" onclick="exportHistXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
         </div>
@@ -567,7 +594,7 @@ td.r { text-align:right; }
           <span class="panel-badge" id="b-hist">—</span>
         </div>
         <div class="tw ts"><table id="t-hist">
-          <thead><tr><th>Timestamp</th><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th></tr></thead>
+          <thead><tr><th>Timestamp</th><th>Week</th><th>Month</th><th>Article</th><th>Description</th><th>Dept</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Risk</th><th>Staff</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -585,7 +612,7 @@ const API = "https://expiry-api.gala-it1.workers.dev";
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
-let storeCode='', storeName='', storeData=[];
+let storeCode='', storeName='', storeData=[], storeStaffs=[];
 let editCurrentRow=null, deleteRowIndex=null, reviewRows=[];
 
 // ── TOAST ──
@@ -615,7 +642,6 @@ async function doLogin(){
     const storedPass=String(match.password||'').trim();
     if(storedPass!==pass){errEl.textContent='Incorrect password.';errEl.style.display='block';return;}
     
-    // Save or clear credentials based on checkbox
     if(remember){
       localStorage.setItem('gala_saved_sc', code);
       localStorage.setItem('gala_saved_pass', pass);
@@ -626,18 +652,23 @@ async function doLogin(){
 
     storeCode=String(match.storeCode||'').trim();
     storeName=String(match.storeName||'').trim();
-    sessionStorage.setItem('sc',storeCode); sessionStorage.setItem('sn',storeName);
+    const staffsStr = String(match.staffs || "").trim();
+    storeStaffs = staffsStr ? staffsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    
+    sessionStorage.setItem('sc',storeCode); 
+    sessionStorage.setItem('sn',storeName);
+    sessionStorage.setItem('ss',JSON.stringify(storeStaffs));
+    
     startApp();
   }catch(e){errEl.textContent='Connection error. Please try again.';errEl.style.display='block';}
   finally{btn.disabled=false;spinner.style.display='none';}
 }
 
 function logout(){
-  sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn');
-  storeCode=''; storeName=''; storeData=[];
+  sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn'); sessionStorage.removeItem('ss');
+  storeCode=''; storeName=''; storeData=[]; storeStaffs=[];
   document.getElementById('login-page').style.display='flex';
   document.getElementById('app-page').style.display='none';
-  // Keep inputs if remember me is checked, otherwise clear them
   if(!document.getElementById('remember-me').checked) {
     document.getElementById('login-code').value='';
     document.getElementById('login-pass').value='';
@@ -651,16 +682,14 @@ function startApp(){
   document.getElementById('ptitle-sub').textContent=storeName+' ('+storeCode+')';
   go('dashboard'); loadData();
   
-  // Initialize resizable columns for the two dashboard tables
   makeTableResizable('t-expired');
   makeTableResizable('t-exp7');
 }
 
 window.onload=()=>{
-  const sc=sessionStorage.getItem('sc'),sn=sessionStorage.getItem('sn');
-  if(sc&&sn){storeCode=sc;storeName=sn;startApp();}
+  const sc=sessionStorage.getItem('sc'),sn=sessionStorage.getItem('sn'),ss=sessionStorage.getItem('ss');
+  if(sc&&sn){storeCode=sc;storeName=sn; if(ss) storeStaffs=JSON.parse(ss); startApp();}
   
-  // Pre-fill saved credentials
   const savedSc = localStorage.getItem('gala_saved_sc');
   const savedPass = localStorage.getItem('gala_saved_pass');
   if(savedSc && savedPass) {
@@ -671,16 +700,16 @@ window.onload=()=>{
 };
 
 // ── NAV ──
-const TITLES={dashboard:'Overview',review:'Review / This Week',buyerAction:"Buyer's Action",history:'History'};
+const TITLES={dashboard:'Overview',review:'Review / This Week',buyerAction:"Buyer's Action",history:'History',staff:'Manage Staff'};
 function go(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+n).classList.add('active');
   document.getElementById('n-'+n).classList.add('active');
   document.getElementById('ptitle').textContent=TITLES[n];
-  if(storeData.length>0) renderPage(n);
+  if(storeData.length>0 || n==='staff') renderPage(n);
 }
-function renderPage(n){({dashboard:renderDashboard,review:renderReview,buyerAction:renderBuyerAction,history:renderHistory})[n]?.();}
+function renderPage(n){({dashboard:renderDashboard,review:renderReview,buyerAction:renderBuyerAction,history:renderHistory,staff:renderStaffPage})[n]?.();}
 
 // ── LOAD DATA ──
 async function loadData(){
@@ -702,8 +731,12 @@ function setStatus(s,m){document.getElementById('sdot').className='sdot '+s;docu
 
 function cleanWeek(weekStr) {
   if (!weekStr) return '';
-  const m = String(weekStr).match(/^(Week\s*\d+)/i);
-  return m ? m[1] : weekStr;
+  const s = String(weekStr).trim();
+  const m = s.match(/Week\s*(\d+)/i);
+  if (m) {
+    return `Week ${m[1]}`;
+  }
+  return s;
 }
 
 function updateBuyerActionBadge() {
@@ -735,6 +768,7 @@ function processStoreData(rows){
       Barcode:r.Barcode||'', Description:r.Description||'', Department:r.Department||'',
       Stock:r.Stock||'', ExpiryDate:r.ExpiryDate||'', DaysLeft:daysLeft,
       Bucket:calcBucket(daysLeft), SubMonth:subMonth, SubMonthDisp:subMonthDisp,
+      StaffName: r.StaffName || r.staffName || '',
       ActionTaken: r.ActionTaken || r.actionTaken || '',
       RtcPrice: r.RtcPrice || r.rtcPrice || '',
       TransferTo: r.TransferTo || r.transferTo || '',
@@ -791,22 +825,23 @@ function populateAllFilters(){
   const weeks=[...new Set(storeData.map(r=>r.Week).filter(Boolean))].sort();
   const depts=[...new Set(storeData.map(r=>r.Department).filter(Boolean))].sort();
   const mOpts=months.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
+  const staffOpts = storeStaffs.map(s => ({val: s, lbl: s}));
 
-  fillOpts('dash-ym', mOpts); fillVals('dash-dept', depts);
+  fillOpts('dash-ym', mOpts); fillVals('dash-dept', depts); fillOpts('dash-staff', staffOpts);
   
-  // Default Review Filters to Current Month & Week
   fillOpts('rev-ym', mOpts);
   fillVals('rev-dept', depts);
+  fillOpts('rev-staff', staffOpts);
   document.getElementById('rev-ym').value = currentYM();
   document.getElementById('rev-week').value = getCurrentWeekStr();
   
-  // Default Buyer Action Filters to Current Month & Week
   fillOpts('ba-ym', mOpts);
   fillVals('ba-dept', depts);
+  fillOpts('ba-staff', staffOpts);
   document.getElementById('ba-ym').value = currentYM();
   document.getElementById('ba-week').value = getCurrentWeekStr();
 
-  fillOpts('hist-ym', mOpts); fillVals('hist-week', weeks); fillVals('hist-dept', depts);
+  fillOpts('hist-ym', mOpts); fillVals('hist-week', weeks); fillVals('hist-dept', depts); fillOpts('hist-staff', staffOpts);
 }
 
 function fillVals(id,vals){
@@ -822,24 +857,77 @@ function fillOpts(id,opts){
   if(opts.some(o=>o.val===cur))el.value=cur;
 }
 
+// ── MANAGE STAFF ──
+function renderStaffPage() {
+  const listEl = document.getElementById('staff-list');
+  if (storeStaffs.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--t3); text-align:center; padding:40px;">No staff added yet. Use the box above to add staff members.</div>';
+    return;
+  }
+  listEl.innerHTML = storeStaffs.map((staff, i) => `
+    <div class="staff-card">
+      <span class="staff-name">${staff}</span>
+      <button class="btn btn-red btn-sm" onclick="removeStaff(${i})"><i class="fa-solid fa-trash"></i> Remove</button>
+    </div>
+  `).join('');
+}
+
+function addStaff() {
+  const input = document.getElementById('staff-input');
+  const name = input.value.trim();
+  if (!name) return toast('Please enter a name', 'error');
+  if (storeStaffs.includes(name)) return toast('Staff member already exists', 'error');
+  
+  storeStaffs.push(name);
+  input.value = '';
+  saveStaffs();
+}
+
+function removeStaff(index) {
+  storeStaffs.splice(index, 1);
+  saveStaffs();
+}
+
+async function saveStaffs() {
+  const staffsStr = storeStaffs.join(',');
+  try {
+    const res = await fetch(API+'?action=updateStoreStaffs', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ storeCode: storeCode, staffs: staffsStr })
+    });
+    const out = await res.json();
+    if (out.success) {
+      toast('Staff list updated', 'success');
+      sessionStorage.setItem('ss', JSON.stringify(storeStaffs));
+      renderStaffPage();
+      populateAllFilters(); // Update dropdowns
+    } else {
+      toast('Failed to update staff', 'error');
+    }
+  } catch (e) {
+    toast('Network error', 'error');
+  }
+}
+
 // ── OVERVIEW ──
 function getDashData(){
   let d=[...storeData];
-  const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept');
+  const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept'), staff=gv('dash-staff');
   if(ym)   d=d.filter(r=>r.SubMonth===ym);
   d = filterByWeek(d, week);
   if(dept) d=d.filter(r=>r.Department===dept);
+  if(staff) d=d.filter(r=>r.StaffName===staff);
   return d;
 }
 
 function resetDash(){
-  ['dash-ym','dash-week','dash-dept'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['dash-ym','dash-week','dash-dept','dash-staff'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderDashboard();
 }
 
 function renderDashboard(){
   const d=getDashData();
-  const ym=gv('dash-ym'), week=gv('dash-week'), dept=gv('dash-dept');
 
   const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket), exp:r=>r.DaysLeft!==null&&r.DaysLeft<=0};
   const totalStock=d.reduce((s,r)=>{const v=parseFloat(r.Stock);return s+(isNaN(v)||v<=0?0:v);},0);
@@ -912,40 +1000,27 @@ function renderDashboard(){
 function exportDashXL(){
   const d=getDashData();
   if(!d.length){toast('No data to export','error');return;}
-  const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket,Timestamp:r.Timestamp}));
-  const ym=gv('dash-ym'),week=gv('dash-week'),dept=gv('dash-dept');
-  const tag=[ym,week,dept].filter(Boolean).join('_')||'All';
+  const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Staff:r.StaffName,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket,Timestamp:r.Timestamp}));
+  const tag=[gv('dash-ym'),gv('dash-week'),gv('dash-dept'),gv('dash-staff')].filter(Boolean).join('_')||'All';
   xlDown(rows, storeName+'_Overview_'+tag);
 }
 
 // ── REVIEW ──
-async function renderReview(){
+function renderReview(){
   const week=gv('rev-week');
   const ym=gv('rev-ym')||currentYM();
 
-  if(week && ym){
-    document.querySelector('#t-rev tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--t3)">Loading…</td></tr>';
-    try{
-      const r=await fetch(`${API}?action=thisWeekReview&storeCode=${encodeURIComponent(storeCode)}&week=${encodeURIComponent(week)}&submissionMonth=${encodeURIComponent(ym)}&_t=${Date.now()}`);
-      const d=await r.json();
-      reviewRows=(d.rows||[]).map((r,i)=>{
-        const expDate=parseDate(r.ExpiryDate);
-        let daysLeft=null;
-        if(r.DaysLeft!==undefined&&r.DaysLeft!==''){const p=parseInt(r.DaysLeft,10);if(!isNaN(p))daysLeft=p;}
-        if(daysLeft===null&&expDate)daysLeft=Math.round((expDate-TODAY)/86400000);
-        return{...r,_idx:i,DaysLeft:daysLeft,Bucket:calcBucket(daysLeft),SubMonthDisp:ymToDisp(ym), Week:cleanWeek(r.Week)};
-      });
-    }catch(e){toast('❌ Failed to load review: '+e.message,'error');reviewRows=[];}
-  } else {
-    let d=[...storeData];
-    d = filterByWeek(d, week);
-    if(ym)   d=d.filter(r=>r.SubMonth===ym);
-    reviewRows=d.map(r=>({...r}));
-  }
+  // Filter locally instead of API call for better performance and exact string match
+  let d=[...storeData];
+  d = filterByWeek(d, week);
+  if(ym) d=d.filter(r=>r.SubMonth===ym);
+  reviewRows=d.map(r=>({...r}));
   
-  // Apply Department Filter for Review
+  // Apply Department & Staff Filter for Review
   const dept = gv('rev-dept');
+  const staff = gv('rev-staff');
   if(dept) reviewRows = reviewRows.filter(r => r.Department === dept);
+  if(staff) reviewRows = reviewRows.filter(r => r.StaffName === staff);
 
   const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket)};
   document.getElementById('kpi-rev').innerHTML=
@@ -955,7 +1030,7 @@ async function renderReview(){
   document.getElementById('b-rev').textContent=reviewRows.length+' items';
 
   document.querySelector('#t-rev tbody').innerHTML=reviewRows.length===0
-    ?'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--t3)">No items found for this period.</td></tr>'
+    ?'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--t3)">No items found for this period.</td></tr>'
     :reviewRows.map((r,i)=>{
       const dlc=daysColor(r.DaysLeft);
       return`<tr>
@@ -968,6 +1043,7 @@ async function renderReview(){
         <td class="mono">${fmtDate(r.ExpiryDate)}</td>
         <td class="mono b" style="color:${dlc}">${r.DaysLeft!==null?r.DaysLeft:'—'}</td>
         <td><span class="badge ${bktCls(r.Bucket)}">${r.Bucket||'—'}</span></td>
+        <td class="mono">${r.StaffName||'—'}</td>
       </tr>`;
     }).join('');
 }
@@ -979,29 +1055,30 @@ function ymToDisp(ym){
 }
 
 function exportRevXL(){
-  const week=gv('rev-week'),ym=gv('rev-ym'),dept=gv('rev-dept');
+  const week=gv('rev-week'),ym=gv('rev-ym'),dept=gv('rev-dept'),staff=gv('rev-staff');
   let d=[...storeData];
   d = filterByWeek(d, week);
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
   if(dept)d=d.filter(r=>r.Department===dept);
+  if(staff)d=d.filter(r=>r.StaffName===staff);
   if(!d.length){toast('No data to export','error');return;}
-  const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
+  const rows=d.map(r=>({Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Staff:r.StaffName,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
   xlDown(rows, storeName+'_Review_'+(week||'AllWeeks')+'_'+(ym||'AllMonths'));
 }
 
 // ── BUYER'S ACTION ──
 function getBuyerActionData(){
   let d=[...storeData];
-  const ym=gv('ba-ym'), week=gv('ba-week'), dept=gv('ba-dept');
+  const ym=gv('ba-ym'), week=gv('ba-week'), dept=gv('ba-dept'), staff=gv('ba-staff');
   if(ym)   d=d.filter(r=>r.SubMonth===ym);
   d = filterByWeek(d, week);
   if(dept) d=d.filter(r=>r.Department===dept);
-  // Only include rows that have some action taken
+  if(staff) d=d.filter(r=>r.StaffName===staff);
   return d.filter(r => r.ActionTaken && r.ActionTaken.trim() !== '');
 }
 
 function resetBuyerAction() {
-  ['ba-ym', 'ba-week', 'ba-dept'].forEach(id => { 
+  ['ba-ym', 'ba-week', 'ba-dept', 'ba-staff'].forEach(id => { 
     const el = document.getElementById(id); 
     if(el) el.value = ''; 
   });
@@ -1039,6 +1116,7 @@ function renderBuyerAction(){
         <td class="mono">${fmtDate(r.ExpiryDate)}</td>
         <td>${r.TransferTo ? `<span class="pill pill-transfer">${r.TransferTo}</span>` : '—'}</td>
         <td class="mono">${r.TransferQty ? `<span class="pill pill-transfer">${r.TransferQty}</span>` : '—'}</td>
+        <td class="mono">${r.StaffName||'—'}</td>
       </tr>
     `).join('');
   } else {
@@ -1062,6 +1140,7 @@ function renderBuyerAction(){
         <td class="mono">${r.RtcPrice ? `<span class="pill pill-rtc">AED ${r.RtcPrice}</span>` : '—'}</td>
         <td class="mono">${r.Start ? fmtDate(r.Start) : '—'}</td>
         <td class="mono">${r.End ? fmtDate(r.End) : '—'}</td>
+        <td class="mono">${r.StaffName||'—'}</td>
       </tr>
     `).join('');
   } else {
@@ -1083,6 +1162,7 @@ function renderBuyerAction(){
         <td class="mono b">${r.Stock||'—'}</td>
         <td class="mono">${fmtDate(r.ExpiryDate)}</td>
         <td class="mono">${fmtDate(r.ActionDate) || '—'}</td>
+        <td class="mono">${r.StaffName||'—'}</td>
       </tr>
     `).join('');
   } else {
@@ -1095,11 +1175,13 @@ function renderBuyerAction(){
 
 // ── HISTORY ──
 function renderHistory(){
-  const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept');
+  const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept'),staff=gv('hist-staff');
   let d=[...storeData];
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
   d = filterByWeek(d, week);
   if(dept)d=d.filter(r=>r.Department===dept);
+  if(staff)d=d.filter(r=>r.StaffName===staff);
+  
   const F={le7:r=>r.Bucket==='<7 Days',le30:r=>['<7 Days','7–30 Days'].includes(r.Bucket)};
   document.getElementById('kpi-hist').innerHTML=
     KPI('Total Items','neu',d.length)+KPI('≤7 Days','red',d.filter(F.le7).length)+
@@ -1131,24 +1213,26 @@ function renderHistory(){
       <td class="mono">${fmtDate(r.ExpiryDate)}</td>
       <td class="mono b" style="color:${dlc}">${r.DaysLeft!==null?r.DaysLeft:'—'}</td>
       <td><span class="badge ${bktCls(r.Bucket)}">${r.Bucket||'—'}</span></td>
+      <td class="mono">${r.StaffName||'—'}</td>
     </tr>`;
   }).join('');
 }
 
 function resetHist(){
-  ['hist-ym','hist-week','hist-dept'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['hist-ym','hist-week','hist-dept','hist-staff'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderHistory();
 }
 
 function exportHistXL(){
-  const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept');
+  const ym=gv('hist-ym'),week=gv('hist-week'),dept=gv('hist-dept'),staff=gv('hist-staff');
   let d=[...storeData];
   if(ym)  d=d.filter(r=>r.SubMonth===ym);
   d = filterByWeek(d, week);
   if(dept)d=d.filter(r=>r.Department===dept);
+  if(staff)d=d.filter(r=>r.StaffName===staff);
   if(!d.length){toast('No data to export','error');return;}
-  const rows=d.map(r=>({Timestamp:r.Timestamp,Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
-  const tag=[ym,week,dept].filter(Boolean).join('_')||'All';
+  const rows=d.map(r=>({Timestamp:r.Timestamp,Week:r.Week,Month:r.SubMonthDisp||r.SubMonth,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Staff:r.StaffName,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,RiskBucket:r.Bucket}));
+  const tag=[ym,week,dept,staff].filter(Boolean).join('_')||'All';
   xlDown(rows, storeName+'_History_'+tag);
 }
 
@@ -1157,7 +1241,6 @@ function xlDown(rows, filename){
   if(!rows.length) return;
   const ws = XLSX.utils.json_to_sheet(rows);
   
-  // Auto-fit columns logic
   const cols = Object.keys(rows[0]);
   const colWidths = cols.map(col => {
     let maxLen = col.length;
@@ -1165,7 +1248,7 @@ function xlDown(rows, filename){
       const valLen = String(row[col] || '').length;
       if (valLen > maxLen) maxLen = valLen;
     });
-    return { wch: maxLen + 2 }; // Add padding
+    return { wch: maxLen + 2 };
   });
   ws['!cols'] = colWidths;
 
@@ -1182,7 +1265,6 @@ function makeTableResizable(tableId) {
   const cols = table.querySelectorAll('th');
   const colElements = table.querySelectorAll('colgroup col');
 
-  // Load saved widths
   const savedWidths = JSON.parse(localStorage.getItem('gala_col_widths_' + tableId) || '[]');
   if (savedWidths.length === cols.length) {
     cols.forEach((th, i) => {
@@ -1192,7 +1274,6 @@ function makeTableResizable(tableId) {
   }
 
   cols.forEach((th, i) => {
-    // Create resizer element
     const resizer = document.createElement('div');
     resizer.classList.add('col-resizer');
     th.appendChild(resizer);
@@ -1204,11 +1285,11 @@ function makeTableResizable(tableId) {
       startWidth = parseInt(window.getComputedStyle(th).width, 10);
       document.body.style.cursor = 'col-resize';
       resizer.classList.add('active');
-      e.preventDefault(); // Prevent text selection
+      e.preventDefault();
 
       function onMouseMove(e) {
         const newWidth = startWidth + (e.pageX - startX);
-        if (newWidth > 30) { // Minimum width constraint
+        if (newWidth > 30) {
           th.style.width = newWidth + 'px';
           if (colElements[i]) colElements[i].style.width = newWidth + 'px';
         }
@@ -1220,7 +1301,6 @@ function makeTableResizable(tableId) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         
-        // Save widths automatically
         const widths = Array.from(cols).map(c => c.style.width || 'auto');
         localStorage.setItem('gala_col_widths_' + tableId, JSON.stringify(widths));
       }
