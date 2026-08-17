@@ -145,8 +145,7 @@ tbody td.b { font-weight:600; } tbody td.mono { font-family:var(--mono); font-si
 .badge.crit { background:var(--red-l); color:var(--red); border-color:var(--red-b); } .badge.high { background:var(--orange-l); color:var(--orange); border-color:var(--orange-b); }
 .badge.med  { background:var(--yellow-l); color:var(--yellow); border-color:var(--yellow-b); } .badge.low  { background:var(--green-l);  color:var(--green);  border-color:var(--green-b); }
 .badge.pend { background:var(--amber-l);  color:var(--amber);  border-color:var(--amber-b); } .badge.done { background:var(--green-l);  color:var(--green);  border-color:var(--green-b); }
-.badge.prev { background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.2; padding: 3px 6px; }
-.badge.prev .prev-sub { font-size:8.5px; font-weight:500; opacity:0.85; }
+.badge.prev { background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; }
 .badge.na   { background:rgba(28,25,23,0.05); color:var(--t3); border-color:var(--border); }
 .overdue-tag { display:inline-flex; align-items:center; gap:4px; padding:2px 6px; border-radius:5px; font-size:9px; font-weight:700; letter-spacing:.3px; background:var(--red); color:#fff; box-shadow:0 2px 6px rgba(220,38,38,0.35); }
 .days-bar { display:flex; align-items:center; gap:8px; min-width:70px; } .days-bar-track { flex:1; height:5px; background:rgba(28,25,23,0.06); border-radius:3px; overflow:hidden; } .days-bar-fill { height:100%; border-radius:3px; transition:width .5s cubic-bezier(.4,0,.2,1); }
@@ -171,7 +170,7 @@ tbody td.b { font-weight:600; } tbody td.mono { font-family:var(--mono); font-si
 .sub-card.ok   { background:var(--green-l); border-color:var(--green-b); } .sub-card.miss { background:var(--red-l);   border-color:var(--red-b); }
 .sub-code { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--text); }
 .sub-name { font-size:11px; color:var(--t2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; }
-.sub-status { font-size:9.5px; font-weight:700; text-transform:uppercase; margin-top:9px; letter-spacing:.6px; font-family:var(--sans); }
+.sub-status { font-size:9.5px; font-weight:700; text-transform:uppercase; margin-top:9px; letter-spacing:.6px; font-family:var(--sans); display:flex; flex-wrap:wrap; gap:4px; }
 .sub-card.ok   .sub-status { color:var(--green); } .sub-card.miss .sub-status { color:var(--red); }
 .sub-items { font-size:10px; color:var(--t2); margin-top:2px; font-family:var(--mono); font-weight:500; }
 .action-toolbar { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); backdrop-filter:blur(22px) saturate(1.6); -webkit-backdrop-filter:blur(22px) saturate(1.6); border:1px solid rgba(255,255,255,0.6); outline:1px solid var(--border); outline-offset:-1px; border-radius:14px; padding:10px 18px; box-shadow:var(--shadow-xl); align-items:center; gap:11px; z-index:200; animation:slideUp .28s cubic-bezier(.22,1,.36,1); white-space:nowrap; }
@@ -540,7 +539,13 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
           <div class="fg"><div class="fl">Store</div><div class="store-disp" id="nf-store-disp">—</div></div>
           <div class="fg"><div class="fl">Month</div><select class="fs" id="nf-ym" onchange="renderNotify()"><option value="">All</option></select></div>
           <div class="fg"><div class="fl">Week</div><select class="fs" id="nf-week" onchange="renderNotify()"><option value="">All</option></select></div>
-          <div class="fg"><div class="fl">Department</div><select class="fs" id="nf-dept" onchange="renderNotify()"><option value="">All</option></select></div>
+          <div class="fg">
+            <div class="fl">Department</div>
+            <div class="ms-container" id="nf-dept-ms">
+              <div class="ms-display" id="nf-dept-display" onclick="toggleMultiSelect('nf-dept')">All Depts</div>
+              <div class="ms-dropdown" id="nf-dept-dropdown"></div>
+            </div>
+          </div>
           <div class="fg" style="flex-direction:row; align-items:center; gap:10px; margin-top:5px;">
             <label class="tick-label"><input type="checkbox" id="nf-rtc" checked onchange="renderNotify()"> RTC Price Change</label>
             <label class="tick-label"><input type="checkbox" id="nf-transfer" checked onchange="renderNotify()"> Store Transfer</label>
@@ -993,7 +998,7 @@ let rawE=[],rawL=[],proc=[],allStoreCodes=[],codeToStore={},emailMapData=[];
 let curPage='overview',selectedIndices=new Set(),pendingAction='';
 let inspMode='e',inspExportType='raw-e';
 let ADMIN_KEY=null;
-let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'ac-bucket':new Set()};
+let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'nf-dept':new Set(),'ac-bucket':new Set()};
 let drilldownMode='soldout';
 let editingIdx=null,editingMode=null;
 let searchDebounce; 
@@ -1034,7 +1039,6 @@ function sortBy(tableId, key, type) {
 
 function getSortVal(r, key, type) {
   let val = '';
-  // Specific mappings for t-ac
   if (key === 'code') val = r.StoreCode;
   else if (key === 'store') val = r.Store;
   else if (key === 'week') return getWeekSortKey(r);
@@ -1060,6 +1064,8 @@ function getSortVal(r, key, type) {
   else if (key === 'transfer') val = r['Transfer To'];
   else if (key === 'tqty') val = parseFloat(r['Transfer Qty']) || 0;
   else if (key === 'adate') { const d = parseDate(r['Action Date']); return d ? d.getTime() : 0; }
+  else if (key === 'prevaction') val = r['Previous Action Info'];
+  else if (key === 'prevprice') val = r['Previous Price Info'];
   else {
     val = r[key];
   }
@@ -1113,12 +1119,10 @@ const AC_COLS=[
   {key:'status',label:'Status',type:'status',render:(r)=>{
     const s=r['Action Status'];
     const cls=s==='Pending Action'?'pend':s==='Action Taken'?'done':'prev';
-    let label=s;
-    if(s==='Previously Actioned'&&r['Previous Action Info']){
-      label=`Previously Actioned<span class="prev-sub">${r['Previous Action Info']}</span>`;
-    }
-    return `<td><span class="badge ${cls}">${label||'—'}</span></td>`;
+    return `<td><span class="badge ${cls}">${s||'—'}</span></td>`;
   },filterKey:'ac-status'},
+  {key:'prevaction',label:'Prev Action',type:'str',render:(r)=>`<td style="font-size:10px; color:var(--t3); white-space:normal;">${r['Previous Action Info']||'—'}</td>`,filterKey:null},
+  {key:'prevprice',label:'Prev Price',type:'str',render:(r)=>`<td style="font-size:10px; color:var(--t3); white-space:normal;">${r['Previous Price Info']||'—'}</td>`,filterKey:null},
   {key:'action',label:'Action(s) Taken',type:'str',render:(r)=>`<td style="${r['Action Taken']?'color:var(--green);font-weight:600':'color:var(--t3)'};white-space:normal;max-width:150px;font-size:11px">${r['Action Taken']||'—'}</td>`,filterKey:null},
   {key:'rtc',label:'RTC Price',type:'num',render:(r)=>`<td class="mono" style="font-size:11px">${r['RTC Price']?'AED '+r['RTC Price']:'—'}</td>`,filterKey:null},
   {key:'start',label:'Start',type:'date',render:(r)=>`<td class="mono" style="font-size:10px">${r.Start||'—'}</td>`,filterKey:null},
@@ -1197,7 +1201,7 @@ function sortWeeks(weeks, data) {
 // ══ MULTI-SELECT LOGIC ══
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-container')){document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));}});
-function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();}
+function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();else if(pfx==='nf-dept')renderNotify();}
 function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}
 function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;}
 
@@ -1220,6 +1224,7 @@ function processRows(rawExpiry){
       'Transfer Qty':cv(r,'TransferQty'),'Start':cv(r,'Start'),'End':cv(r,'End'),
       'Action Status':cv(r,'ActionTaken')?'Action Taken':'Pending Action',
       'Previous Action Info':'',
+      'Previous Price Info':'',
       EmailSent: Number(cv(r,'EmailSent')) || 0,
       Week:week,'Submission Month':subMonthOut,'Sub Month Display':sm.disp||subMonthOut,MonthNum:sm.monthNum,Year:sm.year,_tsDate:tsDate,_raw:r
     };
@@ -1230,30 +1235,60 @@ function processRows(rawExpiry){
 function applyPreviouslyActioned(){
   const actionedMap={};
   proc.forEach(r=>{
-    if(r['Action Status']==='Action Taken'&&r['End']){
-      const endDate=parseDate(r['End']);
-      if(endDate&&endDate>=TODAY){
-        const key=`${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
-        const existing=actionedMap[key];
-        if(!existing||endDate>parseDate(existing.end)){
-          actionedMap[key]={action:r['Action Taken']||'',end:r['End'],start:r['Start']||''};
-        }
+    if(r['Action Status']==='Action Taken'){
+      const key=`${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
+      if(!actionedMap[key]) actionedMap[key] = [];
+      
+      let isValid = false;
+      const act = r['Action Taken'] || '';
+      if(act.includes('RTC Price Change') && r['End']) {
+        const endDate = parseDate(r['End']);
+        if(endDate && endDate >= TODAY) isValid = true;
+      } else if (act.includes('Store Transfer')) {
+        isValid = true;
+      } else if (act.includes('Monitor')) {
+        isValid = true;
+      } else if (act.includes('Clear In Normal Price')) {
+        isValid = true;
+      }
+      
+      if(isValid) {
+        actionedMap[key].push({
+          action: act,
+          end: r['End'] || '',
+          start: r['Start'] || '',
+          rtcPrice: r['RTC Price'] || '',
+          transferTo: r['Transfer To'] || '',
+          transferQty: r['Transfer Qty'] || ''
+        });
       }
     }
   });
+  
   proc.forEach(r=>{
     if(r['Action Status']==='Pending Action'){
       const key=`${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
-      const a=actionedMap[key];
-      if(a){
+      const pastActions = actionedMap[key];
+      if(pastActions && pastActions.length > 0){
         r['Action Status']='Previously Actioned';
-        let shortAction=a.action;
-        if(shortAction.includes('RTC Price Change'))shortAction='RTC given';
-        else if(shortAction.includes('Store Transfer'))shortAction='Transfer given';
-        else if(shortAction.includes('Monitor'))shortAction='Monitored';
-        else if(shortAction.includes('Clear In Normal Price'))shortAction='Cleared';
-        const endDateStr = formatDateToStr(parseDate(a.end)) || a.end;
-        r['Previous Action Info']=`${shortAction} till ${endDateStr}`;
+        
+        let prevActionTexts = [];
+        let prevPriceTexts = [];
+        
+        pastActions.forEach(a => {
+          if(a.action.includes('RTC Price Change')) {
+            const endDateStr = formatDateToStr(parseDate(a.end)) || a.end;
+            prevActionTexts.push(`RTC given till ${endDateStr}`);
+            if(a.rtcPrice) prevPriceTexts.push(`AED ${a.rtcPrice}`);
+          }
+          if(a.action.includes('Store Transfer')) {
+            prevActionTexts.push(`${a.transferQty || '0'} Units Transferred`);
+            if(a.transferTo) prevPriceTexts.push(a.transferTo);
+          }
+        });
+        
+        r['Previous Action Info'] = prevActionTexts.join(', ');
+        r['Previous Price Info'] = prevPriceTexts.join(', ');
       }
     }
   });
@@ -1496,7 +1531,7 @@ function populateNotifyFilters() {
   fill('nf-week', weeks, 'All Weeks');
   
   const depts = [...new Set(proc.map(r=>r.Department).filter(Boolean))].sort();
-  fill('nf-dept', depts, 'All Depts');
+  renderMultiSelectOpts('nf-dept', depts);
   
   const d = new Date();
   const wk = Math.ceil(d.getDate()/7);
@@ -1528,7 +1563,7 @@ function getNotifyCols() {
   return cols;
 }
 function renderNotify(){
-  const code = gv('nf-code'), ym = gv('nf-ym'), week = gv('nf-week'), dept = gv('nf-dept');
+  const code = gv('nf-code'), ym = gv('nf-ym'), week = gv('nf-week');
   const disp = document.getElementById('nf-store-disp');
   if(disp) disp.textContent = code ? (codeToStore[code] || code) : '—';
   
@@ -1546,7 +1581,8 @@ function renderNotify(){
   d = d.filter(actionFilter);
   if(ym) d = d.filter(r => r['Submission Month'] === ym);
   if(week) d = d.filter(r => r.Week === week);
-  if(dept) d = d.filter(r => r.Department === dept);
+  const depts = [...multiDeptSelections['nf-dept']];
+  if(depts.length > 0) d = d.filter(r => depts.includes(r.Department));
   
   document.getElementById('t-nf-hdr').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
   document.querySelector('#t-nf tbody').innerHTML = d.length ? d.map(r => {
@@ -1604,13 +1640,14 @@ function sendNotifyEmail() {
     return;
   }
   
-  const ym = gv('nf-ym'), week = gv('nf-week'), dept = gv('nf-dept');
+  const ym = gv('nf-ym'), week = gv('nf-week');
   let d = proc.filter(r => r.StoreCode === code && r['Action Status'] === 'Action Taken');
   const actionFilter = getNotifyActionFilter();
   d = d.filter(actionFilter);
   if(ym) d = d.filter(r => r['Submission Month'] === ym);
   if(week) d = d.filter(r => r.Week === week);
-  if(dept) d = d.filter(r => r.Department === dept);
+  const depts = [...multiDeptSelections['nf-dept']];
+  if(depts.length > 0) d = d.filter(r => depts.includes(r.Department));
   
   if(d.length === 0) { toast('No actioned items to send', 'error'); return; }
   
@@ -1941,10 +1978,11 @@ function renderSubmission(){
   const ym=gv('sub-ym'),week=gv('sub-week');let d=[...proc];if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
   const storeList=allStoreCodes.length>0?allStoreCodes:Object.entries(codeToStore).map(([code,name])=>({code,name}));
   const submittedCodes=new Set(d.filter(r => Number(r.EmailSent) === 1).map(r=>r.StoreCode).filter(Boolean));
+  const actionedCodes=new Set(d.filter(r => r['Action Status'] === 'Action Taken').map(r=>r.StoreCode).filter(Boolean));
   const submitted=storeList.filter(s=>submittedCodes.has(s.code));const missing=storeList.filter(s=>!submittedCodes.has(s.code));
   document.getElementById('kpi-sub').innerHTML=KPI('Total Stores','neu',storeList.length,'From Stores table')+KPI('Submitted','grn',submitted.length)+KPI('Not Submitted','red',missing.length)+KPI('Items in Period','acc',d.length);
   document.getElementById('b-sub').textContent=storeList.length+' stores';
-  document.getElementById('sub-grid').innerHTML=[...submitted.map(s=>{const items=d.filter(r=>r.StoreCode===s.code).length;return`<div class="sub-card ok"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-check"></i> Submitted</div><div class="sub-items">${items} item${items!==1?'s':''}</div></div>`;}),...missing.map(s=>`<div class="sub-card miss"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-xmark"></i> Not Submitted</div><div class="sub-items">—</div></div>`)].join('');
+  document.getElementById('sub-grid').innerHTML=[...submitted.map(s=>{const items=d.filter(r=>r.StoreCode===s.code).length;const isActioned=actionedCodes.has(s.code);return`<div class="sub-card ok"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-check"></i> Submitted ${isActioned?`<span class="badge done" style="margin-left:5px;">Actioned</span>`:`<span class="badge na" style="margin-left:5px;">Not Actioned</span>`}</div><div class="sub-items">${items} item${items!==1?'s':''}</div></div>`;}),...missing.map(s=>`<div class="sub-card miss"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-xmark"></i> Not Submitted</div><div class="sub-items">—</div></div>`)].join('');
 }
 function openSubRemindModal(){
   const ym=gv('sub-ym'),week=gv('sub-week');let d=[...proc];if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
@@ -2226,7 +2264,7 @@ async function executeAction(){
 }
 
 // ══ EXPORT ══
-const EXP_COLS=['RowIndex','Store','StoreCode','Article','Barcode','Description','Department','Stock','ExpiryDate','DaysLeft','Action Status','Previous Action Info','Action Taken','RTC Price','Start','End','Transfer To','Transfer Qty','Action Date','Week','Submission Month','Sub Month Display','Expiry Risk Bucket','Year'];
+const EXP_COLS=['RowIndex','Store','StoreCode','Article','Barcode','Description','Department','Stock','ExpiryDate','DaysLeft','Action Status','Previous Action Info','Previous Price Info','Action Taken','RTC Price','Start','End','Transfer To','Transfer Qty','Action Date','Week','Submission Month','Sub Month Display','Expiry Risk Bucket','Year'];
 function autoFitAndTable(ws,data,cols){
   const colWidths=cols.map(col=>{let maxLen=col.length;data.forEach(row=>{const val=row[col]!==undefined&&row[col]!==null?String(row[col]):'';if(val.length>maxLen)maxLen=val.length;});return{wch:Math.min(maxLen+2,60)};});
   ws['!cols']=colWidths;
@@ -2349,6 +2387,22 @@ function exportXL(type){
 }
 
 // ══ IMPORT ACTIONS ══
+function elaborateAction(actionStr) {
+  if(!actionStr) return '';
+  let str = actionStr.trim();
+  const parts = str.split(',').map(p => p.trim());
+  const elaborated = parts.map(p => {
+    const lower = p.toLowerCase();
+    if(lower === 'rtc' || lower === 'rtc price change') return 'RTC Price Change';
+    if(lower === 'st' || lower === 'store transfer') return 'Store Transfer';
+    if(lower === 'm' || lower === 'monitor') return 'Monitor';
+    if(lower === 'cnp' || lower === 'clear in normal price') return 'Clear In Normal Price';
+    if(lower === 'rtc+st' || lower === 'rtc price change+store transfer') return 'RTC Price Change+Store Transfer';
+    return p;
+  });
+  return elaborated.join(', ');
+}
+
 async function importActions(input){
   const file=input.files[0];if(!file)return;input.value='';const reader=new FileReader();
   reader.onload=async(e)=>{
@@ -2357,7 +2411,10 @@ async function importActions(input){
     const actionRows=rows.filter(r=>String(r['Action Taken']||'').trim()!=='');if(!actionRows.length){toast('No Action Taken values found','error');return;}
     toast(`Importing ${actionRows.length} actions…`,'',0);
     const results=await Promise.allSettled(actionRows.map(row=>{
-      const rowIndex=String(row['RowIndex']||'').trim();const actionTaken=String(row['Action Taken']||'').trim();if(!rowIndex||!actionTaken)return Promise.resolve({success:false});
+      const rowIndex=String(row['RowIndex']||'').trim();
+      const rawActionTaken=String(row['Action Taken']||'').trim();
+      const actionTaken=elaborateAction(rawActionTaken);
+      if(!rowIndex||!actionTaken)return Promise.resolve({success:false});
       return fetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         rowIndex,
         actionTaken,
@@ -2370,25 +2427,26 @@ async function importActions(input){
       })}).then(r=>r.json());
     }));
     const successCount=results.filter(r=>r.status==='fulfilled'&&r.value?.success!==false).length;const failCount=actionRows.length-successCount;
-    actionRows.forEach(row=>{const rowIndex=String(row['RowIndex']||'').trim();const match=proc.find(r=>String(r._idx)===rowIndex);if(match){match['Action Taken']=String(row['Action Taken']||'').trim();match['Action Status']='Action Taken';match['RTC Price']=String(row['RTC Price']||'');match['Transfer To']=String(row['Transfer To']||'');match['Transfer Qty']=String(row['Transfer Qty']||'');match['Start']=formatDateToStr(parseDate(String(row['Start']||'')));match['End']=formatDateToStr(parseDate(String(row['End']||'')));match['Action Date']=new Date().toISOString();}});
+    actionRows.forEach(row=>{const rowIndex=String(row['RowIndex']||'').trim();const match=proc.find(r=>String(r._idx)===rowIndex);if(match){match['Action Taken']=elaborateAction(String(row['Action Taken']||'').trim());match['Action Status']='Action Taken';match['RTC Price']=String(row['RTC Price']||'');match['Transfer To']=String(row['Transfer To']||'');match['Transfer Qty']=String(row['Transfer Qty']||'');match['Start']=formatDateToStr(parseDate(String(row['Start']||'')));match['End']=formatDateToStr(parseDate(String(row['End']||'')));match['Action Date']=new Date().toISOString();}});
     renderActions();
     if(successCount>0)toast(`${successCount} imported${failCount?' ('+failCount+' skipped)':''}`,'success');else toast('Import failed — check RowIndex','error');
   };reader.readAsArrayBuffer(file);
 }
-    // ══ ADMIN ══
-    async function verifyAdminKey(){const v=document.getElementById('adm-key-input').value.trim();if(!v)return;const btn=document.querySelector('#admin-lock-screen .btn-accent');if(btn){btn.textContent='Verifying…';btn.disabled=true;}try{const res=await fetch(CF_API+'?action=uploadArticles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:v,rows:[]})});const out=await res.json();if(out.message==='Unauthorized'||out.error==='Unauthorized'){document.getElementById('adm-key-err').style.display='block';if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}return;}ADMIN_KEY=v;document.getElementById('admin-lock-screen').style.display='none';document.getElementById('admin-tools').style.display='block';document.getElementById('adm-key-err').style.display='none';}catch(err){document.getElementById('adm-key-err').textContent='Network error. Check connection.';document.getElementById('adm-key-err').style.display='block';}finally{if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}}}
-    function lockAdmin(){ADMIN_KEY=null;document.getElementById('admin-lock-screen').style.display='block';document.getElementById('admin-tools').style.display='none';document.getElementById('adm-key-input').value='';document.getElementById('adm-key-err').style.display='none';}
-    function showUploadStatus(id,type,msg){const el=document.getElementById(id);el.textContent=msg;el.className='upload-status show '+type;}
-    function adminUpload(type){const idMap={Articles:'articlesFile',Stores:'storesFile',EmailMap:'emailmapFile'};const actionMap={Articles:'uploadArticles',Stores:'uploadStores',EmailMap:'uploadEmailMap'};const statusId='adm-'+type.toLowerCase()+'-status';const fileInput=document.getElementById(idMap[type]);if(!fileInput?.files.length){toast('Select a file first','error');return;}showUploadStatus(statusId,'loading','Reading file…');const reader=new FileReader();reader.onload=async(e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);showUploadStatus(statusId,'loading',`Uploading ${rows.length} rows…`);const res=await fetch(CF_API+'?action='+actionMap[type],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const out=await res.json();if(out.success){showUploadStatus(statusId,'ok',`${type} uploaded — ${out.rows||rows.length} rows`);toast(type+' uploaded','success');if(type==='Stores')loadAll();}else{if(out.message==='Unauthorized'){showUploadStatus(statusId,'err','Wrong admin key');document.getElementById('adm-key-err').style.display='block';lockAdmin();}else showUploadStatus(statusId,'err',out.message);}}catch(err){showUploadStatus(statusId,'err',err.message);}};reader.readAsArrayBuffer(fileInput.files[0]);}
 
-    loadAll();
+// ══ ADMIN ══
+async function verifyAdminKey(){const v=document.getElementById('adm-key-input').value.trim();if(!v)return;const btn=document.querySelector('#admin-lock-screen .btn-accent');if(btn){btn.textContent='Verifying…';btn.disabled=true;}try{const res=await fetch(CF_API+'?action=uploadArticles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:v,rows:[]})});const out=await res.json();if(out.message==='Unauthorized'||out.error==='Unauthorized'){document.getElementById('adm-key-err').style.display='block';if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}return;}ADMIN_KEY=v;document.getElementById('admin-lock-screen').style.display='none';document.getElementById('admin-tools').style.display='block';document.getElementById('adm-key-err').style.display='none';}catch(err){document.getElementById('adm-key-err').textContent='Network error. Check connection.';document.getElementById('adm-key-err').style.display='block';}finally{if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}}}
+function lockAdmin(){ADMIN_KEY=null;document.getElementById('admin-lock-screen').style.display='block';document.getElementById('admin-tools').style.display='none';document.getElementById('adm-key-input').value='';document.getElementById('adm-key-err').style.display='none';}
+function showUploadStatus(id,type,msg){const el=document.getElementById(id);el.textContent=msg;el.className='upload-status show '+type;}
+function adminUpload(type){const idMap={Articles:'articlesFile',Stores:'storesFile',EmailMap:'emailmapFile'};const actionMap={Articles:'uploadArticles',Stores:'uploadStores',EmailMap:'uploadEmailMap'};const statusId='adm-'+type.toLowerCase()+'-status';const fileInput=document.getElementById(idMap[type]);if(!fileInput?.files.length){toast('Select a file first','error');return;}showUploadStatus(statusId,'loading','Reading file…');const reader=new FileReader();reader.onload=async(e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);showUploadStatus(statusId,'loading',`Uploading ${rows.length} rows…`);const res=await fetch(CF_API+'?action='+actionMap[type],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const out=await res.json();if(out.success){showUploadStatus(statusId,'ok',`${type} uploaded — ${out.rows||rows.length} rows`);toast(type+' uploaded','success');if(type==='Stores')loadAll();}else{if(out.message==='Unauthorized'){showUploadStatus(statusId,'err','Wrong admin key');document.getElementById('adm-key-err').style.display='block';lockAdmin();}else showUploadStatus(statusId,'err',out.message);}}catch(err){showUploadStatus(statusId,'err',err.message);}};reader.readAsArrayBuffer(fileInput.files[0]);}
 
-    let currentDelAction=null;
-    function openDelModal(action){currentDelAction=action;document.getElementById('del-admin-key').value='';if(action==='clearOldExpData'){document.getElementById('del-title').innerText='Delete Data Older Than 4 Months';document.getElementById('del-desc').innerHTML='This will permanently delete all entries in the ExpiryTracker older than 4 months.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}else{document.getElementById('del-title').innerText='DELETE ALL EXPIRY DATA';document.getElementById('del-desc').innerHTML='<span style="color:var(--red); font-weight:bold;">WARNING:</span> This will permanently delete ALL entries in the ExpiryTracker table.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}document.getElementById('del-overlay').classList.add('open');}
-    function closeDelModal(){document.getElementById('del-overlay').classList.remove('open');}
-    async function executeDeletion(){const adminKey=document.getElementById('del-admin-key').value.trim();if(!adminKey){alert('Please enter the ADMIN_KEY');return;}const btn=document.getElementById('del-confirm-btn');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Processing...';btn.disabled=true;try{const response=await fetch(`${CF_API}/?action=${currentDelAction}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey})});const data=await response.json();if(data.success){alert('Success: '+data.message);closeDelModal();loadAll();}else{alert('Error: '+(data.message||'Unauthorized'));}}catch(err){alert('Network error occurred.');}finally{btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;}}
+loadAll();
 
-    async function importExpData(input){const file=input.files[0];if(!file)return;const statusEl=document.getElementById('adm-expdata-status');statusEl.className='upload-status show loading';statusEl.innerText='Processing file...';const reader=new FileReader();reader.onload=async(e)=>{try{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{raw:false});if(!rows.length)throw new Error('No data found in file');const res=await fetch(`${CF_API}/?action=uploadExpiryData`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const result=await res.json();if(result.success){statusEl.className='upload-status show ok';statusEl.innerText=`Success! ${result.inserted} rows uploaded.`;input.value='';loadAll();}else throw new Error(result.message||'Upload failed');}catch(err){statusEl.className='upload-status show err';statusEl.innerText='Error: '+err.message;}};reader.readAsArrayBuffer(file);}
-    </script>
-    </body>
-    </html>
+let currentDelAction=null;
+function openDelModal(action){currentDelAction=action;document.getElementById('del-admin-key').value='';if(action==='clearOldExpData'){document.getElementById('del-title').innerText='Delete Data Older Than 4 Months';document.getElementById('del-desc').innerHTML='This will permanently delete all entries in the ExpiryTracker older than 4 months.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}else{document.getElementById('del-title').innerText='DELETE ALL EXPIRY DATA';document.getElementById('del-desc').innerHTML='<span style="color:var(--red); font-weight:bold;">WARNING:</span> This will permanently delete ALL entries in the ExpiryTracker table.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}document.getElementById('del-overlay').classList.add('open');}
+function closeDelModal(){document.getElementById('del-overlay').classList.remove('open');}
+async function executeDeletion(){const adminKey=document.getElementById('del-admin-key').value.trim();if(!adminKey){alert('Please enter the ADMIN_KEY');return;}const btn=document.getElementById('del-confirm-btn');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Processing...';btn.disabled=true;try{const response=await fetch(`${CF_API}/?action=${currentDelAction}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey})});const data=await response.json();if(data.success){alert('Success: '+data.message);closeDelModal();loadAll();}else{alert('Error: '+(data.message||'Unauthorized'));}}catch(err){alert('Network error occurred.');}finally{btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;}}
+
+async function importExpData(input){const file=input.files[0];if(!file)return;const statusEl=document.getElementById('adm-expdata-status');statusEl.className='upload-status show loading';statusEl.innerText='Processing file...';const reader=new FileReader();reader.onload=async(e)=>{try{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{raw:false});if(!rows.length)throw new Error('No data found in file');const res=await fetch(`${CF_API}/?action=uploadExpiryData`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const result=await res.json();if(result.success){statusEl.className='upload-status show ok';statusEl.innerText=`Success! ${result.inserted} rows uploaded.`;input.value='';loadAll();}else throw new Error(result.message||'Upload failed');}catch(err){statusEl.className='upload-status show err';statusEl.innerText='Error: '+err.message;}};reader.readAsArrayBuffer(file);}
+</script>
+</body>
+</html>
