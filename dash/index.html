@@ -2398,6 +2398,7 @@ function elaborateAction(actionStr) {
     if(lower === 'm' || lower === 'monitor') return 'Monitor';
     if(lower === 'cnp' || lower === 'clear in normal price') return 'Clear In Normal Price';
     if(lower === 'rtc+st' || lower === 'rtc price change+store transfer') return 'RTC Price Change+Store Transfer';
+    if(lower === 'cnp+st' || lower === 'clear in normal price+store transfer') return 'Clear In Normal Price+Store Transfer';
     return p;
   });
   return elaborated.join(', ');
