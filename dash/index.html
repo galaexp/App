@@ -284,7 +284,7 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
   position: fixed; inset: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
-  background: #e7ebf5; /* Distinct light blue-gray so the white card is clearly visible on top */
+  background: #e7ebf5; 
   overflow: hidden;
 }
 .login-wrap::before {
@@ -1167,7 +1167,7 @@ document.getElementById('login-year').textContent = new Date().getFullYear();
 // ══════════════════════════════════════════
 //  CONFIG & STATE
 // ══════════════════════════════════════════
-const CF_API='https://exp.galamarkets.workers.dev'; // Auth-enabled backend (login/JWT/user-management endpoints). Swap only once the target backend supports those same endpoints.
+const CF_API='https://exp.galamarkets.workers.dev'; 
 const ACTIONS=['RTC Price Change','Store Transfer','Monitor','Clear In Normal Price'];
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY=new Date();TODAY.setHours(0,0,0,0);
@@ -1508,9 +1508,6 @@ function processRows(rawExpiry){
     const sm=parseSM(subMonthRaw);const subMonthOut=sm.ym||subMonthRaw||'';
     const expRaw=cv(r,'ExpiryDate');const expDate=parseDate(expRaw);
     const expDateDisp=expDate?String(expDate.getDate()).padStart(2,'0')+'/'+String(expDate.getMonth()+1).padStart(2,'0')+'/'+expDate.getFullYear():'';
-    // Days Left must always reflect "today", not whatever value the backend row happened to store
-    // (that stored value goes stale the moment a day passes). Compute live from ExpiryDate first,
-    // and only fall back to a stored DaysLeft if there's no parseable expiry date at all.
     let daysLeft=null;
     if(expDate){
       daysLeft=Math.round((expDate-TODAY)/86400000);
@@ -1535,8 +1532,6 @@ function processRows(rawExpiry){
 }
 
 // ══ ARTICLE GROUPING KEY ══
-// Same barcode with a different expiry date is a different batch — never merge them
-// when summarizing article-level stock, or the "latest week" and stock totals get corrupted.
 function articleKeyOf(r){ return `${r.Barcode||r.Article}|${r.ExpiryDate||''}`; }
 
 // ══ PREVIOUSLY ACTIONED ══
@@ -1704,7 +1699,7 @@ function getVisibleCols(){const hiddenKeys=new Set();Object.entries(FILTER_COL_M
 // ══ OVERDUE ══
 function detectOverdue(){
   const n=proc.filter(r=>r['Action Status']==='Pending Action'&&r._tsDate&&Math.round((TODAY-r._tsDate)/86400000)>=14).length;
-  ['overdue-banner','overdue-banner2'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.style.display=n>0?'flex':'none';if(n>0){const c=document.getElementById(id==='overdue-banner'?'overdue-count':'overdue-count2');if(c)c.textContent=n;}});
+  ['overdue-banner','overdue-banner2'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.style.display=n>0?'flex':'none';if(n>0){const c=document.getElementById(id==='overdue-banner'?'overdue-count':'overdue-count2');if(c)c.textContent=n;}}); 
   return n;
 }
 
@@ -1717,7 +1712,7 @@ function renderOverview(){
   const soldOutCount=mtdData.filter(F.soldout).length;
   const expiredCount=mtdData.filter(F.expired).length;
   
-  document.getElementById('kpi-ov').innerHTML=
+  document.getElementById('kpi-ov').innerHTML= 
     KPI('Total Items','neu',d.length)+
     KPI('Total Stock','acc',ts)+
     KPI('Critical ≤7 Days','red',cnt(d,F.le7),'Immediate RTC needed',`drillDownAction('risk','<7 Days')`)+
@@ -1725,8 +1720,8 @@ function renderOverview(){
     KPI('Pending Actions','ora',cnt(d,F.pend),'',`drillDownAction('status','Pending Action')`)+
     KPI('Action Taken','grn',cnt(d,F.comp),'',`drillDownAction('status','Action Taken')`);
     
-  document.getElementById('kpi-ov-extra').innerHTML = 
-    KPI('Sold Out (MTD)','blu',soldOutCount,'Stock at 0 this month',`openDrilldownPage('soldout')`) + 
+  document.getElementById('kpi-ov-extra').innerHTML =  
+    KPI('Sold Out (MTD)','blu',soldOutCount,'Stock at 0 this month',`openDrilldownPage('soldout')`) +  
     KPI('Expired (MTD)','red',expiredCount,'Items expired this month',`openDrilldownPage('expired')`);
     
   const sm={};
@@ -1737,7 +1732,7 @@ function renderOverview(){
   document.getElementById('ch-tot').innerHTML=stores.slice(0,12).map(s=>BR(s.code,s.total,mxT,'var(--accent)')).join('');
   document.getElementById('ch-crit').innerHTML=stores.slice(0,12).map(s=>BR(s.code,s.l7,mxC,'var(--red)')).join('');
   
-  document.querySelector('#t-ov thead tr').innerHTML = `
+  document.querySelector('#t-ov thead tr').innerHTML = ` 
     <th class="sortable" onclick="sortBy('t-ov','code','str')">Code${getSortIcon('t-ov','code')}</th>
     <th class="sortable" onclick="sortBy('t-ov','store','str')">Store${getSortIcon('t-ov','store')}</th>
     <th class="sortable" onclick="sortBy('t-ov','l7','num')">≤7 Days${getSortIcon('t-ov','l7')}</th>
@@ -1776,7 +1771,7 @@ function openDrilldownPage(mode){
   document.getElementById('page-drilldown').classList.add('active');
   document.getElementById('ptitle').textContent=mode==='soldout'?'Sold Out Items (MTD)':'Expired Items (MTD)';
   curPage='drilldown';
-  populateFilters(); 
+  populateFilters();  
   const currentMonth=new Date().toISOString().slice(0,7);
   document.getElementById('dd-ym').value=currentMonth;
   const banner=document.getElementById('dd-info-banner');
@@ -2063,8 +2058,6 @@ function renderActions(){
   document.getElementById('b-ac').textContent=sortedFiltered.length+' items';updateToolbar();renderTransferSuggestions();
 }
 function renderTransferSuggestions(){
-  // Latest week must be scoped per (batch, store), since a store's overall latest
-  // submission week may not include this specific barcode+expiry batch.
   const batchStoreLatestWeeks={};
   proc.forEach(r=>{
     if(!r.StoreCode || !r.Week) return;
@@ -2096,12 +2089,6 @@ function renderArticles(){
   const st=gv('ar-search').toLowerCase();if(st)d=d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st));
   buildActivePills('ar','ar-active-filters');
 
-  // Group by Barcode + ExpiryDate (a "batch"), not just Barcode — the same barcode can
-  // exist at different expiry dates across stores/weeks, and merging those would corrupt
-  // both the displayed expiry date and the latest-week stock sum.
-  // Latest week is then scoped per (batch, store): a store's overall latest submission
-  // week may not include this batch, so fall back to the last week that store actually
-  // reported THIS batch.
   const batchStoreLatestWeeks={};
   d.forEach(r=>{
     if(!r.StoreCode || !r.Week) return;
@@ -2128,7 +2115,7 @@ function renderArticles(){
   const sortedArtRows = sortData(Object.values(artMap), 't-art', 'Article', 'str');
   document.getElementById('b-art').textContent=sortedArtRows.length+' articles';
   
-  document.querySelector('#t-art thead tr').innerHTML = `
+  document.querySelector('#t-art thead tr').innerHTML = ` 
     <th class="sortable" onclick="sortBy('t-art','Article','str')">Article${getSortIcon('t-art','Article')}</th>
     <th class="sortable" onclick="sortBy('t-art','Barcode','str')">Barcode${getSortIcon('t-art','Barcode')}</th>
     <th class="sortable" onclick="sortBy('t-art','Description','str')">Description${getSortIcon('t-art','Description')}</th>
@@ -2139,10 +2126,9 @@ function renderArticles(){
   document.querySelector('#t-art tbody').innerHTML=sortedArtRows.map(r=>`<tr onclick="showArticlePop('${r._key}')" style="cursor:pointer"><td class="mono b">${r.Article||'—'}</td><td class="mono">${r.Barcode||'—'}</td><td>${r.Description||'—'}</td><td>${r.Department||'—'}</td><td class="mono b" style="color:var(--accent)">${r.LatestWeekStock}</td><td class="mono">${r.ExpiryDate||'—'}</td></tr>`).join('');
 }
 function showArticlePop(articleKey){
-  // articleKey is the Barcode|ExpiryDate composite key from renderArticles/exportXL.
   const rows=proc.filter(r=>articleKeyOf(r)===articleKey);if(!rows.length)return;const r0=rows[0];
   const storeMap={};
-  const allWeeksMap = {}; 
+  const allWeeksMap = {};  
   const weekDates = {};
   
   rows.forEach(r=>{
@@ -2483,7 +2469,7 @@ function showPop(idx){
   const last3Hist=stockHist.slice(0,3);
   if(last3Hist.length>0){
     actionSection+=`<div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-clock-rotate-left"></i> Stock History ${histStoreCode?'(Store: '+histStoreCode+')':'(All Stores)'} — Last 3 Weeks</div>${last3Hist.map(p=>{
-      const shortM=(p['Sub Month Display']||'').split(' ')[0]||'';
+      const shortM=(p['Sub Month Display']||'').split(' ')[0]||''; 
       return `<div class="art-store-card" style="margin-bottom:8px;"><div class="art-store-head"><div class="art-store-name">${histStoreCode?'':'<strong>'+(p.StoreCode||'—')+'</strong> · '}${shortM?shortM+'-':''}${p.Week||'—'}</div><div class="art-store-latest">${p.Stock||0} pcs</div></div></div>`;
     }).join('')}</div>`;
   }
@@ -2495,7 +2481,7 @@ function showPop(idx){
     actionSection+=`</div>`;
   }
   document.getElementById('pop-body').innerHTML=actionSection;
-  document.getElementById('pop-foot').innerHTML=`
+  document.getElementById('pop-foot').innerHTML=` 
     <button class="btn btn-red" onclick="popupAction(${r._idx},'RTC Price Change')"><i class="fa-solid fa-tag"></i> RTC Price Change</button>
     <button class="btn btn-accent" onclick="popupAction(${r._idx},'Store Transfer')"><i class="fa-solid fa-arrow-right-arrow-left"></i> Store Transfer</button>
     <button class="btn" onclick="popupAction(${r._idx},'Monitor')"><i class="fa-solid fa-eye"></i> Monitor</button>
@@ -2516,9 +2502,9 @@ async function executePopupDelete() {
   try {
     const res = await apiFetch(`${CF_API}?action=deleteRow&rowIndex=${deleteIdx}`);
     const out = await res.json();
-    if (out.success) { toast('Item deleted successfully', 'success'); closePopupDel(); closePop(); loadAll(); } 
+    if (out.success) { toast('Item deleted successfully', 'success'); closePopupDel(); closePop(); loadAll(); }  
     else { toast(out.message || 'Failed to delete item', 'error'); }
-  } catch (err) { toast('Network error during deletion', 'error'); } 
+  } catch (err) { toast('Network error during deletion', 'error'); }  
   finally { if(btn){btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;} }
 }
 
@@ -2529,7 +2515,7 @@ function openEditModal(idx,mode){
   if(mode==='rtc'){
     document.getElementById('edit-title').textContent='Edit RTC Details';
     document.getElementById('edit-desc').textContent='Update the saved RTC price and date range for this item.';
-    document.getElementById('edit-fields').innerHTML=`
+    document.getElementById('edit-fields').innerHTML=`  
       <div class="ac-field"><div class="ac-field-label">RTC Price</div><div class="ac-input-prefix"><span class="ac-prefix">AED</span><input type="number" id="edit-rtcprice" min="0" step="0.01" placeholder="0.00" value="${r['RTC Price']||''}"></div></div>
       <div class="ac-field"><div class="ac-field-label">Start Date</div><input type="date" id="edit-start" class="ac-input" value="${r['Start']||''}"></div>
       <div class="ac-field"><div class="ac-field-label">End Date</div><input type="date" id="edit-end" class="ac-input" value="${r['End']||''}"></div>
@@ -2542,7 +2528,7 @@ function openEditModal(idx,mode){
     document.getElementById('edit-title').textContent='Edit Record Details';
     document.getElementById('edit-desc').textContent='Update the stock and expiry date for this item.';
     const expIso = r.ExpiryDate ? parseDate(r.ExpiryDate)?.toISOString().slice(0,10) : '';
-    document.getElementById('edit-fields').innerHTML=`
+    document.getElementById('edit-fields').innerHTML=` 
       <div class="ac-field"><div class="ac-field-label">Stock</div><input type="number" id="edit-rec-stock" class="ac-input" min="0" value="${r.Stock||0}"></div>
       <div class="ac-field"><div class="ac-field-label">Expiry Date</div><input type="date" id="edit-rec-expiry" class="ac-input" value="${expIso}"></div>
     `;
@@ -2720,8 +2706,6 @@ function exportXL(type){
   else if(type==='articles'){
     const d=fData('ar');const st=gv('ar-search').toLowerCase();const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)):d;
 
-    // Grouping and latest-week logic mirrors renderArticles(): group by Barcode+ExpiryDate
-    // batch, and compute latest week per (batch, store).
     const batchStoreLatestWeeks={};
     filtered.forEach(r=>{
       if(!r.StoreCode || !r.Week) return;
