@@ -42,6 +42,7 @@ body::after { content:''; position:fixed; inset:0; background-image:url("data:im
 ::-webkit-scrollbar-thumb { background:rgba(28,25,23,0.16); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
 ::-webkit-scrollbar-thumb:hover { background:rgba(28,25,23,0.28); background-clip:padding-box; border:2px solid transparent; }
 .layout { display:flex; width:100%; min-height:100vh; position:relative; z-index:0; }
+.layout.hidden-auth { display:none; }
 .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width:var(--sidebar-w); min-width:var(--sidebar-w); flex-shrink:0; background:rgba(255,255,255,0.85); backdrop-filter:blur(24px) saturate(1.6); -webkit-backdrop-filter:blur(24px) saturate(1.6); border-right:1px solid var(--border); height:100vh; display:flex; flex-direction:column; z-index:100; }
 .brand { padding:16px 18px 14px; display:flex; align-items:center; gap:11px; border-bottom:1px solid var(--border); }
 .brand-mark { width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative; background: none; border: none; box-shadow: none; border-radius: 0; }
@@ -231,13 +232,6 @@ tbody td.b { font-weight:600; } tbody td.mono { font-family:var(--mono); font-si
 .ac-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); background:#fff; }
 .ac-field-hint { font-size:10px; color:var(--t3); margin-top:5px; }
 .ac-footer { display:flex; gap:8px; justify-content:flex-end; padding:16px 24px; border-top:1px solid var(--border); margin-top:18px; background:rgba(28,25,23,0.02); }
-.admin-lock { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 24px; text-align:center; }
-.admin-lock-icon { font-size:34px; width:80px; height:80px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent-grad); color:#fff; border-radius:22px; margin-bottom:20px; box-shadow:0 16px 40px -12px rgba(34,45,101,0.55), inset 0 1px 0 rgba(255,255,255,0.2); }
-.admin-lock h3 { font-family:var(--display); font-size:20px; font-weight:700; margin-bottom:9px; color:var(--text); letter-spacing:-.4px; }
-.admin-lock p { font-size:12px; color:var(--t2); margin-bottom:24px; max-width:350px; line-height:1.5; }
-.admin-key-row { display:flex; gap:8px; width:100%; max-width:350px; }
-.admin-key-row input { flex:1; background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:9px; padding:10px 13px; font-family:var(--mono); font-size:12px; color:var(--text); outline:none; transition:all .15s; }
-.admin-key-row input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); background:#fff; }
 .admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:13px; flex-wrap:wrap; }
 .admin-header-title { display:flex; align-items:center; gap:13px; }
 .admin-header-icon { width:40px; height:40px; border-radius:11px; background:var(--accent-grad); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 8px 20px -6px rgba(34,45,101,0.5); }
@@ -280,6 +274,114 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
 .tick-label { font-size:11px; font-weight:500; color:var(--t2); display:flex; align-items:center; gap:5px; cursor:pointer; padding:4px 8px; border:1px solid var(--border); border-radius:7px; background:var(--surface3); user-select:none; }
 .tick-label:hover { border-color: var(--accent); color: var(--accent); }
 .tick-label input { width:13px; height:13px; }
+.user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; background: rgba(255,255,255,0.6); }
+.user-list-info { display: flex; flex-direction: column; gap: 2px; }
+.user-list-name { font-weight: 600; font-size: 12px; }
+.user-list-meta { font-size: 10px; color: var(--t3); font-family: var(--mono); }
+
+/* ══ LOGIN SCREEN STYLES ══ */
+.login-wrap {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: #e7ebf5; /* Distinct light blue-gray so the white card is clearly visible on top */
+  overflow: hidden;
+}
+.login-wrap::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background: radial-gradient(900px 600px at 8% 6%, rgba(34,45,101,0.16), transparent 60%), radial-gradient(800px 600px at 95% 92%, rgba(74,90,158,0.14), transparent 62%), radial-gradient(600px 500px at 50% 100%, rgba(34,45,101,0.06), transparent 70%);
+}
+.login-wrap::after { display: none; }
+.login-card {
+  position: relative; z-index: 2;
+  width: 100%; max-width: 410px;
+  background: #ffffff;
+  border: 1px solid rgba(28,25,23,0.10);
+  border-radius: 22px;
+  box-shadow: 0 40px 80px -20px rgba(20,20,40,0.25), 0 12px 28px -10px rgba(20,20,40,0.15);
+  overflow: hidden;
+  animation: loginIn .5s cubic-bezier(.22,1,.36,1);
+}
+@keyframes loginIn { from { opacity:0; transform: translateY(24px) scale(.97); } to { opacity:1; transform:none; } }
+.login-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:5px;
+  background: linear-gradient(90deg, #2c3a7f, #222d65, #1a2350);
+}
+.login-top {
+  padding: 34px 32px 22px; text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(34,45,101,0.04), transparent);
+}
+.login-logo {
+  width: 78px; height: 78px; margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: 20px;
+  box-shadow: 0 10px 28px -8px rgba(34,45,101,0.35), 0 0 0 1px rgba(34,45,101,0.08);
+  overflow: hidden;
+}
+.login-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+.login-welcome {
+  font-family: var(--display); font-size: 22px; font-weight: 800;
+  color: var(--text); letter-spacing: -.5px; margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 12px; color: var(--t3); font-family: var(--mono);
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.login-body { padding: 24px 32px 8px; }
+.login-field { position: relative; margin-bottom: 16px; }
+.login-field-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--t3); margin-bottom: 7px;
+  font-family: var(--sans);
+}
+.login-input-wrap {
+  position: relative; display: flex; align-items: center;
+}
+.login-input-ico {
+  position: absolute; left: 14px; font-size: 13px; color: var(--t3);
+  pointer-events: none; transition: color .15s;
+}
+.login-input-wrap:focus-within .login-input-ico { color: var(--accent); }
+.login-input {
+  width: 100%; padding: 12px 14px 12px 42px;
+  background: rgba(255,255,255,0.95);
+  border: 1.5px solid var(--border); border-radius: 11px;
+  font-family: var(--sans); font-size: 13px; color: var(--text);
+  outline: none; transition: all .15s; font-weight: 500;
+}
+.login-input::placeholder { color: var(--t3); }
+.login-input:focus {
+  border-color: var(--accent); background: #fff;
+  box-shadow: 0 0 0 4px rgba(34,45,101,0.10);
+}
+.login-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 18px; gap: 10px;
+}
+.login-remember { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color: var(--t2); font-weight:500; }
+.login-remember input { width:15px; height:15px; }
+.login-forgot { font-size:11.5px; color: var(--accent); text-decoration:none; font-weight:600; }
+.login-forgot:hover { text-decoration: underline; }
+.login-btn {
+  width: 100%; padding: 13px; border: none; border-radius: 11px;
+  background: linear-gradient(135deg, #2c3a7f 0%, #222d65 55%, #1a2350 100%);
+  color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 700;
+  cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 10px 24px -6px rgba(34,45,101,0.55), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform .15s, box-shadow .15s, filter .15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -6px rgba(34,45,101,0.65), inset 0 1px 0 rgba(255,255,255,0.25); filter: brightness(1.05); }
+.login-btn:active { transform: translateY(0); }
+.login-btn:disabled { opacity:.65; cursor:not-allowed; transform:none; }
+.login-foot {
+  padding: 16px 32px 24px; text-align: center;
+  font-size: 10.5px; color: var(--t3); font-family: var(--mono);
+  letter-spacing: .4px;
+}
+.login-foot strong { color: var(--text); font-family: var(--sans); font-weight: 700; }
+
 @media (max-width:900px) {
   :root { --sidebar-w:100%; } .layout { flex-direction:column; } .sidebar { width:100%; height:auto; position:relative; } .main { margin-left:0; } .brand { padding:12px 14px; }
   .nav { display:flex; flex-wrap:wrap; padding:8px; } .nav-item { flex:1; min-width:90px; padding:7px 11px; font-size:11px; justify-content:center; } .nav-item.active::before { display:none; } .nav-section, .nav-sep, .sidebar-foot { display:none; }
@@ -332,8 +434,11 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
     </button>
 
     <div class="nav-sep"></div>
-    <button class="nav-item" onclick="go('admin')" id="n-admin">
+    <button class="nav-item" onclick="go('admin')" id="n-admin" style="display:none;">
       <i class="fa-solid fa-gear nav-ico"></i><span class="nav-text">Admin Panel</span>
+    </button>
+    <button class="nav-item" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket nav-ico"></i><span class="nav-text">Logout</span>
     </button>
   </div>
   <div class="sidebar-foot">Last refresh<strong id="ts">—</strong></div>
@@ -720,19 +825,7 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
 
     <!-- ─── ADMIN PANEL ─── -->
     <div class="page" id="page-admin">
-      <div id="admin-lock-screen" class="panel">
-        <div class="admin-lock">
-          <div class="admin-lock-icon"><i class="fa-solid fa-lock"></i></div>
-          <h3>Admin Panel</h3>
-          <p>Enter the admin key to access data upload tools. This key is required to replace master data in the Cloudflare D1 database.</p>
-          <div class="admin-key-row">
-            <input type="password" id="adm-key-input" placeholder="Enter admin key…" onkeydown="if(event.key==='Enter')verifyAdminKey()">
-            <button class="btn btn-accent" onclick="verifyAdminKey()"><i class="fa-solid fa-unlock"></i> Unlock</button>
-          </div>
-          <div id="adm-key-err" style="margin-top:13px;font-size:12px;color:var(--red);display:none">Incorrect key. Try again.</div>
-        </div>
-      </div>
-      <div id="admin-tools" style="display:none">
+      <div id="admin-tools">
         <div class="admin-header">
           <div class="admin-header-title">
             <div class="admin-header-icon"><i class="fa-solid fa-gear"></i></div>
@@ -741,8 +834,15 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
               <div class="admin-header-sub">Upload master data · All uploads fully replace existing data</div>
             </div>
           </div>
-          <button class="btn btn-sm" onclick="lockAdmin()"><i class="fa-solid fa-lock"></i> Lock</button>
         </div>
+        
+        <div class="upload-card">
+          <div class="upload-card-title"><i class="fa-solid fa-users"></i> User Management</div>
+          <div class="upload-card-sub">Create users with specific department access.</div>
+          <button class="btn btn-sm btn-accent" onclick="openAddUserModal()" style="margin-bottom: 10px;"><i class="fa-solid fa-user-plus"></i> Add User</button>
+          <div id="users-list" style="margin-top: 13px;"></div>
+        </div>
+
         <div class="upload-card">
           <div class="upload-card-title"><i class="fa-solid fa-box"></i> Upload Articles</div>
           <div class="upload-card-sub">Columns required: Barcode, Article, Description, Department</div>
@@ -828,6 +928,89 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
 
 </div> <!-- End main -->
 
+</div> <!-- End layout -->
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="login-wrap" id="login-overlay">
+  <div class="login-card">
+    <div class="login-top">
+      <div class="login-logo">
+        <img src="https://i.ibb.co/rfGVJp3F/Gala-EXP-2-removebg-preview-2.png" alt="Gala Markets">
+      </div>
+      <div class="login-welcome">Welcome Back</div>
+      <div class="login-sub">Gala Markets · Expiry Dashboard</div>
+    </div>
+
+    <div class="login-body">
+      <div class="login-field">
+        <div class="login-field-label">Username</div>
+        <div class="login-input-wrap">
+          <i class="fa-solid fa-user login-input-ico"></i>
+          <input type="text" id="login-user" class="login-input" placeholder="Enter your username" autocomplete="username">
+        </div>
+      </div>
+      <div class="login-field">
+        <div class="login-field-label">Password</div>
+        <div class="login-input-wrap">
+          <i class="fa-solid fa-lock login-input-ico"></i>
+          <input type="password" id="login-pass" class="login-input" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <div class="login-row">
+        <label class="login-remember">
+          <input type="checkbox" id="login-remember"> Remember me
+        </label>
+        <a class="login-forgot" href="javascript:void(0)" onclick="toast('Please contact your administrator to reset password.','info')">Forgot password?</a>
+      </div>
+      <button class="login-btn" id="login-btn" onclick="doLogin()">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
+    </div>
+
+    <div class="login-foot">
+      © <span id="login-year"></span> <strong>Gala Markets</strong> · All rights reserved
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD USER MODAL ══ -->
+<div class="overlay" id="add-user-overlay" style="z-index:600;">
+  <div class="action-confirm" style="max-width: 480px;">
+    <div class="ac-header">
+      <div class="ac-icon"><i class="fa-solid fa-user-plus"></i></div>
+      <div>
+        <h3 id="adduser-title">Create New User</h3>
+        <p id="adduser-desc">Assign departments and admin privileges.</p>
+      </div>
+    </div>
+    <div class="ac-fields" style="padding-top: 16px;">
+      <div class="ac-field">
+        <div class="ac-field-label">Username</div>
+        <input type="text" id="new-user" class="ac-input" placeholder="Enter username">
+      </div>
+      <div class="ac-field">
+        <div class="ac-field-label">Password</div>
+        <input type="password" id="new-pass" class="ac-input" placeholder="Enter password">
+      </div>
+      <div class="ac-field">
+        <div class="ac-field-label">Departments</div>
+        <div class="ms-container" id="usr-dept-ms" style="min-width: 100%;">
+          <div class="ms-display" id="usr-dept-display" onclick="toggleMultiSelect('usr-dept')">No Depts Selected</div>
+          <div class="ms-dropdown" id="usr-dept-dropdown"></div>
+        </div>
+      </div>
+      <div class="ac-field" style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="new-isadmin" style="width: 15px; height: 15px;">
+        <label for="new-isadmin" style="font-size: 12px; color: var(--t2); cursor: pointer;">Grant Admin Privileges</label>
+      </div>
+    </div>
+    <div class="ac-footer">
+      <button class="btn" onclick="closeAddUserModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="createUser()"><i class="fa-solid fa-check"></i> Create User</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ITEM POPUP ══ -->
 <div class="overlay" id="popup-overlay" onclick="closePop(event)">
   <div class="popup">
@@ -896,12 +1079,6 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
       <div>
         <h3 id="del-title">Confirm Deletion</h3>
         <p id="del-desc">You are about to delete data. This action cannot be undone.</p>
-      </div>
-    </div>
-    <div class="ac-fields">
-      <div class="ac-field">
-        <div class="ac-field-label">Admin Key</div>
-        <input type="password" id="del-admin-key" class="ac-input" placeholder="Enter ADMIN_KEY to confirm">
       </div>
     </div>
     <div class="ac-footer">
@@ -985,31 +1162,36 @@ input[type=checkbox]:checked::after { content:'✓'; position:absolute; top:-2px
 <div class="toast" id="toast"></div>
 
 <script>
+document.getElementById('login-year').textContent = new Date().getFullYear();
+
 // ══════════════════════════════════════════
 //  CONFIG & STATE
 // ══════════════════════════════════════════
-const CF_API='https://expiry-api.gala-it1.workers.dev';
+const CF_API='https://exp.galamarkets.workers.dev'; // Auth-enabled backend (login/JWT/user-management endpoints). Swap only once the target backend supports those same endpoints.
 const ACTIONS=['RTC Price Change','Store Transfer','Monitor','Clear In Normal Price'];
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY=new Date();TODAY.setHours(0,0,0,0);
 const TITLES={overview:'Overview',actions:'Action Center',notify:'Notify Store',stores:'Store Summary',articles:'Article View',submission:'Submission Status',inspector:'Data Inspector',admin:'Admin Panel'};
+const DEPARTMENTS = ['Bakery', 'Chilled & Dairy', 'Delicatessen', 'Fish', 'Frozen Foods', 'Grocery Food', 'Grocery Non Food', 'Health & Beauty'];
 
 let rawE=[],rawL=[],proc=[],allStoreCodes=[],codeToStore={},emailMapData=[];
 let curPage='overview',selectedIndices=new Set(),pendingAction='';
 let inspMode='e',inspExportType='raw-e';
-let ADMIN_KEY=null;
-let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'nf-dept':new Set(),'ac-bucket':new Set()};
+let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'nf-dept':new Set(),'ac-bucket':new Set(),'usr-dept':new Set()};
 let drilldownMode='soldout';
 let editingIdx=null,editingMode=null;
 let searchDebounce; 
 let deleteIdx = null;
 let tableSortStates = {};
 
+let AUTH_TOKEN = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+let CURRENT_USER = JSON.parse(localStorage.getItem('current_user') || sessionStorage.getItem('current_user') || 'null');
+
 function adjustDensity(val) {
   const sizes = [
-    { tdPad: '5px 8px', tdFont: '11px', thPad: '6px 8px', thFont: '9px' }, // Compact
-    { tdPad: '9px 12px', tdFont: '12px', thPad: '9px 12px', thFont: '9.5px' }, // Normal
-    { tdPad: '13px 16px', tdFont: '13px', thPad: '11px 16px', thFont: '10px' }  // Spacious
+    { tdPad: '5px 8px', tdFont: '11px', thPad: '6px 8px', thFont: '9px' },
+    { tdPad: '9px 12px', tdFont: '12px', thPad: '9px 12px', thFont: '9.5px' },
+    { tdPad: '13px 16px', tdFont: '13px', thPad: '11px 16px', thFont: '10px' }
   ];
   const s = sizes[val];
   document.documentElement.style.setProperty('--td-pad', s.tdPad);
@@ -1135,6 +1317,117 @@ const AC_COLS=[
 const FILTER_COL_MAP={'ac-code':['code','store'],'ac-week':['week'],'ac-ym':['month'],'ac-status':['status']};
 const FILTER_LABELS={'ac-code':'Store','ac-week':'Week','ac-ym':'Month','ac-status':'Status','ac-bucket':'Risk','dd-code':'Store','dd-week':'Week','dd-ym':'Month','dd-status':'Status','ss-code':'Store','ss-ym':'Month','ss-week':'Week'};
 
+// ══ AUTH LOGIC ══
+async function apiFetch(url, options = {}) {
+    if (AUTH_TOKEN) {
+        options.headers = options.headers || {};
+        options.headers['Authorization'] = `Bearer ${AUTH_TOKEN}`;
+    }
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+        logout();
+        throw new Error("Unauthorized");
+    }
+    return res;
+}
+
+async function doLogin() {
+    const u = document.getElementById('login-user').value.trim();
+    const p = document.getElementById('login-pass').value;
+    const r = document.getElementById('login-remember').checked;
+    const btn = document.getElementById('login-btn');
+    if(!u || !p) { toast('Please enter username and password','error'); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Signing in…';
+    try {
+        const res = await fetch(CF_API + '?action=login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
+        const out = await res.json();
+        if (out.success) {
+            AUTH_TOKEN = out.token;
+            CURRENT_USER = out.user;
+            if (r) {
+                localStorage.setItem('auth_token', AUTH_TOKEN);
+                localStorage.setItem('current_user', JSON.stringify(CURRENT_USER));
+            } else {
+                sessionStorage.setItem('auth_token', AUTH_TOKEN);
+                sessionStorage.setItem('current_user', JSON.stringify(CURRENT_USER));
+            }
+            toast('Welcome back, ' + (CURRENT_USER.username || 'user') + '!', 'success');
+            updateAuthUI();
+            loadAll();
+        } else {
+            toast(out.message || 'Login failed', 'error');
+        }
+    } catch (err) {
+        toast('Network error during login', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
+    }
+}
+
+function logout() {
+    AUTH_TOKEN = null;
+    CURRENT_USER = null;
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('current_user');
+    updateAuthUI();
+}
+
+function updateAuthUI() {
+    const loginOverlay = document.getElementById('login-overlay');
+    const layoutEl = document.querySelector('.layout');
+    const adminNav = document.getElementById('n-admin');
+    const dangerCard = document.querySelector('.danger-card');
+    
+    const filterDeptKeys = ['ac-dept', 'ss-dept', 'ar-dept', 'dd-dept', 'nf-dept'];
+
+    if (!AUTH_TOKEN || !CURRENT_USER) {
+        loginOverlay.style.display = 'flex';
+        if(layoutEl) layoutEl.classList.add('hidden-auth');
+        document.body.style.overflow = 'hidden';
+        if(adminNav) adminNav.style.display = 'none';
+        if(dangerCard) dangerCard.style.display = 'none';
+        
+        filterDeptKeys.forEach(key => {
+            multiDeptSelections[key].clear();
+            updateMultiDeptDisplay(key);
+        });
+    } else {
+        loginOverlay.style.display = 'none';
+        if(layoutEl) layoutEl.classList.remove('hidden-auth');
+        document.body.style.overflow = '';
+        
+        if (CURRENT_USER.isAdmin) {
+            if(adminNav) adminNav.style.display = 'flex';
+            if(dangerCard) dangerCard.style.display = 'block';
+        } else {
+            if(adminNav) adminNav.style.display = 'none';
+            if(dangerCard) dangerCard.style.display = 'none';
+        }
+        
+        if (CURRENT_USER.departments && CURRENT_USER.departments !== 'ALL') {
+            const userDepts = CURRENT_USER.departments.split(',').map(d => d.trim());
+            filterDeptKeys.forEach(key => {
+                multiDeptSelections[key].clear();
+                userDepts.forEach(d => multiDeptSelections[key].add(d));
+                updateMultiDeptDisplay(key);
+            });
+        } else {
+            filterDeptKeys.forEach(key => {
+                multiDeptSelections[key].clear();
+                updateMultiDeptDisplay(key);
+            });
+        }
+    }
+}
+
 // ══ NAV ══
 function go(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
@@ -1144,7 +1437,8 @@ function go(p){
   document.getElementById('ptitle').textContent=TITLES[p]||p;
   curPage=p;
   if(p==='admin'){
-    if(!ADMIN_KEY){document.getElementById('admin-lock-screen').style.display='block';document.getElementById('admin-tools').style.display='none';document.getElementById('adm-key-err').style.display='none';document.getElementById('adm-key-input').value='';}
+    if(!CURRENT_USER?.isAdmin) return;
+    getUsers();
     return;
   }
   if(p==='notify'){ populateNotifyFilters(); renderNotify(); return; }
@@ -1202,7 +1496,7 @@ function sortWeeks(weeks, data) {
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-container')){document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));}});
 function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();else if(pfx==='nf-dept')renderNotify();}
-function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}
+function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(pfx==='usr-dept'){if(count===0)display.textContent='No Depts Selected';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}else{if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}}
 function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;}
 
 // ══ PROCESS ROWS ══
@@ -1214,7 +1508,16 @@ function processRows(rawExpiry){
     const sm=parseSM(subMonthRaw);const subMonthOut=sm.ym||subMonthRaw||'';
     const expRaw=cv(r,'ExpiryDate');const expDate=parseDate(expRaw);
     const expDateDisp=expDate?String(expDate.getDate()).padStart(2,'0')+'/'+String(expDate.getMonth()+1).padStart(2,'0')+'/'+expDate.getFullYear():'';
-    let daysLeft=null;const dlRaw=cv(r,'DaysLeft');if(dlRaw!==''){const dlP=parseInt(dlRaw,10);if(!isNaN(dlP))daysLeft=dlP;}if(daysLeft===null&&expDate)daysLeft=Math.round((expDate-TODAY)/86400000);
+    // Days Left must always reflect "today", not whatever value the backend row happened to store
+    // (that stored value goes stale the moment a day passes). Compute live from ExpiryDate first,
+    // and only fall back to a stored DaysLeft if there's no parseable expiry date at all.
+    let daysLeft=null;
+    if(expDate){
+      daysLeft=Math.round((expDate-TODAY)/86400000);
+    } else {
+      const dlRaw=cv(r,'DaysLeft');
+      if(dlRaw!==''){const dlP=parseInt(dlRaw,10);if(!isNaN(dlP))daysLeft=dlP;}
+    }
     const bucket=calcBucket(daysLeft);
     const tsRaw=cv(r,'Timestamp');const tsDate=parseDate(tsRaw);
     return{
@@ -1230,6 +1533,11 @@ function processRows(rawExpiry){
     };
   });
 }
+
+// ══ ARTICLE GROUPING KEY ══
+// Same barcode with a different expiry date is a different batch — never merge them
+// when summarizing article-level stock, or the "latest week" and stock totals get corrupted.
+function articleKeyOf(r){ return `${r.Barcode||r.Article}|${r.ExpiryDate||''}`; }
 
 // ══ PREVIOUSLY ACTIONED ══
 function applyPreviouslyActioned(){
@@ -1296,12 +1604,13 @@ function applyPreviouslyActioned(){
 
 // ══ LOAD ALL ══
 async function loadAll(){
+  if(!AUTH_TOKEN) return;
   const btn=document.getElementById('rfbtn');btn.classList.add('loading');
   setDot('e','loading','Fetching expiry data…');setDot('l','loading','Fetching buyer actions…');setDot('s','loading','Fetching stores…');
   const [er,sr,emr]=await Promise.allSettled([
-    fetch(CF_API+'?action=allData&_t='+Date.now()).then(r=>r.json()),
-    fetch(CF_API+'?action=stores&_t='+Date.now()).then(r=>r.json()),
-    fetch(CF_API+'?action=getEmailMap&_t='+Date.now()).then(r=>r.json())
+    apiFetch(CF_API+'?action=allData&_t='+Date.now()).then(r=>r.json()),
+    apiFetch(CF_API+'?action=stores&_t='+Date.now()).then(r=>r.json()),
+    apiFetch(CF_API+'?action=getEmailMap&_t='+Date.now()).then(r=>r.json())
   ]);
   if(sr.status==='fulfilled'){codeToStore={};allStoreCodes=[];(Array.isArray(sr.value)?sr.value:[]).forEach(s=>{const code=String(s.storeCode||'').trim(),name=String(s.storeName||'').trim();if(code){codeToStore[code]=name;allStoreCodes.push({code,name});}});setDot('s','ok',`<strong>${allStoreCodes.length}</strong> stores`);}else{setDot('s','err','Stores failed');}
   if(emr.status==='fulfilled'){emailMapData=Array.isArray(emr.value)?emr.value:[];}
@@ -1331,7 +1640,6 @@ function populateFilters(){
   fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar-dept',depts);
   updateStoreDisp('ss');updateStoreDisp('ac');updateStoreDisp('dd');
 
-  // Set Default Current Month and Week
   const d = new Date();
   const currentMonth = d.toISOString().slice(0,7);
   const currentWeek = 'Week ' + Math.ceil(d.getDate() / 7);
@@ -1728,7 +2036,6 @@ function renderActions(){
   detectOverdue();
   let d=fData('ac');
   
-  // Apply exclude filters
   const hideLow = document.getElementById('ac-exc-low')?.checked;
   const hideExpired = document.getElementById('ac-exc-expired')?.checked;
   const hideActionedBefore = document.getElementById('ac-hide-actioned-before')?.checked;
@@ -1756,24 +2063,28 @@ function renderActions(){
   document.getElementById('b-ac').textContent=sortedFiltered.length+' items';updateToolbar();renderTransferSuggestions();
 }
 function renderTransferSuggestions(){
-  const storeLatestWeeks={};
+  // Latest week must be scoped per (batch, store), since a store's overall latest
+  // submission week may not include this specific barcode+expiry batch.
+  const batchStoreLatestWeeks={};
   proc.forEach(r=>{
-    if(r.StoreCode && r.Week) {
-      const sortKey = getWeekSortKey(r);
-      if(!storeLatestWeeks[r.StoreCode] || sortKey > storeLatestWeeks[r.StoreCode].key) {
-        storeLatestWeeks[r.StoreCode] = { key: sortKey, week: r.Week };
-      }
+    if(!r.StoreCode || !r.Week) return;
+    const key=articleKeyOf(r);
+    if(!batchStoreLatestWeeks[key]) batchStoreLatestWeeks[key]={};
+    const sortKey = getWeekSortKey(r);
+    if(!batchStoreLatestWeeks[key][r.StoreCode] || sortKey > batchStoreLatestWeeks[key][r.StoreCode].key) {
+      batchStoreLatestWeeks[key][r.StoreCode] = { key: sortKey, week: r.Week };
     }
   });
   const articleMap={};
   proc.forEach(r=>{
-    const key=r.Barcode||r.Article;
+    const key=articleKeyOf(r);
     if(!articleMap[key])articleMap[key]={desc:r.Description,art:r.Article,storeInfo:{},expiring:[]};
     if(!articleMap[key].storeInfo[r.StoreCode])articleMap[key].storeInfo[r.StoreCode]={latestStock:0,hasHistory:true,name:r.Store};
-    if(r.Week===storeLatestWeeks[r.StoreCode]?.week)articleMap[key].storeInfo[r.StoreCode].latestStock+=parseFloat(r.Stock)||0;
-    if(['<7 Days','7–30 Days','Expired'].includes(r['Expiry Risk Bucket'])&&r['Action Status']==='Pending Action'){const stock=parseFloat(r.Stock)||0;if(stock>0&&r.Week===storeLatestWeeks[r.StoreCode]?.week)articleMap[key].expiring.push({StoreCode:r.StoreCode,Store:r.Store,Stock:stock,ExpiryDate:r.ExpiryDate,_idx:r._idx});}
+    const storeLatest=batchStoreLatestWeeks[key]?.[r.StoreCode];
+    if(storeLatest && r.Week===storeLatest.week)articleMap[key].storeInfo[r.StoreCode].latestStock+=parseFloat(r.Stock)||0;
+    if(['<7 Days','7–30 Days','Expired'].includes(r['Expiry Risk Bucket'])&&r['Action Status']==='Pending Action'){const stock=parseFloat(r.Stock)||0;if(stock>0&&storeLatest&&r.Week===storeLatest.week)articleMap[key].expiring.push({StoreCode:r.StoreCode,Store:r.Store,Stock:stock,ExpiryDate:r.ExpiryDate,_idx:r._idx});}
   });
-  const suggestions=[];for(const key in articleMap){const art=articleMap[key];art.expiring.forEach(exp=>{for(const code in art.storeInfo){if(code!==exp.StoreCode&&art.storeInfo[code].latestStock<3)suggestions.push({fromCode:exp.StoreCode,fromStore:exp.Store,toCode:code,toStore:art.storeInfo[code].name||code,art:art.art,desc:art.desc,qty:exp.Stock,exp:exp.ExpiryDate,_idx:exp._idx});}});}
+  const suggestions=[];for(const key in articleMap){const art=articleMap[key];art.expiring.forEach(exp=>{for(const code in art.storeInfo){if(code!==exp.StoreCode&&art.storeInfo[code].latestStock<3)suggestions.push({fromCode:exp.StoreCode,fromStore:exp.Store,toCode:code,toStore:art.storeInfo[code].name||code,art:art.art,desc:art.desc,qty:exp.Stock,exp:exp.ExpiryDate,_idx:exp._idx});}}); }
   const topSug=suggestions.slice(0,15);document.getElementById('b-sug').textContent=suggestions.length+' suggestions';
   document.querySelector('#t-sug tbody').innerHTML=topSug.length?topSug.map(s=>`<tr><td class="mono b">${s.fromCode}</td><td class="mono b" style="color:var(--accent)">${s.toCode} <span style="font-family:var(--sans);font-weight:400;color:var(--t3)">(Low/OOS)</span></td><td class="mono">${s.art||'—'}</td><td>${s.desc||'—'}</td><td class="mono b">${s.qty}</td><td class="mono">${s.exp||'—'}</td><td><button class="btn btn-sm btn-accent" onclick="approveTransferSuggestion(${s._idx},'${s.toCode}')"><i class="fa-solid fa-check"></i> Approve</button></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:14px">No transfer suggestions available</td></tr>';
 }
@@ -1784,25 +2095,34 @@ function renderArticles(){
   let d=[...proc];const depts=[...multiDeptSelections['ar-dept']];if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
   const st=gv('ar-search').toLowerCase();if(st)d=d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st));
   buildActivePills('ar','ar-active-filters');
-  const storeLatestWeeks={};
+
+  // Group by Barcode + ExpiryDate (a "batch"), not just Barcode — the same barcode can
+  // exist at different expiry dates across stores/weeks, and merging those would corrupt
+  // both the displayed expiry date and the latest-week stock sum.
+  // Latest week is then scoped per (batch, store): a store's overall latest submission
+  // week may not include this batch, so fall back to the last week that store actually
+  // reported THIS batch.
+  const batchStoreLatestWeeks={};
   d.forEach(r=>{
-    if(r.StoreCode && r.Week) {
-      const sortKey = getWeekSortKey(r);
-      if(!storeLatestWeeks[r.StoreCode] || sortKey > storeLatestWeeks[r.StoreCode].key) {
-        storeLatestWeeks[r.StoreCode] = { key: sortKey, week: r.Week };
-      }
+    if(!r.StoreCode || !r.Week) return;
+    const key=articleKeyOf(r);
+    if(!batchStoreLatestWeeks[key]) batchStoreLatestWeeks[key]={};
+    const sortKey = getWeekSortKey(r);
+    if(!batchStoreLatestWeeks[key][r.StoreCode] || sortKey > batchStoreLatestWeeks[key][r.StoreCode].key) {
+      batchStoreLatestWeeks[key][r.StoreCode] = { key: sortKey, week: r.Week };
     }
   });
+
   const artMap={};
   d.forEach(r=>{
-    const key=r.Barcode||r.Article;
+    const key=articleKeyOf(r);
     if(!artMap[key])artMap[key]={Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,LatestWeekStock:0,ExpiryDate:r.ExpiryDate,_key:key,_storeStocks:{}};
-    if(r.StoreCode && storeLatestWeeks[r.StoreCode] && storeLatestWeeks[r.StoreCode].week === r.Week){
+    const storeLatest=batchStoreLatestWeeks[key]?.[r.StoreCode];
+    if(r.StoreCode && storeLatest && storeLatest.week === r.Week){
       const sv=parseFloat(r.Stock);const stockVal=isNaN(sv)?1:sv;
       if(!artMap[key]._storeStocks[r.StoreCode])artMap[key]._storeStocks[r.StoreCode]=0;
       artMap[key]._storeStocks[r.StoreCode]+=stockVal;
     }
-    if(r.ExpiryDate){const d1=parseDate(r.ExpiryDate);const d2=parseDate(artMap[key].ExpiryDate);if(d1&&d2&&d1<d2)artMap[key].ExpiryDate=r.ExpiryDate;else if(!d2&&d1)artMap[key].ExpiryDate=r.ExpiryDate;}
   });
   Object.values(artMap).forEach(a=>{a.LatestWeekStock=Object.values(a._storeStocks).reduce((sum,v)=>sum+v,0);});
   const sortedArtRows = sortData(Object.values(artMap), 't-art', 'Article', 'str');
@@ -1819,10 +2139,11 @@ function renderArticles(){
   document.querySelector('#t-art tbody').innerHTML=sortedArtRows.map(r=>`<tr onclick="showArticlePop('${r._key}')" style="cursor:pointer"><td class="mono b">${r.Article||'—'}</td><td class="mono">${r.Barcode||'—'}</td><td>${r.Description||'—'}</td><td>${r.Department||'—'}</td><td class="mono b" style="color:var(--accent)">${r.LatestWeekStock}</td><td class="mono">${r.ExpiryDate||'—'}</td></tr>`).join('');
 }
 function showArticlePop(articleKey){
-  const rows=proc.filter(r=>(r.Barcode||r.Article)===articleKey);if(!rows.length)return;const r0=rows[0];
+  // articleKey is the Barcode|ExpiryDate composite key from renderArticles/exportXL.
+  const rows=proc.filter(r=>articleKeyOf(r)===articleKey);if(!rows.length)return;const r0=rows[0];
   const storeMap={};
   const allWeeksMap = {}; 
-  const weekDates = {}; // To store the earliest date for each week key for sorting
+  const weekDates = {};
   
   rows.forEach(r=>{
     if(!r.Week) return;
@@ -1850,7 +2171,6 @@ function showArticlePop(articleKey){
     return a.localeCompare(b);
   });
   
-  // Find latest week for each store
   const storeLatestWeeks={};
   rows.forEach(r=>{
     if(r.StoreCode && r.Week) {
@@ -1865,8 +2185,8 @@ function showArticlePop(articleKey){
   });
   
   document.getElementById('pop-title').textContent=r0.Article||'Article Details';
-  document.getElementById('pop-sub').textContent=(r0.Description||'')+(r0.Barcode?' · '+r0.Barcode:'');
-  let bodyHtml=`<div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-circle-info"></i> Article Info</div><div class="popup-grid">${PF('Department',r0.Department||'—')}${PF('Total Stores',Object.keys(storeMap).length)}${PF('Total Weeks Tracked',allWeeks.length)}</div></div><div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-store"></i> Store Breakdown (Latest submitted week per store)</div>`;
+  document.getElementById('pop-sub').textContent=(r0.Description||'')+(r0.Barcode?' · '+r0.Barcode:'')+(r0.ExpiryDate?' · Exp '+r0.ExpiryDate:'');
+  let bodyHtml=`<div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-circle-info"></i> Article Info</div><div class="popup-grid">${PF('Department',r0.Department||'—')}${PF('Expiry Date',r0.ExpiryDate||'—','mono')}${PF('Total Stores',Object.keys(storeMap).length)}${PF('Total Weeks Tracked',allWeeks.length)}</div></div><div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-store"></i> Store Breakdown (Latest submitted week per store)</div>`;
   
   Object.keys(storeMap).sort().forEach(code=>{
     const s=storeMap[code];
@@ -2009,9 +2329,9 @@ async function executeSubReminders(){
   const ym=gv('sub-ym'),week=gv('sub-week');
   const btn=document.getElementById('sub-remind-send-btn');
   btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Sending...';btn.disabled=true;
-  toast(`Sending reminders to ${checked.length} stores...`,'',0);
+   toast(`Sending reminders to ${checked.length} stores...`,'',0);
   try{
-    const res=await fetch(CF_API+'?action=sendSubmissionReminders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeCodes:checked,week:week||'Current Week',submissionMonth:ym||new Date().toISOString().slice(0,7)})});
+    const res=await apiFetch(CF_API+'?action=sendSubmissionReminders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeCodes:checked,week:week||'Current Week',submissionMonth:ym||new Date().toISOString().slice(0,7)})});
     const out=await res.json();
     if(out.success)toast(out.message||'Reminders sent successfully','success',4000);
     else toast(out.message||'Failed to send reminders','error');
@@ -2019,10 +2339,17 @@ async function executeSubReminders(){
   }catch(err){toast('Network error sending reminders','error');}
   finally{btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Send Reminders';btn.disabled=false;}
 }
-
 // ══ INSPECTOR ══
-function switchInsp(mode,btn){inspMode=mode;document.querySelectorAll('#page-inspector .btn').forEach(b=>b.classList.remove('btn-accent'));btn.classList.add('btn-accent');const titles={e:'ExpiryData Raw',l:'Buyer Actions Raw',p:'Processed'};document.getElementById('insp-title').textContent=titles[mode];inspExportType=mode==='e'?'raw-e':mode==='l'?'raw-l':'proc';renderInspector();}
-function renderInspector(){
+function switchInsp(mode,btn){
+  inspMode=mode;
+  document.querySelectorAll('#page-inspector .btn').forEach(b=>b.classList.remove('btn-accent'));
+  btn.classList.add('btn-accent');
+  const titles={e:'ExpiryData Raw',l:'Buyer Actions Raw',p:'Processed'};
+  document.getElementById('insp-title').textContent=titles[mode];
+  inspExportType=mode==='e'?'raw-e':mode==='l'?'raw-l':'proc';
+  renderInspector();
+}
+  function renderInspector(){
   const PROC_COLS=['Store','StoreCode','Article','Barcode','Description','Department','Stock','Action Status','Action Taken','RTC Price','Transfer To','Transfer Qty','Start','End','Action Date','Week','Submission Month','Sub Month Display','ExpiryDate','DaysLeft','Expiry Risk Bucket','Year'];
   const data=inspMode==='e'?rawE:inspMode==='l'?rawL:proc.map(r=>{const o={};PROC_COLS.forEach(c=>o[c]=r[c]??'');return o;});
   if(!data||!data.length){document.querySelector('#t-insp thead').innerHTML='';document.querySelector('#t-insp tbody').innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:28px">No data</td></tr>';document.getElementById('insp-badge').textContent='0';return;}
@@ -2037,7 +2364,82 @@ function renderInspector(){
   document.querySelector('#t-insp tbody').innerHTML=sortedData.slice(0,300).map(r=>'<tr>'+cols.map(c=>`<td>${r[c]??''}</td>`).join('')+'</tr>').join('');
   document.getElementById('insp-badge').textContent=sortedData.length+' rows';
 }
+async function getUsers() {
+  try {
+    const res = await apiFetch(CF_API + '?action=getUsers');
+    const users = await res.json();
+    const list = document.getElementById('users-list');
+    list.innerHTML = users.map(u => `
+      <div class="user-list-item">
+        <div class="user-list-info">
+          <div class="user-list-name">${u.username} ${u.isAdmin ? '<span class="badge done" style="margin-left:5px">Admin</span>' : ''}</div>
+          <div class="user-list-meta">Departments: ${u.departments}</div>
+        </div>
+        ${u.username !== CURRENT_USER.username ? `<button class="btn btn-sm btn-red" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    toast('Failed to fetch users', 'error');
+  }
+}
 
+function openAddUserModal() {
+  multiDeptSelections['usr-dept'].clear();
+  updateMultiDeptDisplay('usr-dept');
+  renderMultiSelectOpts('usr-dept', DEPARTMENTS);
+  document.getElementById('new-user').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('new-isadmin').checked = false;
+  document.getElementById('add-user-overlay').classList.add('open');
+}
+function closeAddUserModal() {
+  document.getElementById('add-user-overlay').classList.remove('open');
+}
+
+async function createUser() {
+  const u = document.getElementById('new-user').value;
+  const p = document.getElementById('new-pass').value;
+  const d = [...multiDeptSelections['usr-dept']].join(', ') || 'ALL';
+  const a = document.getElementById('new-isadmin').checked;
+  if(!u || !p) { toast('Username and password required', 'error'); return; }
+  try {
+    const res = await apiFetch(CF_API + '?action=createUser', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p, departments: d, isAdmin: a })
+    });
+    const out = await res.json();
+    if (out.success) {
+      toast('User created successfully', 'success');
+      closeAddUserModal();
+      getUsers();
+    } else {
+      toast(out.message || 'Failed to create user', 'error');
+    }
+  } catch (err) {
+    toast('Network error', 'error');
+  }
+}
+
+async function deleteUser(id) {
+  if(!confirm('Are you sure you want to delete this user?')) return;
+  try {
+    const res = await apiFetch(CF_API + '?action=deleteUser', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const out = await res.json();
+    if (out.success) {
+      toast('User deleted', 'success');
+      getUsers();
+    } else {
+      toast(out.message || 'Failed to delete user', 'error');
+    }
+  } catch (err) {
+    toast('Network error', 'error');
+  }
+}
 // ══ POPUP (with pen-icon edit & header delete) ══
 const PF=(k,v,cls='')=>`<div class="pf"><div class="pkey">${k}</div><div class="pval${cls?' '+cls:''}">${v??'—'}</div></div>`;
 function rowClick(e,idx){if(e.target.tagName==='INPUT')return;showPop(idx);}
@@ -2074,7 +2476,6 @@ function showPop(idx){
       ${r['Transfer To']?`<div class="pf" style="grid-column:span 2"><div class="pkey">Transfer To</div><div class="pval">${r['Transfer To']}</div></div>`:''}
     </div></div>`;
   
-  // Stock History (Last 3 Weeks)
   const histStoreCode=gv('ac-code')||gv('dd-code')||'';
   let stockHist=proc.filter(p=>p.Barcode===r.Barcode&&p.ExpiryDate===r.ExpiryDate);
   if(histStoreCode)stockHist=stockHist.filter(p=>p.StoreCode===histStoreCode);
@@ -2106,34 +2507,19 @@ function closePop(e){if(e&&e.target!==document.getElementById('popup-overlay'))r
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('popup-overlay').classList.remove('open');closeConfirm();closeEditModal();closePopupDel();document.body.style.overflow='';}});
 
 // ══ POPUP DELETE LOGIC ══
-function confirmPopupDelete(idx) {
-  deleteIdx = idx;
-  document.getElementById('popup-del-overlay').classList.add('open');
-}
-function closePopupDel() {
-  document.getElementById('popup-del-overlay').classList.remove('open');
-  deleteIdx = null;
-}
+function confirmPopupDelete(idx) { deleteIdx = idx; document.getElementById('popup-del-overlay').classList.add('open'); }
+function closePopupDel() { document.getElementById('popup-del-overlay').classList.remove('open'); deleteIdx = null; }
 async function executePopupDelete() {
   if (!deleteIdx) return;
   const btn = document.getElementById('popup-del-btn');
   if(btn){btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';btn.disabled=true;}
   try {
-    const res = await fetch(`${CF_API}?action=deleteRow&rowIndex=${deleteIdx}`);
+    const res = await apiFetch(`${CF_API}?action=deleteRow&rowIndex=${deleteIdx}`);
     const out = await res.json();
-    if (out.success) {
-      toast('Item deleted successfully', 'success');
-      closePopupDel();
-      closePop();
-      loadAll(); 
-    } else {
-      toast(out.message || 'Failed to delete item', 'error');
-    }
-  } catch (err) {
-    toast('Network error during deletion', 'error');
-  } finally {
-    if(btn){btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;}
-  }
+    if (out.success) { toast('Item deleted successfully', 'success'); closePopupDel(); closePop(); loadAll(); } 
+    else { toast(out.message || 'Failed to delete item', 'error'); }
+  } catch (err) { toast('Network error during deletion', 'error'); } 
+  finally { if(btn){btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;} }
 }
 
 // ══ EDIT MODAL (pen-icon edit) ══
@@ -2171,7 +2557,7 @@ async function saveEditAction(){
     if(editingMode === 'record') {
       const newStock = document.getElementById('edit-rec-stock').value.trim();
       const newExpiry = document.getElementById('edit-rec-expiry').value.trim();
-      const res = await fetch(`${CF_API}?action=editRow&rowIndex=${editingIdx}&stock=${newStock}&expiry=${newExpiry}`);
+      const res = await apiFetch(`${CF_API}?action=editRow&rowIndex=${editingIdx}&stock=${newStock}&expiry=${newExpiry}`);
       const out = await res.json();
       if(out.success) {
         r.Stock = newStock;
@@ -2196,7 +2582,7 @@ async function saveEditAction(){
       body.transferTo=document.getElementById('edit-transferto').value.trim();
       body.transferQty=document.getElementById('edit-transferqty').value.trim();
     }
-    const res=await fetch(CF_API+'?action=editBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const res=await apiFetch(CF_API+'?action=editBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const out=await res.json();
     if(out.success){
       if(editingMode==='rtc'){r['RTC Price']=body.rtcPrice;r['Start']=body.start;r['End']=body.end;}
@@ -2254,7 +2640,7 @@ async function executeAction(){
     return{r,combinedAction,combinedRTC,combinedTransfer};
   });
   const results=await Promise.allSettled(updates.map(u=>
-    fetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowIndex:u.r._idx,actionTaken:u.combinedAction,rtcPrice:u.combinedRTC,transferTo:u.combinedTransfer,actionDate,transferQty:transferQty||'',start:startDate||'',end:endDate||''})}).then(res=>res.json())
+    apiFetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowIndex:u.r._idx,actionTaken:u.combinedAction,rtcPrice:u.combinedRTC,transferTo:u.combinedTransfer,actionDate,transferQty:transferQty||'',start:startDate||'',end:endDate||''})}).then(res=>res.json())
   ));
   let ok=0;
   results.forEach((res,i)=>{const u=updates[i];if(res.status==='fulfilled'&&res.value?.success!==false){u.r['Action Taken']=u.combinedAction;u.r['Action Status']='Action Taken';u.r['RTC Price']=u.combinedRTC;u.r['Transfer To']=u.combinedTransfer;u.r['Transfer Qty']=transferQty||u.r['Transfer Qty']||'';u.r['Start']=startDate||u.r['Start']||'';u.r['End']=endDate||u.r['End']||'';u.r['Action Date']=actionDate;ok++;}});
@@ -2333,24 +2719,28 @@ function exportXL(type){
   }
   else if(type==='articles'){
     const d=fData('ar');const st=gv('ar-search').toLowerCase();const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)):d;
-    const storeLatestWeeks={};
+
+    // Grouping and latest-week logic mirrors renderArticles(): group by Barcode+ExpiryDate
+    // batch, and compute latest week per (batch, store).
+    const batchStoreLatestWeeks={};
     filtered.forEach(r=>{
-      if(r.StoreCode && r.Week) {
-        const sortKey = getWeekSortKey(r);
-        if(!storeLatestWeeks[r.StoreCode] || sortKey > storeLatestWeeks[r.StoreCode].key) {
-          storeLatestWeeks[r.StoreCode] = { key: sortKey, week: r.Week };
-        }
+      if(!r.StoreCode || !r.Week) return;
+      const key=articleKeyOf(r);
+      if(!batchStoreLatestWeeks[key]) batchStoreLatestWeeks[key]={};
+      const sortKey = getWeekSortKey(r);
+      if(!batchStoreLatestWeeks[key][r.StoreCode] || sortKey > batchStoreLatestWeeks[key][r.StoreCode].key) {
+        batchStoreLatestWeeks[key][r.StoreCode] = { key: sortKey, week: r.Week };
       }
     });
     const artMap={};filtered.forEach(r=>{
-      const key=r.Barcode||r.Article;
+      const key=articleKeyOf(r);
       if(!artMap[key])artMap[key]={Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,LatestWeekStock:0,ExpiryDate:r.ExpiryDate,_storeStocks:{}};
-      if(r.StoreCode && storeLatestWeeks[r.StoreCode] && storeLatestWeeks[r.StoreCode].week === r.Week){
+      const storeLatest=batchStoreLatestWeeks[key]?.[r.StoreCode];
+      if(r.StoreCode && storeLatest && storeLatest.week === r.Week){
         const sv=parseFloat(r.Stock);const stockVal=isNaN(sv)?1:sv;
         if(!artMap[key]._storeStocks[r.StoreCode])artMap[key]._storeStocks[r.StoreCode]=0;
         artMap[key]._storeStocks[r.StoreCode]+=stockVal;
       }
-      if(r.ExpiryDate){const d1=parseDate(r.ExpiryDate);const d2=parseDate(artMap[key].ExpiryDate);if(d1&&d2&&d1<d2)artMap[key].ExpiryDate=r.ExpiryDate;else if(!d2&&d1)artMap[key].ExpiryDate=r.ExpiryDate;}
     });
     Object.values(artMap).forEach(a=>{a.LatestWeekStock=Object.values(a._storeStocks).reduce((sum,v)=>sum+v,0);delete a._storeStocks;});
     data=Object.values(artMap);cols=['Article','Barcode','Description','Department','LatestWeekStock','ExpiryDate'];fname='ArticleView';
@@ -2416,7 +2806,7 @@ async function importActions(input){
       const rawActionTaken=String(row['Action Taken']||'').trim();
       const actionTaken=elaborateAction(rawActionTaken);
       if(!rowIndex||!actionTaken)return Promise.resolve({success:false});
-      return fetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      return apiFetch(CF_API+'?action=saveBuyerAction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         rowIndex,
         actionTaken,
         rtcPrice:String(row['RTC Price']||''),
@@ -2435,19 +2825,18 @@ async function importActions(input){
 }
 
 // ══ ADMIN ══
-async function verifyAdminKey(){const v=document.getElementById('adm-key-input').value.trim();if(!v)return;const btn=document.querySelector('#admin-lock-screen .btn-accent');if(btn){btn.textContent='Verifying…';btn.disabled=true;}try{const res=await fetch(CF_API+'?action=uploadArticles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:v,rows:[]})});const out=await res.json();if(out.message==='Unauthorized'||out.error==='Unauthorized'){document.getElementById('adm-key-err').style.display='block';if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}return;}ADMIN_KEY=v;document.getElementById('admin-lock-screen').style.display='none';document.getElementById('admin-tools').style.display='block';document.getElementById('adm-key-err').style.display='none';}catch(err){document.getElementById('adm-key-err').textContent='Network error. Check connection.';document.getElementById('adm-key-err').style.display='block';}finally{if(btn){btn.innerHTML='<i class="fa-solid fa-unlock"></i> Unlock';btn.disabled=false;}}}
-function lockAdmin(){ADMIN_KEY=null;document.getElementById('admin-lock-screen').style.display='block';document.getElementById('admin-tools').style.display='none';document.getElementById('adm-key-input').value='';document.getElementById('adm-key-err').style.display='none';}
 function showUploadStatus(id,type,msg){const el=document.getElementById(id);el.textContent=msg;el.className='upload-status show '+type;}
-function adminUpload(type){const idMap={Articles:'articlesFile',Stores:'storesFile',EmailMap:'emailmapFile'};const actionMap={Articles:'uploadArticles',Stores:'uploadStores',EmailMap:'uploadEmailMap'};const statusId='adm-'+type.toLowerCase()+'-status';const fileInput=document.getElementById(idMap[type]);if(!fileInput?.files.length){toast('Select a file first','error');return;}showUploadStatus(statusId,'loading','Reading file…');const reader=new FileReader();reader.onload=async(e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);showUploadStatus(statusId,'loading',`Uploading ${rows.length} rows…`);const res=await fetch(CF_API+'?action='+actionMap[type],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const out=await res.json();if(out.success){showUploadStatus(statusId,'ok',`${type} uploaded — ${out.rows||rows.length} rows`);toast(type+' uploaded','success');if(type==='Stores')loadAll();}else{if(out.message==='Unauthorized'){showUploadStatus(statusId,'err','Wrong admin key');document.getElementById('adm-key-err').style.display='block';lockAdmin();}else showUploadStatus(statusId,'err',out.message);}}catch(err){showUploadStatus(statusId,'err',err.message);}};reader.readAsArrayBuffer(fileInput.files[0]);}
-
-loadAll();
+function adminUpload(type){const idMap={Articles:'articlesFile',Stores:'storesFile',EmailMap:'emailmapFile'};const actionMap={Articles:'uploadArticles',Stores:'uploadStores',EmailMap:'uploadEmailMap'};const statusId='adm-'+type.toLowerCase()+'-status';const fileInput=document.getElementById(idMap[type]);if(!fileInput?.files.length){toast('Select a file first','error');return;}showUploadStatus(statusId,'loading','Reading file…');const reader=new FileReader();reader.onload=async(e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);showUploadStatus(statusId,'loading',`Uploading ${rows.length} rows…`);const res=await apiFetch(CF_API+'?action='+actionMap[type],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows})});const out=await res.json();if(out.success){showUploadStatus(statusId,'ok',`${type} uploaded — ${out.rows||rows.length} rows`);toast(type+' uploaded','success');if(type==='Stores')loadAll();}else{showUploadStatus(statusId,'err',out.message);}}catch(err){showUploadStatus(statusId,'err',err.message);}};reader.readAsArrayBuffer(fileInput.files[0]);}
 
 let currentDelAction=null;
-function openDelModal(action){currentDelAction=action;document.getElementById('del-admin-key').value='';if(action==='clearOldExpData'){document.getElementById('del-title').innerText='Delete Data Older Than 4 Months';document.getElementById('del-desc').innerHTML='This will permanently delete all entries in the ExpiryTracker older than 4 months.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}else{document.getElementById('del-title').innerText='DELETE ALL EXPIRY DATA';document.getElementById('del-desc').innerHTML='<span style="color:var(--red); font-weight:bold;">WARNING:</span> This will permanently delete ALL entries in the ExpiryTracker table.<br><br><b>Enter ADMIN_KEY to confirm.</b>';}document.getElementById('del-overlay').classList.add('open');}
+function openDelModal(action){currentDelAction=action;document.getElementById('del-title').innerText=action==='clearOldExpData'?'Delete Data Older Than 4 Months':'DELETE ALL EXPIRY DATA';document.getElementById('del-desc').innerHTML=action==='clearOldExpData'?'This will permanently delete all entries in the ExpiryTracker older than 4 months.<br><br><b>This action cannot be undone.</b>':'<span style="color:var(--red); font-weight:bold;">WARNING:</span> This will permanently delete ALL entries in the ExpiryTracker table.<br><br><b>This action cannot be undone.</b>';document.getElementById('del-overlay').classList.add('open');}
 function closeDelModal(){document.getElementById('del-overlay').classList.remove('open');}
-async function executeDeletion(){const adminKey=document.getElementById('del-admin-key').value.trim();if(!adminKey){alert('Please enter the ADMIN_KEY');return;}const btn=document.getElementById('del-confirm-btn');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Processing...';btn.disabled=true;try{const response=await fetch(`${CF_API}/?action=${currentDelAction}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey})});const data=await response.json();if(data.success){alert('Success: '+data.message);closeDelModal();loadAll();}else{alert('Error: '+(data.message||'Unauthorized'));}}catch(err){alert('Network error occurred.');}finally{btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;}}
+async function executeDeletion(){const btn=document.getElementById('del-confirm-btn');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Processing...';btn.disabled=true;try{const response=await apiFetch(`${CF_API}/?action=${currentDelAction}`,{method:'POST'});const data=await response.json();if(data.success){alert('Success: '+data.message);closeDelModal();loadAll();}else{alert('Error: '+(data.message||'Unauthorized'));}}catch(err){alert('Network error occurred.');}finally{btn.innerHTML='<i class="fa-solid fa-trash"></i> Confirm Delete';btn.disabled=false;}}
 
-async function importExpData(input){const file=input.files[0];if(!file)return;const statusEl=document.getElementById('adm-expdata-status');statusEl.className='upload-status show loading';statusEl.innerText='Processing file...';const reader=new FileReader();reader.onload=async(e)=>{try{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{raw:false});if(!rows.length)throw new Error('No data found in file');const res=await fetch(`${CF_API}/?action=uploadExpiryData`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey:ADMIN_KEY,rows})});const result=await res.json();if(result.success){statusEl.className='upload-status show ok';statusEl.innerText=`Success! ${result.inserted} rows uploaded.`;input.value='';loadAll();}else throw new Error(result.message||'Upload failed');}catch(err){statusEl.className='upload-status show err';statusEl.innerText='Error: '+err.message;}};reader.readAsArrayBuffer(file);}
+async function importExpData(input){const file=input.files[0];if(!file)return;const statusEl=document.getElementById('adm-expdata-status');statusEl.className='upload-status show loading';statusEl.innerText='Processing file...';const reader=new FileReader();reader.onload=async(e)=>{try{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{raw:false});if(!rows.length)throw new Error('No data found in file');const res=await apiFetch(`${CF_API}/?action=uploadExpiryData`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows})});const result=await res.json();if(result.success){statusEl.className='upload-status show ok';statusEl.innerText=`Success! ${result.inserted} rows uploaded.`;input.value='';loadAll();}else throw new Error(result.message||'Upload failed');}catch(err){statusEl.className='upload-status show err';statusEl.innerText='Error: '+err.message;}};reader.readAsArrayBuffer(file);}
+
+updateAuthUI();
+if(AUTH_TOKEN) loadAll();
 </script>
 </body>
 </html>
