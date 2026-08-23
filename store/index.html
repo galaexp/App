@@ -635,12 +635,18 @@ async function doLogin(){
   if(!code||!pass){errEl.textContent='Please enter Store Code and password.';errEl.style.display='block';return;}
   btn.disabled=true; spinner.style.display='block';
   try{
-    const r=await fetch(API+'?action=storeAuth&_t='+Date.now());
-    const stores=await r.json();
-    const match=stores.find(s=>String(s.storeCode||'').trim().toUpperCase()===code);
-    if(!match){errEl.textContent='Store Code not found.';errEl.style.display='block';return;}
-    const storedPass=String(match.password||'').trim();
-    if(storedPass!==pass){errEl.textContent='Incorrect password.';errEl.style.display='block';return;}
+    const r = await fetch(API+'?action=storeAuth', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ storeCode: code, password: pass })
+    });
+    const res = await r.json();
+
+    if (!r.ok || !res.success) {
+      errEl.textContent = res.message || 'Login failed.';
+      errEl.style.display = 'block';
+      return;
+    }
     
     if(remember){
       localStorage.setItem('gala_saved_sc', code);
@@ -650,9 +656,9 @@ async function doLogin(){
       localStorage.removeItem('gala_saved_pass');
     }
 
-    storeCode=String(match.storeCode||'').trim();
-    storeName=String(match.storeName||'').trim();
-    const staffsStr = String(match.staffs || "").trim();
+    storeCode = String(res.storeCode || '').trim();
+    storeName = String(res.storeName || '').trim();
+    const staffsStr = String(res.staffs || "").trim();
     storeStaffs = staffsStr ? staffsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
     
     sessionStorage.setItem('sc',storeCode); 
@@ -717,7 +723,7 @@ async function loadData(){
   if(btn) btn.classList.add('loading');
   setStatus('loading','Loading store data…');
   try{
-    const dataR = await fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&_t='+Date.now()).then(r=>r.json());
+    const dataR = await fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&password='+encodeURIComponent(sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '')+'&_t='+Date.now()).then(r=>r.json());
     storeData=processStoreData(dataR.rows||[]);
     setStatus('ok',`<strong>${storeData.length}</strong> items for ${storeName}`);
     updateBuyerActionBadge();
@@ -894,7 +900,11 @@ async function saveStaffs() {
     const res = await fetch(API+'?action=updateStoreStaffs', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ storeCode: storeCode, staffs: staffsStr })
+      body: JSON.stringify({ 
+        storeCode: storeCode, 
+        password: sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '',
+        staffs: staffsStr 
+      })
     });
     const out = await res.json();
     if (out.success) {
@@ -903,7 +913,7 @@ async function saveStaffs() {
       renderStaffPage();
       populateAllFilters(); // Update dropdowns
     } else {
-      toast('Failed to update staff', 'error');
+      toast(out.message || 'Failed to update staff', 'error');
     }
   } catch (e) {
     toast('Network error', 'error');
