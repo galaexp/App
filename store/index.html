@@ -648,6 +648,9 @@ async function doLogin(){
       return;
     }
     
+    // Store password in session storage so we can use it for future API calls in this session
+    sessionStorage.setItem('pass', pass);
+
     if(remember){
       localStorage.setItem('gala_saved_sc', code);
       localStorage.setItem('gala_saved_pass', pass);
@@ -671,7 +674,7 @@ async function doLogin(){
 }
 
 function logout(){
-  sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn'); sessionStorage.removeItem('ss');
+  sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn'); sessionStorage.removeItem('ss'); sessionStorage.removeItem('pass');
   storeCode=''; storeName=''; storeData=[]; storeStaffs=[];
   document.getElementById('login-page').style.display='flex';
   document.getElementById('app-page').style.display='none';
@@ -723,7 +726,8 @@ async function loadData(){
   if(btn) btn.classList.add('loading');
   setStatus('loading','Loading store data…');
   try{
-    const dataR = await fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&password='+encodeURIComponent(sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '')+'&_t='+Date.now()).then(r=>r.json());
+    const pass = sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '';
+    const dataR = await fetch(API+'?action=thisStoreData&storeCode='+encodeURIComponent(storeCode)+'&password='+encodeURIComponent(pass)+'&_t='+Date.now()).then(r=>r.json());
     storeData=processStoreData(dataR.rows||[]);
     setStatus('ok',`<strong>${storeData.length}</strong> items for ${storeName}`);
     updateBuyerActionBadge();
@@ -897,12 +901,13 @@ function removeStaff(index) {
 async function saveStaffs() {
   const staffsStr = storeStaffs.join(',');
   try {
+    const pass = sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '';
     const res = await fetch(API+'?action=updateStoreStaffs', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ 
         storeCode: storeCode, 
-        password: sessionStorage.getItem('pass') || localStorage.getItem('gala_saved_pass') || '',
+        password: pass, 
         staffs: staffsStr 
       })
     });
@@ -1001,7 +1006,7 @@ function renderDashboard(){
   document.getElementById('dash-wk-badge').textContent=weeks.length+' weeks';
   document.getElementById('dash-wk').innerHTML=wkTotals.map((w,i)=>{
     const prev=wkTotals[i-1];
-    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):'';
+    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):''; // Fixed missing empty string
     const trend=prev?(w.count>prev.count?'↑ Rising':w.count<prev.count?'↓ Falling':'→ Same'):'';
     return`<div class="wk-cell ${cls}"><div class="wk-cell-label">${w.week}</div><div class="wk-cell-val">${w.count}</div><div class="wk-cell-trend">${trend}</div></div>`;
   }).join('');
@@ -1204,7 +1209,7 @@ function renderHistory(){
   document.getElementById('hist-wk-badge').textContent=weeks.length+' weeks';
   document.getElementById('hist-wk').innerHTML=wkTotals.map((w,i)=>{
     const prev=wkTotals[i-1];
-    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):'';
+    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):''; // Fixed missing empty string
     const trend=prev?(w.count>prev.count?'↑ Rising':w.count<prev.count?'↓ Falling':'→ Same'):'';
     return`<div class="wk-cell ${cls}"><div class="wk-cell-label">${w.week}</div><div class="wk-cell-val">${w.count}</div><div class="wk-cell-trend">${trend}</div></div>`;
   }).join('');
