@@ -2739,40 +2739,40 @@
             </div>
             <div class="nav">
                 <div class="nav-section">Analytics</div>
-                <button class="nav-item active" onclick="go('overview')" id="n-overview">
+                <button class="nav-item active" data-page="overview">
                     <i class="fa-solid fa-gauge-high nav-ico"></i><span class="nav-text">Overview</span>
                 </button>
-                <button class="nav-item" onclick="go('actions')" id="n-actions">
+                <button class="nav-item" data-page="actions">
                     <i class="fa-solid fa-bolt-lightning nav-ico"></i><span class="nav-text">Action Center</span>
                     <span class="nav-badge" id="nb-actions">0</span>
                 </button>
-                <button class="nav-item" onclick="go('notify')" id="n-notify">
+                <button class="nav-item" data-page="notify">
                     <i class="fa-solid fa-paper-plane nav-ico"></i><span class="nav-text">Notify Store</span>
                 </button>
-                <button class="nav-item" onclick="go('stores')" id="n-stores">
+                <button class="nav-item" data-page="stores">
                     <i class="fa-solid fa-shop nav-ico"></i><span class="nav-text">Store Summary</span>
                 </button>
 
                 <div class="nav-sep"></div>
                 <div class="nav-section">Reports</div>
-                <button class="nav-item" onclick="go('articles')" id="n-articles">
+                <button class="nav-item" data-page="articles">
                     <i class="fa-solid fa-boxes-stacked nav-ico"></i><span class="nav-text">Article View</span>
                 </button>
-                <button class="nav-item" onclick="go('buyerAction')" id="n-buyerAction" style="display:none;">
+                <button class="nav-item" data-page="buyerAction" style="display:none;">
                     <i class="fa-solid fa-bolt-lightning nav-ico"></i><span class="nav-text">Buyers Action</span>
                 </button>
-                <button class="nav-item" onclick="go('submission')" id="n-submission">
+                <button class="nav-item" data-page="submission">
                     <i class="fa-solid fa-clipboard-check nav-ico"></i><span class="nav-text">Submission Status</span>
                 </button>
-                <button class="nav-item" onclick="go('inspector')" id="n-inspector">
+                <button class="nav-item" data-page="inspector">
                     <i class="fa-solid fa-database nav-ico"></i><span class="nav-text">Data Inspector</span>
                 </button>
 
                 <div class="nav-sep"></div>
-                <button class="nav-item" onclick="go('admin')" id="n-admin" style="display:none;">
+                <button class="nav-item" data-page="admin" style="display:none;">
                     <i class="fa-solid fa-gear nav-ico"></i><span class="nav-text">Admin Panel</span>
                 </button>
-                <button class="nav-item" onclick="logout()">
+                <button class="nav-item" id="logout-btn">
                     <i class="fa-solid fa-right-from-bracket nav-ico"></i><span class="nav-text">Logout</span>
                 </button>
             </div>
@@ -2793,10 +2793,10 @@
                 </div>
                 <div class="density-slider">
                     <i class="fa-solid fa-compress"></i>
-                    <input type="range" id="densitySlider" min="0" max="2" value="1" oninput="adjustDensity(this.value)" title="Adjust Table Density" />
+                    <input type="range" id="densitySlider" min="0" max="2" value="1" title="Adjust Table Density" />
                     <i class="fa-solid fa-expand"></i>
                 </div>
-                <button class="refresh-btn loading" onclick="loadAll()" id="rfbtn">
+                <button class="refresh-btn loading" id="rfbtn">
                     <i class="fa-solid fa-arrows-rotate spin"></i> Refresh Data
                 </button>
             </div>
@@ -2816,7 +2816,7 @@
                     <div id="react-overview-root"></div>
                     <div class="overdue-banner" id="overdue-banner">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <div><strong id="overdue-count">0</strong> items submitted 2+ weeks ago are still Pending — <a onclick="go('actions');filterOverdue()">View overdue →</a></div>
+                        <div><strong id="overdue-count">0</strong> items submitted 2+ weeks ago are still Pending — <a id="overdue-link">View overdue →</a></div>
                     </div>
                     <div class="kpi-grid" id="kpi-ov"></div>
                     <div class="kpi-grid large-cards" id="kpi-ov-extra"></div>
@@ -2874,14 +2874,14 @@
                         <div class="tw ts">
                             <table id="t-ov">
                                 <thead><tr>
-                                        <th class="sortable" onclick="sortBy('t-ov','code','str')">Code</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','store','str')">Store</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','l7','num')">≤7 Days</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','l30','num')">≤30 Days</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','l60','num')">≤60 Days</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','total','num')">Total</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','p','num')">Pending</th>
-                                        <th class="sortable" onclick="sortBy('t-ov','c','num')">Actioned</th>
+                                        <th class="sortable" data-table="t-ov" data-key="code" data-type="str">Code</th>
+                                        <th class="sortable" data-table="t-ov" data-key="store" data-type="str">Store</th>
+                                        <th class="sortable" data-table="t-ov" data-key="l7" data-type="num">≤7 Days</th>
+                                        <th class="sortable" data-table="t-ov" data-key="l30" data-type="num">≤30 Days</th>
+                                        <th class="sortable" data-table="t-ov" data-key="l60" data-type="num">≤60 Days</th>
+                                        <th class="sortable" data-table="t-ov" data-key="total" data-type="num">Total</th>
+                                        <th class="sortable" data-table="t-ov" data-key="p" data-type="num">Pending</th>
+                                        <th class="sortable" data-table="t-ov" data-key="c" data-type="num">Actioned</th>
                                     </tr></thead>
                                 <tbody></tbody>
                             </table>
@@ -2901,21 +2901,21 @@
                     </div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ac-code" onchange="onCodeChange('ac')"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ac-code"><option value="">All</option></select></div>
                             <div class="fg"><div class="fl">Store</div><div class="store-disp" id="ac-store-disp">—</div></div>
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ac-ym" onchange="renderActions()"><option value="">All</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ac-week" onchange="renderActions()"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ac-ym"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ac-week"><option value="">All</option></select></div>
 
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="ac-dept-ms">
-                                    <div class="ms-display" id="ac-dept-display" onclick="toggleMultiSelect('ac-dept')">All Depts</div>
+                                    <div class="ms-display" id="ac-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="ac-dept-dropdown"></div>
                                 </div>
                             </div>
 
                             <div class="fg"><div class="fl">Status</div>
-                                <select class="fs" id="ac-status" onchange="renderActions()">
+                                <select class="fs" id="ac-status">
                                     <option value="">All</option><option value="Pending Action">Pending</option><option value="Action Taken">Actioned</option><option value="Previously Actioned">Prev. Actioned</option>
                                 </select>
                             </div>
@@ -2923,13 +2923,13 @@
                             <div class="fg">
                                 <div class="fl">Risk</div>
                                 <div class="ms-container" id="ac-bucket-ms">
-                                    <div class="ms-display" id="ac-bucket-display" onclick="toggleMultiSelect('ac-bucket')">All Risks</div>
+                                    <div class="ms-display" id="ac-bucket-display">All Risks</div>
                                     <div class="ms-dropdown" id="ac-bucket-dropdown"></div>
                                 </div>
                             </div>
 
-                            <button class="rbtn" onclick="resetF('ac')"><i class="fa-solid fa-xmark"></i> Reset</button>
-                            <button class="btn btn-sm btn-export" onclick="exportXL('actions')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="rbtn" id="ac-reset"><i class="fa-solid fa-xmark"></i> Reset</button>
+                            <button class="btn btn-sm btn-export" id="ac-export"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="kpi-grid" id="kpi-ac"></div>
@@ -2937,7 +2937,7 @@
                     <div style="display:flex; justify-content:flex-start; margin-bottom:9px;">
                         <div class="search-wrap">
                             <i class="fa-solid fa-magnifying-glass search-ico"></i>
-                            <input type="text" id="globalSearch" placeholder="Search article, description…" oninput="onSearch()" style="width:320px;" />
+                            <input type="text" id="globalSearch" placeholder="Search article, description…" style="width:320px;" />
                         </div>
                     </div>
 
@@ -2949,14 +2949,14 @@
                                 <div class="active-filters" id="ac-active-filters"></div>
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-                                <label class="tick-label"><input type="checkbox" id="ac-exc-low" onchange="renderActions()"> Hide 0-4 Stock</label>
-                                <label class="tick-label"><input type="checkbox" id="ac-exc-expired" onchange="renderActions()"> Hide Expired</label>
-                                <label class="tick-label"><input type="checkbox" id="ac-hide-actioned-before" onchange="renderActions()"> Hide Actioned Before</label>
+                                <label class="tick-label"><input type="checkbox" id="ac-exc-low"> Hide 0-4 Stock</label>
+                                <label class="tick-label"><input type="checkbox" id="ac-exc-expired"> Hide Expired</label>
+                                <label class="tick-label"><input type="checkbox" id="ac-hide-actioned-before"> Hide Actioned Before</label>
                                 <span class="panel-badge" id="b-ac">—</span>
-                                <button class="btn btn-sm" onclick="selectAllVisible()">Select All</button>
-                                <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
-                                <button class="btn btn-sm btn-import" onclick="document.getElementById('import-file').click()"><i class="fa-solid fa-arrow-up-from-line"></i> Import Actions</button>
-                                <input type="file" id="import-file" accept=".xlsx,.csv" style="display:none" onchange="importActions(this)" />
+                                <button class="btn btn-sm" id="select-all-visible">Select All</button>
+                                <button class="btn btn-sm" id="clear-selection">Clear</button>
+                                <button class="btn btn-sm btn-import" id="import-actions-trigger"><i class="fa-solid fa-arrow-up-from-line"></i> Import Actions</button>
+                                <input type="file" id="import-file" accept=".xlsx,.csv" style="display:none" />
                             </div>
                         </div>
                         <div class="tw ts">
@@ -2992,24 +2992,24 @@
                     </div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="nf-code" onchange="renderNotify()"><option value="">Select Store</option></select></div>
+                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="nf-code"><option value="">Select Store</option></select></div>
                             <div class="fg"><div class="fl">Store</div><div class="store-disp" id="nf-store-disp">—</div></div>
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="nf-ym" onchange="renderNotify()"><option value="">All</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="nf-week" onchange="renderNotify()"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="nf-ym"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="nf-week"><option value="">All</option></select></div>
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="nf-dept-ms">
-                                    <div class="ms-display" id="nf-dept-display" onclick="toggleMultiSelect('nf-dept')">All Depts</div>
+                                    <div class="ms-display" id="nf-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="nf-dept-dropdown"></div>
                                 </div>
                             </div>
                             <div class="fg" style="flex-direction:row; align-items:center; gap:8px; margin-top:4px;">
-                                <label class="tick-label"><input type="checkbox" id="nf-rtc" checked onchange="renderNotify()"> RTC Price Change</label>
-                                <label class="tick-label"><input type="checkbox" id="nf-transfer" checked onchange="renderNotify()"> Store Transfer</label>
-                                <label class="tick-label"><input type="checkbox" id="nf-monitor" onchange="renderNotify()"> Monitor</label>
-                                <label class="tick-label"><input type="checkbox" id="nf-clear" onchange="renderNotify()"> Clear In Normal Price</label>
+                                <label class="tick-label"><input type="checkbox" id="nf-rtc" checked> RTC Price Change</label>
+                                <label class="tick-label"><input type="checkbox" id="nf-transfer" checked> Store Transfer</label>
+                                <label class="tick-label"><input type="checkbox" id="nf-monitor"> Monitor</label>
+                                <label class="tick-label"><input type="checkbox" id="nf-clear"> Clear In Normal Price</label>
                             </div>
-                            <button class="btn btn-sm btn-accent" onclick="sendNotifyEmail()" style="align-self:flex-end"><i class="fa-solid fa-envelope"></i> Copy Table & Open Email</button>
+                            <button class="btn btn-sm btn-accent" id="nf-send-email"><i class="fa-solid fa-envelope"></i> Copy Table & Open Email</button>
                         </div>
                     </div>
                     <div class="panel">
@@ -3037,21 +3037,21 @@
                     </div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ss-code" onchange="onCodeChange('ss')"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ss-code"><option value="">All</option></select></div>
                             <div class="fg"><div class="fl">Store</div><div class="store-disp" id="ss-store-disp">—</div></div>
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ss-ym" onchange="renderStores()"><option value="">All</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ss-week" onchange="renderStores()"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ss-ym"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ss-week"><option value="">All</option></select></div>
 
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="ss-dept-ms">
-                                    <div class="ms-display" id="ss-dept-display" onclick="toggleMultiSelect('ss-dept')">All Depts</div>
+                                    <div class="ms-display" id="ss-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="ss-dept-dropdown"></div>
                                 </div>
                             </div>
 
-                            <button class="rbtn" onclick="resetF('ss')"><i class="fa-solid-xmark"></i> Reset</button>
-                            <button class="btn btn-sm btn-export" onclick="exportXL('artweek')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="rbtn" id="ss-reset"><i class="fa-solid fa-xmark"></i> Reset</button>
+                            <button class="btn btn-sm btn-export" id="ss-export"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="kpi-grid" id="kpi-sum"></div>
@@ -3070,14 +3070,14 @@
                     <div style="display:flex; justify-content:flex-start; margin-bottom:9px;">
                         <div class="search-wrap">
                             <i class="fa-solid fa-magnifying-glass search-ico"></i>
-                            <input type="text" id="ss-search" placeholder="Search article, description, store…" oninput="onStoreSearch()" style="width:320px;" />
+                            <input type="text" id="ss-search" placeholder="Search article, description, store…" style="width:320px;" />
                         </div>
                     </div>
 
                     <div class="panel">
                         <div class="panel-head">
                             <div><div class="panel-title">Article Stock by Week</div><div class="panel-title-sub">Rising = stock not clearing</div></div>
-                            <div style="display:flex;gap:6px;align-items:center"><span class="panel-badge" id="b-artweek">—</span><button class="btn btn-sm btn-export" onclick="exportXL('artweek')"><i class="fa-solid fa-file-excel"></i> Export</button></div>
+                            <div style="display:flex;gap:6px;align-items:center"><span class="panel-badge" id="b-artweek">—</span><button class="btn btn-sm btn-export" id="ss-export-artweek"><i class="fa-solid fa-file-excel"></i> Export</button></div>
                         </div>
                         <div class="tw ts"><table id="t-artweek"><thead><tr id="t-artweek-hdr"></tr></thead><tbody></tbody></table></div>
                     </div>
@@ -3085,7 +3085,7 @@
                         <div class="panel-head">
                             <div><div class="panel-title">Increasing Stock Items</div><div class="panel-title-sub">Stock rising week-over-week — not clearing</div></div>
                             <div style="display:flex; gap:6px; align-items:center;">
-                                <label class="tick-label"><input type="checkbox" id="inc-hide-prev-zero" onchange="renderIncreasingStocks(fData('ss'))"> Hide Prev Stock 0</label>
+                                <label class="tick-label"><input type="checkbox" id="inc-hide-prev-zero"> Hide Prev Stock 0</label>
                                 <span class="panel-badge" id="b-inc">—</span>
                             </div>
                         </div>
@@ -3107,17 +3107,17 @@
                         <div class="filter-bar-row">
                             <div class="fg" style="min-width:190px">
                                 <div class="fl">Search Article</div>
-                                <input type="text" id="ar-search" class="fs" style="min-width:180px;appearance:none;background-image:none;padding-left:9px" placeholder="Article, Barcode, Desc..." oninput="renderArticles()" />
+                                <input type="text" id="ar-search" class="fs" style="min-width:180px;appearance:none;background-image:none;padding-left:9px" placeholder="Article, Barcode, Desc..." />
                             </div>
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="ar-dept-ms">
-                                    <div class="ms-display" id="ar-dept-display" onclick="toggleMultiSelect('ar-dept')">All Depts</div>
+                                    <div class="ms-display" id="ar-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="ar-dept-dropdown"></div>
                                 </div>
                             </div>
-                            <button class="rbtn" onclick="resetF('ar')"><i class="fa-solid fa-xmark"></i> Reset</button>
-                            <button class="btn btn-sm btn-export" onclick="exportXL('articles')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="rbtn" id="ar-reset"><i class="fa-solid fa-xmark"></i> Reset</button>
+                            <button class="btn btn-sm btn-export" id="ar-export"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="panel">
@@ -3132,12 +3132,12 @@
                         <div class="tw ts">
                             <table id="t-art">
                                 <thead><tr>
-                                        <th class="sortable" onclick="sortBy('t-art','Article','str')">Article</th>
-                                        <th class="sortable" onclick="sortBy('t-art','Barcode','str')">Barcode</th>
-                                        <th class="sortable" onclick="sortBy('t-art','Description','str')">Description</th>
-                                        <th class="sortable" onclick="sortBy('t-art','Department','str')">Department</th>
-                                        <th class="sortable" onclick="sortBy('t-art','LatestWeekStock','num')">Total Latest Week Stock</th>
-                                        <th class="sortable" onclick="sortBy('t-art','ExpiryDate','date')">Expiry Date</th>
+                                        <th class="sortable" data-table="t-art" data-key="Article" data-type="str">Article</th>
+                                        <th class="sortable" data-table="t-art" data-key="Barcode" data-type="str">Barcode</th>
+                                        <th class="sortable" data-table="t-art" data-key="Description" data-type="str">Description</th>
+                                        <th class="sortable" data-table="t-art" data-key="Department" data-type="str">Department</th>
+                                        <th class="sortable" data-table="t-art" data-key="LatestWeekStock" data-type="num">Total Latest Week Stock</th>
+                                        <th class="sortable" data-table="t-art" data-key="ExpiryDate" data-type="date">Expiry Date</th>
                                     </tr></thead>
                                 <tbody></tbody>
                             </table>
@@ -3153,19 +3153,19 @@
                     </div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ba-code" onchange="onCodeChange('ba')"><option value="">All Stores</option></select></div>
+                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ba-code"><option value="">All Stores</option></select></div>
                             <div class="fg"><div class="fl">Store</div><div class="store-disp" id="ba-store-disp">—</div></div>
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ba-ym" onchange="renderBuyerAction()"><option value="">All</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ba-week" onchange="renderBuyerAction()"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="ba-ym"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="ba-week"><option value="">All</option></select></div>
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="ba-dept-ms">
-                                    <div class="ms-display" id="ba-dept-display" onclick="toggleMultiSelect('ba-dept')">All Depts</div>
+                                    <div class="ms-display" id="ba-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="ba-dept-dropdown"></div>
                                 </div>
                             </div>
-                            <button class="rbtn" onclick="resetF('ba')"><i class="fa-solid fa-xmark"></i> Reset</button>
-                            <button class="btn btn-sm btn-export" onclick="exportBuyerActionXL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="rbtn" id="ba-reset"><i class="fa-solid fa-xmark"></i> Reset</button>
+                            <button class="btn btn-sm btn-export" id="ba-export"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="kpi-grid" id="kpi-ba"></div>
@@ -3214,8 +3214,8 @@
                     </div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="sub-ym" onchange="renderSubmission()"><option value="">All Months</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="sub-week" onchange="renderSubmission()"><option value="">All Weeks</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="sub-ym"><option value="">All Months</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="sub-week"><option value="">All Weeks</option></select></div>
                         </div>
                     </div>
                     <div class="kpi-grid" id="kpi-sub"></div>
@@ -3227,7 +3227,7 @@
                             </div>
                             <div style="display:flex; gap:6px; align-items:center;">
                                 <span class="panel-badge" id="b-sub">—</span>
-                                <button class="btn btn-sm btn-accent" id="btn-remind" onclick="openSubRemindModal()"><i class="fa-solid fa-paper-plane"></i> Remind Not Submitted</button>
+                                <button class="btn btn-sm btn-accent" id="btn-remind"><i class="fa-solid fa-paper-plane"></i> Remind Not Submitted</button>
                             </div>
                         </div>
                         <div class="panel-body"><div class="sub-grid" id="sub-grid"></div></div>
@@ -3241,10 +3241,10 @@
                         <div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-code-branch"></i> Source to signal</span></div>
                     </div>
                     <div style="display:flex; gap:6px; margin-bottom:9px;">
-                        <button class="btn btn-accent btn-sm" id="insp-btn-e" onclick="switchInsp('e',this)">ExpiryData Raw</button>
-                        <button class="btn btn-sm" id="insp-btn-l" onclick="switchInsp('l',this)">Buyer Actions Raw</button>
-                        <button class="btn btn-sm" id="insp-btn-p" onclick="switchInsp('p',this)">Processed</button>
-                        <button class="btn btn-sm btn-export" onclick="exportXL(inspExportType)" style="margin-left:auto"><i class="fa-solid fa-file-excel"></i> Export</button>
+                        <button class="btn btn-accent btn-sm" id="insp-btn-e">ExpiryData Raw</button>
+                        <button class="btn btn-sm" id="insp-btn-l">Buyer Actions Raw</button>
+                        <button class="btn btn-sm" id="insp-btn-p">Processed</button>
+                        <button class="btn btn-sm btn-export" id="insp-export" style="margin-left:auto"><i class="fa-solid fa-file-excel"></i> Export</button>
                     </div>
                     <div class="panel">
                         <div class="panel-head"><span class="panel-title" id="insp-title">ExpiryData Raw</span><span class="panel-badge" id="insp-badge">—</span></div>
@@ -3272,26 +3272,26 @@
                         <div class="upload-card">
                             <div class="upload-card-title"><i class="fa-solid fa-users"></i> User Management</div>
                             <div class="upload-card-sub">Create users with specific department access.</div>
-                            <button class="btn btn-sm btn-accent" onclick="openAddUserModal()" style="margin-bottom:8px;"><i class="fa-solid fa-user-plus"></i> Add User</button>
+                            <button class="btn btn-sm btn-accent" id="add-user-btn" style="margin-bottom:8px;"><i class="fa-solid fa-user-plus"></i> Add User</button>
                             <div id="users-list" style="margin-top:11px;"></div>
                         </div>
 
                         <div class="upload-card">
                             <div class="upload-card-title"><i class="fa-solid fa-box"></i> Upload Articles</div>
                             <div class="upload-card-sub">Columns required: Barcode, Article, Description, Department</div>
-                            <div class="upload-row"><input type="file" id="articlesFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" onclick="adminUpload('Articles')"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
+                            <div class="upload-row"><input type="file" id="articlesFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" id="upload-articles-btn"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
                             <div class="upload-status" id="adm-articles-status"></div>
                         </div>
                         <div class="upload-card">
                             <div class="upload-card-title"><i class="fa-solid fa-shop"></i> Upload Stores</div>
                             <div class="upload-card-sub">Columns required: StoreCode, StoreName, Password</div>
-                            <div class="upload-row"><input type="file" id="storesFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" onclick="adminUpload('Stores')"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
+                            <div class="upload-row"><input type="file" id="storesFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" id="upload-stores-btn"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
                             <div class="upload-status" id="adm-stores-status"></div>
                         </div>
                         <div class="upload-card">
                             <div class="upload-card-title"><i class="fa-solid fa-envelope"></i> Upload Email Map</div>
                             <div class="upload-card-sub">Columns required: StoreCode, ToEmail, CcEmail</div>
-                            <div class="upload-row"><input type="file" id="emailmapFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" onclick="adminUpload('EmailMap')"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
+                            <div class="upload-row"><input type="file" id="emailmapFile" accept=".xlsx,.csv" /><button class="btn btn-green btn-sm" id="upload-emailmap-btn"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload</button></div>
                             <div class="upload-status" id="adm-emailmap-status"></div>
                         </div>
 
@@ -3300,13 +3300,13 @@
                             <div class="upload-card-sub">Danger zone · Permanent deletion &amp; Bulk Upload of ExpiryTracker records</div>
 
                             <div class="upload-row" style="gap:8px; margin-bottom:11px;">
-                                <button class="btn btn-sm" style="background:var(--orange-l); color:var(--orange); border-color:var(--orange-b);" onclick="openDelModal('clearOldExpData')"><i class="fa-solid fa-clock-rotate-left"></i> Clear Data - Before 4 Months</button>
-                                <button class="btn btn-sm btn-red" onclick="openDelModal('clearAllExpData')"><i class="fa-solid fa-trash"></i> Clear Data - All Exp Data</button>
+                                <button class="btn btn-sm" id="clear-old-data-btn" style="background:var(--orange-l); color:var(--orange); border-color:var(--orange-b);"><i class="fa-solid fa-clock-rotate-left"></i> Clear Data - Before 4 Months</button>
+                                <button class="btn btn-sm btn-red" id="clear-all-data-btn"><i class="fa-solid fa-trash"></i> Clear Data - All Exp Data</button>
                             </div>
 
                             <div class="upload-row" style="border-top:1px solid var(--border); padding-top:11px;">
-                                <button class="btn btn-sm btn-import" onclick="document.getElementById('expdata-file').click()"><i class="fa-solid fa-arrow-up-from-line"></i> Upload ExpiryTracker Data</button>
-                                <input type="file" id="expdata-file" accept=".xlsx,.csv" style="display:none" onchange="importExpData(this)" />
+                                <button class="btn btn-sm btn-import" id="upload-expdata-trigger"><i class="fa-solid fa-arrow-up-from-line"></i> Upload ExpiryTracker Data</button>
+                                <input type="file" id="expdata-file" accept=".xlsx,.csv" style="display:none" />
                             </div>
                             <div class="upload-status" id="adm-expdata-status" style="margin-top:9px;"></div>
                         </div>
@@ -3322,24 +3322,24 @@
                     <div class="drilldown-info" id="dd-info-banner"></div>
                     <div class="filter-bar">
                         <div class="filter-bar-row">
-                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="dd-code" onchange="onCodeChange('dd')"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Store Code</div><select class="fs" id="dd-code"><option value="">All</option></select></div>
                             <div class="fg"><div class="fl">Store</div><div class="store-disp" id="dd-store-disp">—</div></div>
-                            <div class="fg"><div class="fl">Month</div><select class="fs" id="dd-ym" onchange="renderDrilldown()"><option value="">All</option></select></div>
-                            <div class="fg"><div class="fl">Week</div><select class="fs" id="dd-week" onchange="renderDrilldown()"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Month</div><select class="fs" id="dd-ym"><option value="">All</option></select></div>
+                            <div class="fg"><div class="fl">Week</div><select class="fs" id="dd-week"><option value="">All</option></select></div>
                             <div class="fg">
                                 <div class="fl">Department</div>
                                 <div class="ms-container" id="dd-dept-ms">
-                                    <div class="ms-display" id="dd-dept-display" onclick="toggleMultiSelect('dd-dept')">All Depts</div>
+                                    <div class="ms-display" id="dd-dept-display">All Depts</div>
                                     <div class="ms-dropdown" id="dd-dept-dropdown"></div>
                                 </div>
                             </div>
                             <div class="fg"><div class="fl">Status</div>
-                                <select class="fs" id="dd-status" onchange="renderDrilldown()">
+                                <select class="fs" id="dd-status">
                                     <option value="">All</option><option value="Pending Action">Pending</option><option value="Action Taken">Actioned</option><option value="Previously Actioned">Prev. Actioned</option>
                                 </select>
                             </div>
-                            <button class="rbtn" onclick="resetF('dd')"><i class="fa-solid fa-xmark"></i> Reset</button>
-                            <button class="btn btn-sm btn-export" onclick="exportXL('drilldown')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="rbtn" id="dd-reset"><i class="fa-solid fa-xmark"></i> Reset</button>
+                            <button class="btn btn-sm btn-export" id="dd-export"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="kpi-grid" id="kpi-dd"></div>
@@ -3403,16 +3403,16 @@
                     <div class="login-field-label">Password</div>
                     <div class="login-input-wrap">
                         <i class="fa-solid fa-lock login-input-ico"></i>
-                        <input type="password" id="login-pass" class="login-input" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+                        <input type="password" id="login-pass" class="login-input" placeholder="Enter your password" autocomplete="current-password" />
                     </div>
                 </div>
                 <div class="login-row">
                     <label class="login-remember">
                         <input type="checkbox" id="login-remember" /> Remember me
                     </label>
-                    <a class="login-forgot" href="javascript:void(0)" onclick="toast('Please contact your administrator to reset password.','info')">Forgot password?</a>
+                    <a class="login-forgot" id="forgot-password-link">Forgot password?</a>
                 </div>
-                <button class="login-btn" id="login-btn" onclick="doLogin()">
+                <button class="login-btn" id="login-btn">
                     <i class="fa-solid fa-right-to-bracket"></i> Sign In
                 </button>
             </div>
@@ -3446,50 +3446,48 @@
                     <div class="ac-field-label">User Type</div>
                     <div style="display:flex; gap:9px; flex-wrap:wrap;">
                         <label class="tick-label">
-                            <input type="radio" name="user-type" value="buyer" checked onchange="toggleUserType('buyer')" />
-                            Buyer (Department-based)
+                            <input type="radio" name="user-type" value="buyer" checked /> Buyer (Department-based)
                         </label>
                         <label class="tick-label">
-                            <input type="radio" name="user-type" value="areamanager" onchange="toggleUserType('areamanager')" />
-                            Area Manager (Store-based)
+                            <input type="radio" name="user-type" value="areamanager" /> Area Manager (Store-based)
                         </label>
                     </div>
                 </div>
                 <div class="ac-field" id="usr-dept-field">
                     <div class="ac-field-label">Departments</div>
                     <div class="ms-container" id="usr-dept-ms" style="min-width:100%;">
-                        <div class="ms-display" id="usr-dept-display" onclick="toggleMultiSelect('usr-dept')">No Depts Selected</div>
+                        <div class="ms-display" id="usr-dept-display">No Depts Selected</div>
                         <div class="ms-dropdown" id="usr-dept-dropdown"></div>
                     </div>
                 </div>
                 <div class="ac-field" id="usr-store-field" style="display:none;">
                     <div class="ac-field-label">Stores</div>
                     <div class="ms-container" id="usr-store-ms" style="min-width:100%;">
-                        <div class="ms-display" id="usr-store-display" onclick="toggleMultiSelect('usr-store')">No Stores Selected</div>
+                        <div class="ms-display" id="usr-store-display">No Stores Selected</div>
                         <div class="ms-dropdown" id="usr-store-dropdown"></div>
                     </div>
                 </div>
                 <div class="ac-field" style="display:flex; align-items:center; gap:7px;">
-                    <input type="checkbox" id="new-isadmin" style="width:14px;height:14px;" onchange="onAdminToggle(this)" />
+                    <input type="checkbox" id="new-isadmin" style="width:14px;height:14px;" />
                     <label for="new-isadmin" style="font-size:11.5px; color:var(--t2); cursor:pointer;">Grant Admin Privileges (full access)</label>
                 </div>
             </div>
             <div class="ac-footer">
-                <button class="btn" onclick="closeAddUserModal()">Cancel</button>
-                <button class="btn btn-accent" onclick="createUser()"><i class="fa-solid fa-check"></i> Create User</button>
+                <button class="btn" id="add-user-cancel">Cancel</button>
+                <button class="btn btn-accent" id="add-user-confirm"><i class="fa-solid fa-check"></i> Create User</button>
             </div>
         </div>
     </div>
 
     <!-- ═══ ITEM POPUP ═══ -->
-    <div class="overlay" id="popup-overlay" onclick="closePop(event)">
+    <div class="overlay" id="popup-overlay">
         <div class="popup">
             <div class="popup-head">
                 <div><div class="popup-title" id="pop-title">—</div><div class="popup-sub" id="pop-sub"></div></div>
                 <div style="display:flex; gap:7px; flex-shrink:0;">
-                    <button class="popup-close" style="background:var(--amber-l); color:var(--amber); border-color:var(--amber-b);" id="pop-edit-btn" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                    <button class="popup-close" style="background:var(--red-l); color:var(--red); border-color:var(--red-b);" id="pop-del-btn" title="Delete Item"><i class="fa-solid fa-trash"></i></button>
-                    <button class="popup-close" onclick="closePop()"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="popup-close" id="pop-edit-btn" style="background:var(--amber-l); color:var(--amber); border-color:var(--amber-b);" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
+                    <button class="popup-close" id="pop-del-btn" style="background:var(--red-l); color:var(--red); border-color:var(--red-b);" title="Delete Item"><i class="fa-solid fa-trash"></i></button>
+                    <button class="popup-close" id="pop-close-btn"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="popup-body" id="pop-body"></div>
@@ -3526,7 +3524,7 @@
                 </div>
                 <div class="ac-field" id="field-transfer" style="display:none">
                     <div class="ac-field-label">Transfer To — Store Codes</div>
-                    <textarea id="inp-transfer" class="ac-textarea" rows="3" placeholder="Paste store codes from Excel, or type manually&#10;Tabs & newlines auto-convert to commas" oninput="normTransfer(this)"></textarea>
+                    <textarea id="inp-transfer" class="ac-textarea" rows="3" placeholder="Paste store codes from Excel, or type manually&#10;Tabs & newlines auto-convert to commas"></textarea>
                     <div class="ac-field-hint">Pasting from Excel? Rows auto-convert to comma-separated list</div>
                 </div>
                 <div class="ac-field" id="field-transfer-qty" style="display:none">
@@ -3535,8 +3533,8 @@
                 </div>
             </div>
             <div class="ac-footer">
-                <button class="btn" onclick="closeConfirm()">Cancel</button>
-                <button class="btn btn-accent" id="confirm-ok-btn" onclick="executeAction()"><i class="fa-solid fa-check"></i> Confirm &amp; Save</button>
+                <button class="btn" id="confirm-cancel-btn">Cancel</button>
+                <button class="btn btn-accent" id="confirm-ok-btn"><i class="fa-solid fa-check"></i> Confirm &amp; Save</button>
             </div>
         </div>
     </div>
@@ -3552,8 +3550,8 @@
                 </div>
             </div>
             <div class="ac-footer">
-                <button class="btn" onclick="closeDelModal()">Cancel</button>
-                <button class="btn btn-red" id="del-confirm-btn" onclick="executeDeletion()"><i class="fa-solid fa-trash"></i> Confirm Delete</button>
+                <button class="btn" id="del-cancel-btn">Cancel</button>
+                <button class="btn btn-red" id="del-confirm-btn"><i class="fa-solid fa-trash"></i> Confirm Delete</button>
             </div>
         </div>
     </div>
@@ -3569,8 +3567,8 @@
                 </div>
             </div>
             <div class="ac-footer">
-                <button class="btn" onclick="closePopupDel()">Cancel</button>
-                <button class="btn btn-red" id="popup-del-btn" onclick="executePopupDelete()"><i class="fa-solid fa-trash"></i> Confirm Delete</button>
+                <button class="btn" id="popup-del-cancel">Cancel</button>
+                <button class="btn btn-red" id="popup-del-btn"><i class="fa-solid fa-trash"></i> Confirm Delete</button>
             </div>
         </div>
     </div>
@@ -3588,8 +3586,8 @@
             <div class="ac-items" id="edit-item-info"></div>
             <div class="ac-fields" id="edit-fields"></div>
             <div class="ac-footer">
-                <button class="btn" onclick="closeEditModal()">Cancel</button>
-                <button class="btn btn-accent" id="edit-save-btn" onclick="saveEditAction()"><i class="fa-solid fa-check"></i> Save Changes</button>
+                <button class="btn" id="edit-cancel-btn">Cancel</button>
+                <button class="btn btn-accent" id="edit-save-btn"><i class="fa-solid fa-check"></i> Save Changes</button>
             </div>
         </div>
     </div>
@@ -3606,13 +3604,13 @@
             </div>
             <div class="ac-fields" style="max-height:300px; overflow-y:auto; margin-top:9px;">
                 <label class="ms-opt" style="font-weight:600; border-bottom:1px solid var(--border); margin-bottom:5px;">
-                    <input type="checkbox" id="sub-remind-all" onchange="toggleAllSubRemind(this)" /> Select All
+                    <input type="checkbox" id="sub-remind-all" /> Select All
                 </label>
                 <div id="sub-remind-list"></div>
             </div>
             <div class="ac-footer">
-                <button class="btn" onclick="closeSubRemindModal()">Cancel</button>
-                <button class="btn btn-accent" id="sub-remind-send-btn" onclick="executeSubReminders()"><i class="fa-solid fa-paper-plane"></i> Send Reminders</button>
+                <button class="btn" id="sub-remind-cancel">Cancel</button>
+                <button class="btn btn-accent" id="sub-remind-send-btn"><i class="fa-solid fa-paper-plane"></i> Send Reminders</button>
             </div>
         </div>
     </div>
@@ -3621,18 +3619,24 @@
     <div class="action-toolbar" id="action-toolbar">
         <div class="action-toolbar-count"><strong id="sel-count">0</strong> selected</div>
         <div class="action-toolbar-sep"></div>
-        <button class="act-btn rtc" onclick="confirmAction('RTC Price Change')"><i class="fa-solid fa-tag"></i> RTC Price Change</button>
-        <button class="act-btn trans" onclick="confirmAction('Store Transfer')"><i class="fa-solid fa-arrow-right-arrow-left"></i> Store Transfer</button>
-        <button class="act-btn mon" onclick="confirmAction('Monitor')"><i class="fa-solid fa-eye"></i> Monitor</button>
-        <button class="act-btn clear" onclick="confirmAction('Clear In Normal Price')"><i class="fa-solid fa-rotate-left"></i> Clear In Normal Price</button>
+        <button class="act-btn rtc" data-action="RTC Price Change"><i class="fa-solid fa-tag"></i> RTC Price Change</button>
+        <button class="act-btn trans" data-action="Store Transfer"><i class="fa-solid fa-arrow-right-arrow-left"></i> Store Transfer</button>
+        <button class="act-btn mon" data-action="Monitor"><i class="fa-solid fa-eye"></i> Monitor</button>
+        <button class="act-btn clear" data-action="Clear In Normal Price"><i class="fa-solid fa-rotate-left"></i> Clear In Normal Price</button>
         <div class="action-toolbar-sep"></div>
-        <button class="act-btn cancel" onclick="clearSelection()" title="Clear selection"><i class="fa-solid fa-xmark"></i></button>
+        <button class="act-btn cancel" id="toolbar-clear" title="Clear selection"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <!-- ═══ TOAST ═══ -->
     <div class="toast" id="toast"></div>
 
     <!-- ═══ SCRIPTS ═══ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js">
+    </script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js">
+    </script>
     <script>
         document.getElementById('login-year').textContent = new Date().getFullYear();
 
@@ -3642,12 +3646,6 @@
         const MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const TODAY = new Date();
         TODAY.setHours(0, 0, 0, 0);
-        const TITLES = { overview: 'Overview', actions: 'Action Center', notify: 'Notify Store', stores: 'Store Summary',
-            articles: 'Article View', buyerAction: "Buyer's Action", submission: 'Submission Status',
-            inspector: 'Data Inspector', admin: 'Admin Panel' };
-        const ROUTES = { overview: 'overview', actions: 'actions', notify: 'notify', stores: 'stores', articles: 'articles',
-            buyerAction: 'buyerAction', submission: 'submission', inspector: 'inspector', admin: 'admin',
-            drilldown: 'drilldown' };
         const DEPARTMENTS = ['Bakery', 'Chilled & Dairy', 'Delicatessen', 'Fish', 'Frozen Foods', 'Grocery Food',
             'Grocery Non Food', 'Health & Beauty'
         ];
@@ -3669,13 +3667,16 @@
         let drilldownMode = 'soldout';
         let editingIdx = null,
             editingMode = null;
-        let searchDebounce;
         let deleteIdx = null;
         let tableSortStates = {};
 
         let AUTH_TOKEN = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
         let CURRENT_USER = JSON.parse(localStorage.getItem('current_user') || sessionStorage.getItem('current_user') ||
-        'null');
+            'null');
+
+        // ─── DOM REFS ───
+        const $ = (sel, ctx = document) => ctx.querySelector(sel);
+        const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
         // ─── HELPERS ───
         function adjustDensity(val) {
@@ -3704,24 +3705,13 @@
             document.getElementById('usr-store-field').style.display = (type === 'areamanager') ? 'block' : 'none';
         }
 
-        function onAdminToggle(chk) {
-            if (chk.checked) {
-                document.getElementById('user-type-field').style.display = 'none';
-                document.getElementById('usr-dept-field').style.display = 'none';
-                document.getElementById('usr-store-field').style.display = 'none';
-            } else {
-                document.getElementById('user-type-field').style.display = 'block';
-                toggleUserType(document.querySelector('input[name="user-type"]:checked')?.value || 'buyer');
-            }
-        }
-
         function renderStoreSelectOpts(pfx, stores) {
             const dropdown = document.getElementById(`${pfx}-dropdown`);
             if (!dropdown) return;
             dropdown.innerHTML = stores.map(s =>
-                `<label class="ms-opt"><input type="checkbox" value="${s.code}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(s.code)?'checked':''}><span><strong>${s.code}</strong> · ${s.name}</span></label>`
+                `<label class="ms-opt"><input type="checkbox" value="${s.code}" ${multiDeptSelections[pfx].has(s.code)?'checked':''}><span><strong>${s.code}</strong> · ${s.name}</span></label>`
             ).join('') +
-                `<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;
+                `<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" data-pfx="${pfx}">Done</button>`;
         }
 
         function sortBy(tableId, key, type) {
@@ -3797,12 +3787,12 @@
         // ─── COLUMN DEFINITIONS ───
         const AC_COLS = [
             { key: 'chk', label: '☑', type: 'str', renderH: () =>
-                    `<input type="checkbox" id="chk-all" onchange="toggleAll(this)">`, render: (r) =>
-                    `<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-idx="${r._idx}" onchange="onRowCheck(${r._idx},this.checked)" ${selectedIndices.has(r._idx)?'checked':''}></td>`,
+                    `<input type="checkbox" id="chk-all">`, render: (r) =>
+                    `<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-idx="${r._idx}" ${selectedIndices.has(r._idx)?'checked':''}></td>`,
                 filterKey: null },
             { key: 'code', label: 'Code', type: 'str', render: (r) => `<td class="mono b">${r.StoreCode||'—'}</td>`,
                 filterKey: 'ac-code' },
-            { key: 'store', label: 'Store', type: 'str', render: (r) => `<td class="b">${r.Store||'—'}</td>',
+            { key: 'store', label: 'Store', type: 'str', render: (r) => `<td class="b">${r.Store||'—'}</td>`,
                 filterKey: 'ac-code' },
             { key: 'week', label: 'Week', type: 'str', render: (r) => `<td class="mono">${r.Week||'—'}</td>`,
                 filterKey: 'ac-week' },
@@ -3870,43 +3860,31 @@
         }
 
         async function doLogin() {
-    const u = document.getElementById('login-user').value.trim();
-    const p = document.getElementById('login-pass').value;
-    const r = document.getElementById('login-remember').checked;
-    const btn = document.getElementById('login-btn');
-    if(!u || !p) { toast('Please enter username and password','error'); return; }
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Signing in…';
-    try {
-        const res = await fetch(CF_API + '?action=login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, password: p })
-        });
-        const out = await res.json();
-        if (out.success) {
-            AUTH_TOKEN = out.token;
-            CURRENT_USER = out.user;
-            if (r) {
-                localStorage.setItem('auth_token', AUTH_TOKEN);
-                localStorage.setItem('current_user', JSON.stringify(CURRENT_USER));
-            } else {
-                sessionStorage.setItem('auth_token', AUTH_TOKEN);
-                sessionStorage.setItem('current_user', JSON.stringify(CURRENT_USER));
-            }
-            toast('Welcome back, ' + (CURRENT_USER.username || 'user') + '!', 'success');
-            updateAuthUI();
-            loadAll();
-        } else {
-            toast(out.message || 'Login failed', 'error');
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value;
+            const r = document.getElementById('login-remember').checked;
+            const btn = document.getElementById('login-btn');
+            if (!u || !p) { toast('Please enter username and password', 'error'); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Signing in…';
+            try {
+                const res = await fetch(CF_API + '?action=login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p }) });
+                const out = await res.json();
+                if (out.success) {
+                    AUTH_TOKEN = out.token;
+                    CURRENT_USER = out.user;
+                    if (r) { localStorage.setItem('auth_token', AUTH_TOKEN);
+                        localStorage.setItem('current_user', JSON.stringify(CURRENT_USER)); } else { sessionStorage
+                            .setItem('auth_token', AUTH_TOKEN);
+                        sessionStorage.setItem('current_user', JSON.stringify(CURRENT_USER)); }
+                    toast('Welcome back, ' + (CURRENT_USER.username || 'user') + '!', 'success');
+                    updateAuthUI();
+                    loadAll();
+                } else { toast(out.message || 'Login failed', 'error'); }
+            } catch (err) { toast('Network error during login', 'error'); } finally { btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In'; }
         }
-    } catch (err) {
-        toast('Network error during login', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
-    }
-}
 
         function logout() {
             AUTH_TOKEN = null;
@@ -3921,11 +3899,11 @@
         function updateAuthUI() {
             const loginOverlay = document.getElementById('login-overlay');
             const layoutEl = document.querySelector('.layout');
-            const adminNav = document.getElementById('n-admin');
+            const adminNav = document.querySelector('[data-page="admin"]');
             const dangerCard = document.querySelector('.danger-card');
-            const actionsNav = document.getElementById('n-actions');
-            const notifyNav = document.getElementById('n-notify');
-            const baNav = document.getElementById('n-buyerAction');
+            const actionsNav = document.querySelector('[data-page="actions"]');
+            const notifyNav = document.querySelector('[data-page="notify"]');
+            const baNav = document.querySelector('[data-page="buyerAction"]');
             const filterDeptKeys = ['ac-dept', 'ss-dept', 'ar-dept', 'dd-dept', 'nf-dept', 'ba-dept'];
 
             if (!AUTH_TOKEN || !CURRENT_USER) {
@@ -3969,7 +3947,7 @@
 
         // ─── NAV ───
         function setRouteHash(p, replace = false) {
-            const next = '#' + (ROUTES[p] || p);
+            const next = '#' + p;
             if (location.hash === next) return;
             if (replace) history.replaceState(null, '', next);
             else history.pushState(null, '', next);
@@ -3978,7 +3956,9 @@
         function routeFromHash() {
             const raw = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim().toLowerCase();
             if (!raw || raw === 'login') return raw === 'login' ? 'login' : 'overview';
-            return Object.keys(ROUTES).find(key => ROUTES[key].toLowerCase() === raw) || 'overview';
+            return ['overview', 'actions', 'notify', 'stores', 'articles', 'buyerAction', 'submission', 'inspector',
+                'admin', 'drilldown'
+            ].find(p => p === raw) || 'overview';
         }
 
         function syncRoute() {
@@ -3994,12 +3974,13 @@
         window.addEventListener('hashchange', syncRoute);
 
         function go(p, options = {}) {
-            if (!ROUTES[p] || (p === 'admin' && !CURRENT_USER?.isAdmin)) return;
+            if (!p || (p === 'admin' && !CURRENT_USER?.isAdmin)) return;
             if (!options.fromHash) setRouteHash(p);
             document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            document.getElementById('page-' + p).classList.add('active');
-            const navBtn = document.getElementById('n-' + p);
+            const pageEl = document.getElementById('page-' + p);
+            if (pageEl) pageEl.classList.add('active');
+            const navBtn = document.querySelector(`.nav-item[data-page="${p}"]`);
             if (navBtn) navBtn.classList.add('active');
             curPage = p;
             if (p === 'admin') { getUsers(); return; }
@@ -4159,9 +4140,9 @@
             const dropdown = document.getElementById(`${pfx}-dropdown`);
             if (!dropdown) return;
             dropdown.innerHTML = values.map(v =>
-                    `<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`
+                    `<label class="ms-opt"><input type="checkbox" value="${v}" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`
                 ).join('') +
-                `<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;
+                `<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" data-pfx="${pfx}">Done</button>`;
         }
 
         // ─── PROCESS ROWS ───
@@ -4426,8 +4407,7 @@
         function filterOverdue() { document.getElementById('ac-status').value = 'Pending Action';
             renderActions(); }
 
-        function onSearch() { clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(() => { if (curPage === 'actions') renderActions(); }, 250); }
+        function onSearch() { if (curPage === 'actions') renderActions(); }
 
         function buildActivePills(pfx, containerId) {
             const filterIds = (pfx === 'ac') ? ['ac-code', 'ac-ym', 'ac-week', 'ac-status'] : (pfx === 'ss') ? ['ss-code',
@@ -4508,14 +4488,14 @@
                 'var(--red)')).join('');
 
             document.querySelector('#t-ov thead tr').innerHTML = `
-            <th class="sortable" onclick="sortBy('t-ov','code','str')">Code${getSortIcon('t-ov','code')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','store','str')">Store${getSortIcon('t-ov','store')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','l7','num')">≤7 Days${getSortIcon('t-ov','l7')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','l30','num')">≤30 Days${getSortIcon('t-ov','l30')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','l60','num')">≤60 Days${getSortIcon('t-ov','l60')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','total','num')">Total${getSortIcon('t-ov','total')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','p','num')">Pending${getSortIcon('t-ov','p')}</th>
-            <th class="sortable" onclick="sortBy('t-ov','c','num')">Actioned${getSortIcon('t-ov','c')}</th>
+            <th class="sortable" data-table="t-ov" data-key="code" data-type="str">Code${getSortIcon('t-ov','code')}</th>
+            <th class="sortable" data-table="t-ov" data-key="store" data-type="str">Store${getSortIcon('t-ov','store')}</th>
+            <th class="sortable" data-table="t-ov" data-key="l7" data-type="num">≤7 Days${getSortIcon('t-ov','l7')}</th>
+            <th class="sortable" data-table="t-ov" data-key="l30" data-type="num">≤30 Days${getSortIcon('t-ov','l30')}</th>
+            <th class="sortable" data-table="t-ov" data-key="l60" data-type="num">≤60 Days${getSortIcon('t-ov','l60')}</th>
+            <th class="sortable" data-table="t-ov" data-key="total" data-type="num">Total${getSortIcon('t-ov','total')}</th>
+            <th class="sortable" data-table="t-ov" data-key="p" data-type="num">Pending${getSortIcon('t-ov','p')}</th>
+            <th class="sortable" data-table="t-ov" data-key="c" data-type="num">Actioned${getSortIcon('t-ov','c')}</th>
           `;
             document.querySelector('#t-ov tbody').innerHTML = stores.map(s =>
                 `<tr onclick="drillStore('${s.code}')" title="Drill into ${s.store}"><td class="mono b">${s.code}</td><td class="b">${s.store}</td><td style="color:var(--red)" class="mono">${s.l7}</td><td style="color:var(--orange)" class="mono">${s.l30}</td><td style="color:var(--yellow)" class="mono">${s.l60}</td><td class="mono b">${s.total}</td><td><span class="badge pend">${s.p}</span></td><td><span class="badge done">${s.c}</span></td></tr>`
@@ -4629,7 +4609,7 @@
                 'Days Left', 'Status', 'Action Taken', 'Week', 'Month'
             ];
             document.getElementById('t-dd-hdr').innerHTML = cols.map(c => { const m = ddColsMap[c]; return (
-                    `<th class="sortable" onclick="sortBy('t-dd','${m.key}','${m.type}')">${c}${getSortIcon('t-dd',m.key)}</th>`
+                    `<th class="sortable" data-table="t-dd" data-key="${m.key}" data-type="${m.type}">${c}${getSortIcon('t-dd',m.key)}</th>`
                     ); }).join('');
 
             const sortedD = sortData(d, 't-dd', 'StoreCode', 'str');
@@ -4991,7 +4971,7 @@
 
             document.getElementById('t-ac-hdr').innerHTML = visCols.map(c => {
                 const sortable = c.key !== 'chk';
-                return `<th class="${sortable?'sortable':''}" onclick="${sortable?`sortBy('t-ac','${c.key}','${c.type||'str'}')`:''}" style="cursor:${sortable?'pointer':'default'};user-select:none;">${c.label}${sortable?getSortIcon('t-ac',c.key):''}</th>`;
+                return `<th class="${sortable?'sortable':''}" data-table="t-ac" data-key="${c.key}" data-type="${c.type||'str'}" style="cursor:${sortable?'pointer':'default'};user-select:none;">${c.label}${sortable?getSortIcon('t-ac',c.key):''}</th>`;
             }).join('');
 
             document.querySelector('#t-ac tbody').innerHTML = sortedFiltered.map(r => {
@@ -5105,12 +5085,12 @@
             document.getElementById('b-art').textContent = sortedArtRows.length + ' articles';
 
             document.querySelector('#t-art thead tr').innerHTML = `
-            <th class="sortable" onclick="sortBy('t-art','Article','str')">Article${getSortIcon('t-art','Article')}</th>
-            <th class="sortable" onclick="sortBy('t-art','Barcode','str')">Barcode${getSortIcon('t-art','Barcode')}</th>
-            <th class="sortable" onclick="sortBy('t-art','Description','str')">Description${getSortIcon('t-art','Description')}</th>
-            <th class="sortable" onclick="sortBy('t-art','Department','str')">Department${getSortIcon('t-art','Department')}</th>
-            <th class="sortable" onclick="sortBy('t-art','LatestWeekStock','num')">Total Latest Week Stock${getSortIcon('t-art','LatestWeekStock')}</th>
-            <th class="sortable" onclick="sortBy('t-art','ExpiryDate','date')">Expiry Date${getSortIcon('t-art','ExpiryDate')}</th>
+            <th class="sortable" data-table="t-art" data-key="Article" data-type="str">Article${getSortIcon('t-art','Article')}</th>
+            <th class="sortable" data-table="t-art" data-key="Barcode" data-type="str">Barcode${getSortIcon('t-art','Barcode')}</th>
+            <th class="sortable" data-table="t-art" data-key="Description" data-type="str">Description${getSortIcon('t-art','Description')}</th>
+            <th class="sortable" data-table="t-art" data-key="Department" data-type="str">Department${getSortIcon('t-art','Department')}</th>
+            <th class="sortable" data-table="t-art" data-key="LatestWeekStock" data-type="num">Total Latest Week Stock${getSortIcon('t-art','LatestWeekStock')}</th>
+            <th class="sortable" data-table="t-art" data-key="ExpiryDate" data-type="date">Expiry Date${getSortIcon('t-art','ExpiryDate')}</th>
           `;
             document.querySelector('#t-art tbody').innerHTML = sortedArtRows.map(r =>
                     `<tr onclick="showArticlePop('${r._key}')" style="cursor:pointer"><td class="mono b">${r.Article||'—'}</td><td class="mono">${r.Barcode||'—'}</td><td>${r.Description||'—'}</td><td>${r.Department||'—'}</td><td class="mono b" style="color:var(--accent)">${r.LatestWeekStock}</td><td class="mono">${r.ExpiryDate||'—'}</td></tr>`
@@ -5174,16 +5154,13 @@
             });
             bodyHtml += `</div>`;
             document.getElementById('pop-body').innerHTML = bodyHtml;
-            document.getElementById('pop-foot').innerHTML = `<button class="btn" onclick="closePop()">Close</button>`;
+            document.getElementById('pop-foot').innerHTML = `<button class="btn" id="pop-close-foot">Close</button>`;
             document.getElementById('popup-overlay').classList.add('open');
             document.body.style.overflow = 'hidden';
         }
 
         // ─── STORE SUMMARY ───
-        let storeSearchDebounce;
-
-        function onStoreSearch() { clearTimeout(storeSearchDebounce);
-            storeSearchDebounce = setTimeout(() => renderStores(), 250); }
+        function onStoreSearch() { renderStores(); }
 
         function renderStores() {
             let d = fData('ss');
@@ -5231,9 +5208,9 @@
             if (!gv('ss-ym')) fixedCols.push('Submission Month');
             fixedCols.push('Article', 'Description', 'ExpiryDate');
             document.getElementById('t-artweek-hdr').innerHTML = fixedCols.map(c =>
-                    `<th class="sortable" onclick="sortBy('t-artweek','${c}','${c==='ExpiryDate'?'date':'str'}')" style="cursor:pointer;">${c}${getSortIcon('t-artweek',c)}</th>`
+                    `<th class="sortable" data-table="t-artweek" data-key="${c}" data-type="${c==='ExpiryDate'?'date':'str'}" style="cursor:pointer;">${c}${getSortIcon('t-artweek',c)}</th>`
                 ).join('') + awWeeks.map(w =>
-                    `<th class="sortable" onclick="sortBy('t-artweek','${w}','num')" style="cursor:pointer;">${w}${getSortIcon('t-artweek',w)}</th>`
+                    `<th class="sortable" data-table="t-artweek" data-key="${w}" data-type="num" style="cursor:pointer;">${w}${getSortIcon('t-artweek',w)}</th>`
                 ).join('');
             document.querySelector('#t-artweek tbody').innerHTML = sortedArtRows.map(row =>
                     `<tr>` + fixedCols.map(c =>
@@ -5268,7 +5245,7 @@
                         `<span class="badge pend">${w.p}</span>` }, { key: 'c', label: 'Actioned',
                     render: w => `<span class="badge done">${w.c}</span>` });
             document.getElementById('t-sum-hdr').innerHTML = sumCols.map(c =>
-                    `<th class="sortable" onclick="sortBy('t-sum','${c.key}','${['r7','r30','r60','r90','tot','p','c'].includes(c.key)?'num':'str'}')" style="cursor:pointer;">${c.label}${getSortIcon('t-sum',c.key)}</th>`
+                    `<th class="sortable" data-table="t-sum" data-key="${c.key}" data-type="${['r7','r30','r60','r90','tot','p','c'].includes(c.key)?'num':'str'}" style="cursor:pointer;">${c.label}${getSortIcon('t-sum',c.key)}</th>`
                 ).join('');
             document.querySelector('#t-sum tbody').innerHTML = sortedWArr.map(w =>
                     `<tr>` + sumCols.map(c => { let cls = c.cls || ''; let style = c.style || ''; let val = c
@@ -5328,7 +5305,7 @@
             ];
             document.getElementById('t-inc-hdr').innerHTML = cols.map(c => {
                 const m = incColsMap[c];
-                return `<th class="sortable" onclick="sortBy('t-inc','${m.key}','${m.type}')" style="cursor:pointer;">${c}${getSortIcon('t-inc',m.key)}</th>`;
+                return `<th class="sortable" data-table="t-inc" data-key="${m.key}" data-type="${m.type}" style="cursor:pointer;">${c}${getSortIcon('t-inc',m.key)}</th>`;
             }).join('');
 
             const sortedIncreasing = sortData(increasing, 't-inc', 'StoreCode', 'str');
@@ -5421,10 +5398,8 @@
         }
 
         // ─── INSPECTOR ───
-        function switchInsp(mode, btn) {
+        function switchInsp(mode) {
             inspMode = mode;
-            document.querySelectorAll('#page-inspector .btn').forEach(b => b.classList.remove('btn-accent'));
-            btn.classList.add('btn-accent');
             const titles = { e: 'ExpiryData Raw', l: 'Buyer Actions Raw', p: 'Processed' };
             document.getElementById('insp-title').textContent = titles[mode];
             inspExportType = mode === 'e' ? 'raw-e' : mode === 'l' ? 'raw-l' : 'proc';
@@ -5450,7 +5425,7 @@
                     'num';
                 else if (['Timestamp', 'ExpiryDate', 'ActionDate', 'Start', 'End'].includes(c)) type =
                     'date';
-                return `<th class="sortable" onclick="sortBy('t-insp','${c}','${type}')" style="cursor:pointer;">${c}${getSortIcon('t-insp',c)}</th>`;
+                return `<th class="sortable" data-table="t-insp" data-key="${c}" data-type="${type}" style="cursor:pointer;">${c}${getSortIcon('t-insp',c)}</th>`;
             }).join('') + '</tr>';
             const sortedData = sortData(data, 't-insp', cols[0], 'str');
             document.querySelector('#t-insp tbody').innerHTML = sortedData.slice(0, 300).map(r =>
@@ -5481,7 +5456,7 @@
                       <div class="user-list-name">${u.username} ${roleBadge}</div>
                       <div class="user-list-meta">${roleDetail}</div>
                     </div>
-                    ${u.username !== CURRENT_USER.username ? `<button class="btn btn-sm btn-red" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    ${u.username !== CURRENT_USER.username ? `<button class="btn btn-sm btn-red" data-userid="${u.id}"><i class="fa-solid fa-trash"></i></button>` : ''}
                   </div>
                 `;
                 }).join('');
@@ -5568,11 +5543,8 @@
             document.getElementById('pop-sub').textContent = (r.Description || '') + (r.Barcode ? ' · ' + r
                 .Barcode : '');
 
-            const delBtn = document.getElementById('pop-del-btn');
-            delBtn.onclick = () => confirmPopupDelete(r._idx);
-
-            const editBtn = document.getElementById('pop-edit-btn');
-            editBtn.onclick = () => openEditModal(r._idx, 'record');
+            document.getElementById('pop-del-btn').onclick = () => confirmPopupDelete(r._idx);
+            document.getElementById('pop-edit-btn').onclick = () => openEditModal(r._idx, 'record');
 
             let actionSection =
                 `<div class="popup-sect"><div class="popup-sect-title"><i class="fa-solid fa-fingerprint"></i> Identity</div><div class="popup-grid">
@@ -5625,15 +5597,10 @@
             updateToolbar();
             confirmAction(action); }
 
-        function closePop(e) { if (e && e.target !== document.getElementById('popup-overlay')) return;
+        function closePop() {
             document.getElementById('popup-overlay').classList.remove('open');
-            document.body.style.overflow = ''; }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById(
-                    'popup-overlay').classList.remove('open');
-                closeConfirm();
-                closeEditModal();
-                closePopupDel();
-                document.body.style.overflow = ''; } });
+            document.body.style.overflow = '';
+        }
 
         // ─── POPUP DELETE ───
         function confirmPopupDelete(idx) { deleteIdx = idx;
@@ -6221,52 +6188,285 @@
         }
 
         // ─── INIT ───
-        updateAuthUI();
-        syncRoute();
-        if (AUTH_TOKEN) loadAll();
-    </script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js">
-    </script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js">
-    </script>
-    <script>
-        (() => {
+        function init() {
+            document.getElementById('login-year').textContent = new Date().getFullYear();
+
+            // ── Event listeners ──
+            // Login
+            document.getElementById('login-btn').addEventListener('click', doLogin);
+            document.getElementById('login-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter')
+                    doLogin(); });
+            document.getElementById('forgot-password-link').addEventListener('click', () => toast(
+                'Please contact your administrator to reset password.', 'info'));
+
+            // Logout
+            document.getElementById('logout-btn').addEventListener('click', logout);
+
+            // Refresh
+            document.getElementById('rfbtn').addEventListener('click', loadAll);
+
+            // Density slider
+            document.getElementById('densitySlider').addEventListener('input', function() {
+                adjustDensity(this.value);
+            });
+
+            // Nav items
+            document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+                btn.addEventListener('click', () => go(btn.dataset.page));
+            });
+
+            // Overdue link
+            document.getElementById('overdue-link').addEventListener('click', () => {
+                go('actions');
+                filterOverdue();
+            });
+
+            // Action Center filters
+            document.getElementById('ac-code').addEventListener('change', () => onCodeChange('ac'));
+            document.getElementById('ac-ym').addEventListener('change', renderActions);
+            document.getElementById('ac-week').addEventListener('change', renderActions);
+            document.getElementById('ac-status').addEventListener('change', renderActions);
+            document.getElementById('ac-exc-low').addEventListener('change', renderActions);
+            document.getElementById('ac-exc-expired').addEventListener('change', renderActions);
+            document.getElementById('ac-hide-actioned-before').addEventListener('change', renderActions);
+            document.getElementById('globalSearch').addEventListener('input', onSearch);
+            document.getElementById('ac-reset').addEventListener('click', () => resetF('ac'));
+            document.getElementById('ac-export').addEventListener('click', () => exportXL('actions'));
+            document.getElementById('select-all-visible').addEventListener('click', selectAllVisible);
+            document.getElementById('clear-selection').addEventListener('click', clearSelection);
+            document.getElementById('import-actions-trigger').addEventListener('click', () => document.getElementById(
+                'import-file').click());
+            document.getElementById('import-file').addEventListener('change', function() { importActions(this); });
+
+            // Multi-select "Done" buttons (delegated)
+            document.addEventListener('click', (e) => {
+                const doneBtn = e.target.closest('.ms-dropdown .btn');
+                if (doneBtn && doneBtn.dataset.pfx) {
+                    e.stopPropagation();
+                    toggleMultiSelect(doneBtn.dataset.pfx);
+                }
+                // Multi-select checkbox changes
+                const chk = e.target.closest('.ms-opt input[type="checkbox"]');
+                if (chk) {
+                    const pfx = chk.closest('.ms-container')?.id?.replace('-ms', '');
+                    if (pfx) onMultiDeptChange(pfx, chk);
+                }
+            });
+
+            // Multi-select displays
+            document.querySelectorAll('.ms-display').forEach(disp => {
+                const id = disp.id.replace('-display', '');
+                disp.addEventListener('click', () => toggleMultiSelect(id));
+            });
+
+            // Toolbar actions
+            document.querySelectorAll('.act-btn[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => confirmAction(btn.dataset.action));
+            });
+            document.getElementById('toolbar-clear').addEventListener('click', clearSelection);
+
+            // Confirm modal
+            document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirm);
+            document.getElementById('confirm-ok-btn').addEventListener('click', executeAction);
+
+            // Edit modal
+            document.getElementById('edit-cancel-btn').addEventListener('click', closeEditModal);
+            document.getElementById('edit-save-btn').addEventListener('click', saveEditAction);
+
+            // Popup close
+            document.getElementById('pop-close-btn').addEventListener('click', closePop);
+            document.getElementById('pop-close-foot').addEventListener('click', closePop);
+            document.getElementById('popup-overlay').addEventListener('click', (e) => { if (e.target === document
+                    .getElementById('popup-overlay')) closePop(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closePop();
+                    closeConfirm();
+                    closeEditModal();
+                    closePopupDel(); } });
+
+            // Popup delete
+            document.getElementById('popup-del-cancel').addEventListener('click', closePopupDel);
+            document.getElementById('popup-del-btn').addEventListener('click', executePopupDelete);
+
+            // Del modal
+            document.getElementById('del-cancel-btn').addEventListener('click', closeDelModal);
+            document.getElementById('del-confirm-btn').addEventListener('click', executeDeletion);
+
+            // Notify
+            document.getElementById('nf-code').addEventListener('change', renderNotify);
+            document.getElementById('nf-ym').addEventListener('change', renderNotify);
+            document.getElementById('nf-week').addEventListener('change', renderNotify);
+            document.getElementById('nf-rtc').addEventListener('change', renderNotify);
+            document.getElementById('nf-transfer').addEventListener('change', renderNotify);
+            document.getElementById('nf-monitor').addEventListener('change', renderNotify);
+            document.getElementById('nf-clear').addEventListener('change', renderNotify);
+            document.getElementById('nf-send-email').addEventListener('click', sendNotifyEmail);
+
+            // Store Summary
+            document.getElementById('ss-code').addEventListener('change', () => onCodeChange('ss'));
+            document.getElementById('ss-ym').addEventListener('change', renderStores);
+            document.getElementById('ss-week').addEventListener('change', renderStores);
+            document.getElementById('ss-search').addEventListener('input', onStoreSearch);
+            document.getElementById('ss-reset').addEventListener('click', () => resetF('ss'));
+            document.getElementById('ss-export').addEventListener('click', () => exportXL('stores'));
+            document.getElementById('ss-export-artweek').addEventListener('click', () => exportXL('artweek'));
+            document.getElementById('inc-hide-prev-zero').addEventListener('change', () => renderIncreasingStocks(
+                fData('ss')));
+
+            // Articles
+            document.getElementById('ar-search').addEventListener('input', renderArticles);
+            document.getElementById('ar-reset').addEventListener('click', () => resetF('ar'));
+            document.getElementById('ar-export').addEventListener('click', () => exportXL('articles'));
+
+            // Buyer Action
+            document.getElementById('ba-code').addEventListener('change', () => onCodeChange('ba'));
+            document.getElementById('ba-ym').addEventListener('change', renderBuyerAction);
+            document.getElementById('ba-week').addEventListener('change', renderBuyerAction);
+            document.getElementById('ba-reset').addEventListener('click', () => resetF('ba'));
+            document.getElementById('ba-export').addEventListener('click', exportBuyerActionXL);
+
+            // Submission
+            document.getElementById('sub-ym').addEventListener('change', renderSubmission);
+            document.getElementById('sub-week').addEventListener('change', renderSubmission);
+            document.getElementById('btn-remind').addEventListener('click', openSubRemindModal);
+            document.getElementById('sub-remind-all').addEventListener('change', function() { toggleAllSubRemind(
+                    this); });
+            document.getElementById('sub-remind-cancel').addEventListener('click', closeSubRemindModal);
+            document.getElementById('sub-remind-send-btn').addEventListener('click', executeSubReminders);
+
+            // Inspector
+            document.getElementById('insp-btn-e').addEventListener('click', function() { switchInsp('e');
+                this.classList.add('btn-accent');
+                document.getElementById('insp-btn-l').classList.remove('btn-accent');
+                document.getElementById('insp-btn-p').classList.remove('btn-accent'); });
+            document.getElementById('insp-btn-l').addEventListener('click', function() { switchInsp('l');
+                this.classList.add('btn-accent');
+                document.getElementById('insp-btn-e').classList.remove('btn-accent');
+                document.getElementById('insp-btn-p').classList.remove('btn-accent'); });
+            document.getElementById('insp-btn-p').addEventListener('click', function() { switchInsp('p');
+                this.classList.add('btn-accent');
+                document.getElementById('insp-btn-e').classList.remove('btn-accent');
+                document.getElementById('insp-btn-l').classList.remove('btn-accent'); });
+            document.getElementById('insp-export').addEventListener('click', () => exportXL(inspExportType));
+
+            // Drilldown
+            document.getElementById('dd-code').addEventListener('change', () => onCodeChange('dd'));
+            document.getElementById('dd-ym').addEventListener('change', renderDrilldown);
+            document.getElementById('dd-week').addEventListener('change', renderDrilldown);
+            document.getElementById('dd-status').addEventListener('change', renderDrilldown);
+            document.getElementById('dd-reset').addEventListener('click', () => resetF('dd'));
+            document.getElementById('dd-export').addEventListener('click', () => exportXL('drilldown'));
+
+            // Admin
+            document.getElementById('add-user-btn').addEventListener('click', openAddUserModal);
+            document.getElementById('add-user-cancel').addEventListener('click', closeAddUserModal);
+            document.getElementById('add-user-confirm').addEventListener('click', createUser);
+            document.getElementById('new-isadmin').addEventListener('change', function() { onAdminToggle(this); });
+            document.querySelectorAll('input[name="user-type"]').forEach(radio => {
+                radio.addEventListener('change', function() { toggleUserType(this.value); });
+            });
+            document.getElementById('upload-articles-btn').addEventListener('click', () => adminUpload('Articles'));
+            document.getElementById('upload-stores-btn').addEventListener('click', () => adminUpload('Stores'));
+            document.getElementById('upload-emailmap-btn').addEventListener('click', () => adminUpload('EmailMap'));
+            document.getElementById('clear-old-data-btn').addEventListener('click', () => openDelModal(
+                'clearOldExpData'));
+            document.getElementById('clear-all-data-btn').addEventListener('click', () => openDelModal(
+                'clearAllExpData'));
+            document.getElementById('upload-expdata-trigger').addEventListener('click', () => document.getElementById(
+                'expdata-file').click());
+            document.getElementById('expdata-file').addEventListener('change', function() { importExpData(this); });
+
+            // User delete delegation
+            document.getElementById('users-list').addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.btn-red[data-userid]');
+                if (delBtn) deleteUser(delBtn.dataset.userid);
+            });
+
+            // Sortable headers (delegated)
+            document.addEventListener('click', (e) => {
+                const th = e.target.closest('.sortable');
+                if (th) {
+                    const tableId = th.dataset.table;
+                    const key = th.dataset.key;
+                    const type = th.dataset.type || 'str';
+                    if (tableId && key) sortBy(tableId, key, type);
+                }
+            });
+
+            // Transfer suggestion approve (delegated)
+            document.querySelector('#t-sug').addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-accent');
+                if (btn && btn.textContent.includes('Approve')) {
+                    const idx = btn.dataset.idx;
+                    const toCode = btn.dataset.to;
+                    if (idx && toCode) approveTransferSuggestion(parseInt(idx), toCode);
+                }
+            });
+
+            // Popup action buttons (delegated)
+            document.getElementById('pop-foot').addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn');
+                if (!btn) return;
+                const action = btn.textContent.trim();
+                const idx = parseInt(btn.dataset.idx);
+                if (idx && action) popupAction(idx, action);
+            });
+
+            // Chk-all
+            document.addEventListener('change', (e) => {
+                if (e.target.id === 'chk-all') toggleAll(e.target);
+            });
+            document.addEventListener('change', (e) => {
+                if (e.target.classList.contains('row-chk')) {
+                    const idx = parseInt(e.target.dataset.idx);
+                    onRowCheck(idx, e.target.checked);
+                }
+            });
+
+            // Transfer textarea normalize
+            document.getElementById('inp-transfer').addEventListener('input', function() { normTransfer(this); });
+
+            // Init auth and load
+            updateAuthUI();
+            syncRoute();
+            if (AUTH_TOKEN) loadAll();
+
+            // React greeting
             const root = document.getElementById('react-overview-root');
-            if (!root || !window.React || !window.ReactDOM) return;
-
-            const { createElement: h, useEffect, useState } = React;
-
-            function OverviewGreeting() {
-                const getCurrentUser = () => typeof CURRENT_USER !== 'undefined' ? CURRENT_USER : null;
-                const [user, setUser] = useState(getCurrentUser());
-                useEffect(() => {
-                    const timer = setInterval(() => setUser(getCurrentUser()), 700);
-                    return () => clearInterval(timer);
-                }, []);
-
-                const name = user?.username || 'there';
-                const initials = name.slice(0, 2).toUpperCase();
-                const isAdmin = user?.isAdmin;
-                const role = isAdmin ? 'Administrator' : user?.stores && user.stores !== 'ALL' ?
-                    'Area manager' : 'Buyer workspace';
-
-                return h('section', { className: 'react-greeting', 'aria-label': 'Welcome message' },
-                    h('div', null,
-                        h('div', { className: 'react-greeting-kicker' }, 'Expiry intelligence · Today'),
-                        h('h1', null, `Good to see you, ${name}.`),
-                        h('p', null,
-                            'Keep the shelf moving with a clear view of risk, actions, and store performance.'
-                            ),
-                    ),
-                    h('div', { className: 'react-greeting-meta' },
-                        h('div', { className: 'react-greeting-avatar', 'aria-hidden': 'true' }, initials),
-                        h('span', null, role),
-                    ),
-                );
+            if (root && window.React && window.ReactDOM) {
+                const { createElement: h, useEffect, useState } = React;
+                function OverviewGreeting() {
+                    const getCurrentUser = () => typeof CURRENT_USER !== 'undefined' ? CURRENT_USER : null;
+                    const [user, setUser] = useState(getCurrentUser());
+                    useEffect(() => {
+                        const timer = setInterval(() => setUser(getCurrentUser()), 700);
+                        return () => clearInterval(timer);
+                    }, []);
+                    const name = user?.username || 'there';
+                    const initials = name.slice(0, 2).toUpperCase();
+                    const isAdmin = user?.isAdmin;
+                    const role = isAdmin ? 'Administrator' : user?.stores && user.stores !== 'ALL' ?
+                        'Area manager' : 'Buyer workspace';
+                    return h('section', { className: 'react-greeting', 'aria-label': 'Welcome message' },
+                        h('div', null,
+                            h('div', { className: 'react-greeting-kicker' },
+                                'Expiry intelligence · Today'),
+                            h('h1', null, `Good to see you, ${name}.`),
+                            h('p', null,
+                                'Keep the shelf moving with a clear view of risk, actions, and store performance.'
+                                ),
+                        ),
+                        h('div', { className: 'react-greeting-meta' },
+                            h('div', { className: 'react-greeting-avatar', 'aria-hidden': 'true' },
+                                initials),
+                            h('span', null, role),
+                        ),
+                    );
+                }
+                ReactDOM.createRoot(root).render(h(OverviewGreeting));
             }
+        }
 
-            ReactDOM.createRoot(root).render(h(OverviewGreeting));
-        })();
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
