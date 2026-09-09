@@ -210,6 +210,10 @@ tbody td.mono{font-family:var(--mono);font-size:10.5px}
 .badge.pend{background:var(--amber-l);color:var(--amber);border-color:var(--amber-b)}
 .badge.done{background:var(--green-l);color:var(--green);border-color:var(--green-b)}
 .badge.prev{background:#eef2ff;color:#3f51b5;border-color:#d4dcf6}
+.badge.validity{background:#fff4e5;color:#b54708;border-color:#f7c98b}
+.disabled-article-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);margin-top:6px}
+.disabled-article-info{min-width:0;display:flex;flex-direction:column;gap:1px}.disabled-article-code{font-family:var(--mono);font-weight:700;font-size:11px}.disabled-article-desc{font-size:10px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.disabled-search-results{margin-top:6px;max-height:190px;overflow-y:auto}.disabled-result{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;margin-top:5px}.disabled-result:hover{border-color:var(--accent)}
+.status-ms{min-width:150px}
 .badge.na{background:rgba(16,24,40,.05);color:var(--t3);border-color:var(--border)}
 .overdue-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:4px;font-size:8.5px;font-weight:700;letter-spacing:.3px;background:var(--red);color:#fff}
 .days-bar{display:flex;align-items:center;gap:6px;min-width:64px}
@@ -502,6 +506,10 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
     <button class="nav-item active" onclick="go('overview')" id="n-overview">
       <i class="fa-solid fa-gauge-high nav-ico"></i><span class="nav-text">Overview</span>
     </button>
+    <button class="nav-item" onclick="go('attention')" id="n-attention" style="display:none;">
+      <i class="fa-solid fa-list-check nav-ico"></i><span class="nav-text">Needs My Attention</span>
+      <span class="nav-badge" id="nb-attention">0</span>
+    </button>
     <button class="nav-item" onclick="go('areaView')" id="n-areaView" style="display:none;">
       <i class="fa-solid fa-table-cells-large nav-ico"></i><span class="nav-text">Area View</span>
     </button>
@@ -651,6 +659,35 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
       </div>
     </div>
 
+    <!-- ─── NEEDS MY ATTENTION (BUYER) ─── -->
+    <div class="page" id="page-attention">
+      <div class="page-head">
+        <div><h1><i class="fa-solid fa-list-check"></i> Needs My Attention</h1><p>A focused buyer work queue for items that need a decision now — prioritised by RTC validity, expiry urgency, pending action, and stock exposure.</p></div>
+        <div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-bolt"></i> Buyer priority queue</span></div>
+      </div>
+      <div class="kpi-grid" id="kpi-attention"></div>
+      <div class="filter-bar">
+        <div class="filter-bar-row">
+          <div class="fg"><div class="fl">Store Code</div><select class="fs" id="attention-code" onchange="renderNeedsAttention()"><option value="">All</option></select></div>
+          <div class="fg"><div class="fl">Month</div><select class="fs" id="attention-ym" onchange="renderNeedsAttention()"><option value="">All</option></select></div>
+          <div class="fg"><div class="fl">Week</div><select class="fs" id="attention-week" onchange="renderNeedsAttention()"><option value="">All</option></select></div>
+          <div class="fg"><div class="fl">Department</div><div class="ms-container" id="attention-dept-ms"><div class="ms-display" id="attention-dept-display" onclick="toggleMultiSelect('attention-dept')">All Depts</div><div class="ms-dropdown" id="attention-dept-dropdown"></div></div></div>
+          <div class="fg"><div class="fl">Status</div><select class="fs" id="attention-status" onchange="renderNeedsAttention()"><option value="">All</option><option>Pending Action</option><option>Validity Expired</option></select></div>
+          <div class="fg"><div class="fl">Reason</div><select class="fs" id="attention-reason" onchange="renderNeedsAttention()"><option value="">All</option><option value="validity">RTC Validity Expired</option><option value="pending">Pending 14+ Days</option><option value="critical3">Expiry ≤3 Days</option><option value="critical7">Expiry ≤7 Days</option><option value="critical10">Expiry ≤10 Days</option><option value="critical30">Expiry ≤30 Days</option><option value="highstock">High Stock</option></select></div>
+          <button class="rbtn" onclick="resetAttentionFilters()"><i class="fa-solid fa-xmark"></i> Reset</button>
+          <button class="btn btn-sm btn-export" onclick="exportXL('attention')" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-start;margin:8px 0 9px;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="search-wrap"><i class="fa-solid fa-magnifying-glass search-ico"></i><input type="text" id="attention-search" placeholder="Search article, barcode, description, store…" oninput="renderNeedsAttention()" style="width:360px;"></div>
+        <div class="active-filters" id="attention-active-filters"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Priority Queue</div><div class="panel-title-sub">Expired articles and zero-stock articles are excluded. Click any row to review the full record.</div></div><span class="panel-badge" id="b-attention">0 items</span></div>
+        <div class="tw ts"><table id="t-attention"><thead><tr></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
     <!-- ─── ACTION CENTER ─── -->
     <div class="page" id="page-actions">
       <div class="page-head">
@@ -677,9 +714,10 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
           </div>
 
           <div class="fg"><div class="fl">Status</div>
-            <select class="fs" id="ac-status" onchange="renderActions()">
-              <option value="">All</option><option value="Pending Action">Pending</option><option value="Action Taken">Actioned</option><option value="Previously Actioned">Prev. Actioned</option>
-            </select>
+            <div class="ms-container status-ms" id="ac-status-ms">
+              <div class="ms-display" id="ac-status-display" onclick="toggleMultiSelect('ac-status')">All Statuses</div>
+              <div class="ms-dropdown" id="ac-status-dropdown"></div>
+            </div>
           </div>
 
           <div class="fg">
@@ -729,20 +767,12 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
         </div>
       </div>
 
-      <div class="panel" id="transfer-match-panel" style="margin-top:10px;">
+      <div class="panel" id="validity-expired-panel" style="margin-top:10px;">
         <div class="panel-head">
-          <div>
-            <div class="panel-title"><i class="fa-solid fa-brain"></i> Inter-Store Transfer Matchmaker</div>
-            <div class="panel-title-sub">Automated suggestions to move near-expiry stock to out-of-stock or fast-moving stores</div>
-          </div>
-          <span class="panel-badge" id="b-sug">0 suggestions</span>
+          <div><div class="panel-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--amber);"></i> Further Action Required · Validity Expired</div><div class="panel-title-sub">RTC validity has ended while stock remains and the article has not yet expired.</div></div>
+          <span class="panel-badge" id="b-validity-expired">0 items</span>
         </div>
-        <div class="tw ts" style="max-height:300px;">
-          <table id="t-sug">
-            <thead><tr><th>From Store</th><th>To Store (Low/OOS)</th><th>Article</th><th>Description</th><th>Qty</th><th>Expiry</th><th>Action</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div class="tw ts" style="max-height:320px;"><table id="t-validity-expired"><thead><tr><th>Store</th><th>Code</th><th>Article</th><th>Description</th><th>Stock</th><th>Expiry</th><th>Days Left</th><th>Previous Action</th><th>Previous Price</th><th>RTC End</th></tr></thead><tbody></tbody></table></div>
       </div>
     </div>
 
@@ -799,49 +829,31 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
       </div>
 
       <div class="settings-grid">
-        <div class="settings-section">
-          <div class="settings-section-head"><h3>Notify Store email</h3><p>These are the default values used by Notify Store. You can change them without changing the dashboard code.</p></div>
-          <div class="settings-body">
-            <div class="settings-form">
-              <div class="settings-two">
-                <div><div class="settings-label">To email (from Email Map)</div><input class="settings-input" id="set-to" type="text" readonly placeholder="Store email"></div>
-                <div><div class="settings-label">CC emails</div><input class="settings-input" id="set-cc" type="text" placeholder="cc1@example.com, cc2@example.com"></div>
-                </div>
-              <div><div class="settings-label">Mail subject</div><input class="settings-input" id="set-subject" type="text"></div>
-              <div><div class="settings-label">Body structure</div><textarea class="settings-textarea" id="set-body"></textarea>
-                <div class="settings-help">To comes from the selected store's Email Map entry. Add one or more CC addresses separated by commas or semicolons. Available placeholders: <span class="settings-token">{STORE}</span><span class="settings-token">{STORE_CODE}</span><span class="settings-token">{WEEK}</span><span class="settings-token">{MONTH}</span><span class="settings-token">{ITEM_COUNT}</span><span class="settings-token">{DATE}</span><span class="settings-token">{BODY}</span></div>
-              </div>
-              <div class="settings-two">
-                <div>
-                  <div class="settings-label">Email options</div>
-                  <div class="settings-checks">
-                    <label class="settings-check"><input type="checkbox" id="set-confirm" checked> Ask for confirmation before opening email</label>
-                    <label class="settings-check"><input type="checkbox" id="set-remember-actions" checked> Remember Notify Store action filters</label>
-                  </div>
-                </div>
-                <div>
-                  <div class="settings-label">Actions included by default</div>
-                  <div class="settings-checks">
-                    <label class="settings-check"><input type="checkbox" id="set-rtc" checked> RTC Price Change</label>
-                    <label class="settings-check"><input type="checkbox" id="set-transfer" checked> Store Transfer</label>
-                    <label class="settings-check"><input type="checkbox" id="set-monitor"> Monitor</label>
-                    <label class="settings-check"><input type="checkbox" id="set-clear"> Clear In Normal Price</label>
-                  </div>
-                </div>
-              </div>
-              <div class="settings-actions">
-                <button class="btn btn-accent" onclick="saveBuyerSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
-                <button class="btn" onclick="previewBuyerEmail()"><i class="fa-solid fa-eye"></i> Preview</button>
-                <button class="btn btn-red" onclick="resetBuyerSettings()"><i class="fa-solid fa-rotate-left"></i> Reset Defaults</button>
-                <span class="settings-status" id="settings-status"></span>
-              </div>
-            </div>
+        <div>
+          <div class="settings-section" style="margin-bottom:10px;">
+            <div class="settings-section-head"><h3>Disabled Articles</h3><p>Disable articles from the buyer workspace. Disabled articles are hidden from Action Center and buyer-facing expiry views across all stores.</p></div>
+            <div class="settings-body"><div class="settings-form">
+              <div><div class="settings-label">Search / select article</div><div style="display:flex;gap:7px;align-items:stretch;"><input class="settings-input" id="disabled-article-search" type="text" list="disabled-article-list" placeholder="Article, barcode or description..." oninput="searchDisabledArticleOptions()" onkeydown="if(event.key==='Enter'){event.preventDefault();addDisabledArticleFromSearch();}"><datalist id="disabled-article-list"></datalist><button class="btn btn-accent" onclick="addDisabledArticleFromSearch()"><i class="fa-solid fa-plus"></i> Add</button></div><div class="disabled-search-results" id="disabled-search-results"></div></div>
+              <div><div class="settings-label">Paste from Excel</div><textarea class="settings-textarea" id="disabled-article-paste" style="min-height:90px" placeholder="Paste one or multiple Article numbers from Excel here..." onpaste="setTimeout(handleDisabledPaste,0)"></textarea><div class="settings-help">Paste a single column or multiple Excel rows. The article description is looked up automatically. Barcode values are also accepted.</div></div>
+              <div><div class="settings-label">Disabled article list</div><div id="disabled-article-list-box"></div><div class="settings-help" id="disabled-article-count">0 articles disabled</div></div>
+              <div class="settings-actions"><button class="btn btn-accent" onclick="saveDisabledArticles()"><i class="fa-solid fa-floppy-disk"></i> Save Disabled Articles</button><button class="btn" onclick="clearDisabledArticleInput()"><i class="fa-solid fa-eraser"></i> Clear Input</button></div><div class="settings-status" id="disabled-article-status"></div>
+            </div></div>
           </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-head"><h3>Preview</h3><p>Preview uses the current settings and sample values. The real item table is added by Notify Store.</p></div>
-          <div class="settings-body"><div class="settings-preview" id="settings-preview">Click Preview to see the email structure.</div></div>
+          <div class="settings-section">
+            <div class="settings-section-head"><h3>Mail Settings</h3><p>Customize the Notify Store email used during this session.</p></div>
+            <div class="settings-body"><div class="settings-form">
+              <div class="settings-two"><div><div class="settings-label">To email (from Email Map)</div><input class="settings-input" id="set-to" type="text" readonly placeholder="Store email"></div><div><div class="settings-label">CC emails</div><input class="settings-input" id="set-cc" type="text" placeholder="cc1@example.com, cc2@example.com"></div></div>
+              <div><div class="settings-label">Mail subject</div><input class="settings-input" id="set-subject" type="text"></div>
+              <div><div class="settings-label">Body structure</div><textarea class="settings-textarea" id="set-body"></textarea><div class="settings-help">To comes from the selected store's Email Map entry. Add one or more CC addresses separated by commas or semicolons. Available placeholders: <span class="settings-token">{STORE}</span><span class="settings-token">{STORE_CODE}</span><span class="settings-token">{WEEK}</span><span class="settings-token">{MONTH}</span><span class="settings-token">{ITEM_COUNT}</span><span class="settings-token">{DATE}</span><span class="settings-token">{BODY}</span></div></div>
+              <div class="settings-two"><div><div class="settings-label">Email options</div><div class="settings-checks"><label class="settings-check"><input type="checkbox" id="set-confirm" checked> Ask for confirmation before opening email</label><label class="settings-check"><input type="checkbox" id="set-remember-actions" checked> Remember Notify Store action filters</label></div></div><div><div class="settings-label">Actions included by default</div><div class="settings-checks"><label class="settings-check"><input type="checkbox" id="set-rtc" checked> RTC Price Change</label><label class="settings-check"><input type="checkbox" id="set-transfer" checked> Store Transfer</label><label class="settings-check"><input type="checkbox" id="set-monitor"> Monitor</label><label class="settings-check"><input type="checkbox" id="set-clear"> Clear In Normal Price</label></div></div></div>
+              <div class="settings-actions"><button class="btn btn-accent" onclick="saveBuyerSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button><button class="btn" onclick="previewBuyerEmail()"><i class="fa-solid fa-eye"></i> Preview</button><button class="btn btn-red" onclick="resetBuyerSettings()"><i class="fa-solid fa-rotate-left"></i> Reset Defaults</button><span class="settings-status" id="settings-status"></span></div>
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+                <div class="settings-label">Mail Preview</div>
+                <div class="settings-help" style="margin-bottom:8px">Preview uses the current mail settings and sample values.</div>
+                <div class="settings-preview" id="settings-preview">Click Preview to see the email structure.</div>
+              </div>
+            </div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1012,6 +1024,18 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- ─── EXPIRY WITHIN 10 DAYS ─── -->
+    <div class="page" id="page-expiry10"><div class="page-head"><div><h1><i class="fa-solid fa-hourglass-end"></i> Expiry Within 10 Days</h1><p>Store-wise view of items with stock remaining and expiry within the next 10 days.</p></div><div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-triangle-exclamation"></i> Immediate expiry exposure</span></div></div>
+      <div class="filter-bar"><div class="filter-bar-row">
+        <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ex10-code" onchange="updateStoreDisp('ex10');renderExpiry10()"><option value="">All</option></select></div><div class="fg"><div class="fl">Store</div><div class="store-disp" id="ex10-store-disp">—</div></div>
+        <div class="fg"><div class="fl">Month</div><select class="fs" id="ex10-ym" onchange="renderExpiry10()"><option value="">All</option></select></div><div class="fg"><div class="fl">Week</div><select class="fs" id="ex10-week" onchange="renderExpiry10()"><option value="">All</option></select></div>
+        <div class="fg"><div class="fl">Department</div><div class="ms-container"><div class="ms-display" id="ex10-dept-display" onclick="toggleMultiSelect('ex10-dept')">All Depts</div><div class="ms-dropdown" id="ex10-dept-dropdown"></div></div></div>
+        <div class="fg"><div class="fl">Status</div><div class="ms-container status-ms"><div class="ms-display" id="ex10-status-display" onclick="toggleMultiSelect('ex10-status')">All Statuses</div><div class="ms-dropdown" id="ex10-status-dropdown"></div></div></div>
+        <button class="rbtn" onclick="resetExpiry10Filters()"><i class="fa-solid fa-xmark"></i> Reset</button><button class="btn btn-sm btn-export" onclick="exportExpiry10XL()" style="align-self:flex-end"><i class="fa-solid fa-file-excel"></i> Export</button>
+      </div></div>
+      <div class="kpi-grid" id="kpi-ex10"></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Store-wise Expiry Within 10 Days</div><div class="panel-title-sub">Expiry date, action status, and previous action are shown for every store/article.</div></div><span class="panel-badge" id="b-ex10">—</span></div><div class="tw ts"><table id="t-ex10"><thead><tr id="t-ex10-hdr"></tr></thead><tbody></tbody></table></div></div>
     </div>
 
     <!-- ─── BUYERS ACTION ─── -->
@@ -1504,14 +1528,14 @@ const CF_API='https://exp.galamarkets.workers.dev';
 const ACTIONS=['RTC Price Change','Store Transfer','Monitor','Clear In Normal Price'];
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY=new Date();TODAY.setHours(0,0,0,0);
-const TITLES={overview:'Overview',actions:'Action Center',notify:'Notify Store',settings:'Buyer Settings',stores:'Store Summary',articles:'Article View',areaView:'Area View',buyerAction:"Buyer's Action",submission:'Submission Status',inspector:'Data Inspector',admin:'Admin Panel'};
-const ROUTES={overview:'overview',actions:'actions',notify:'notify',settings:'settings',stores:'stores',articles:'articles',areaView:'areaView',buyerAction:'buyerAction',submission:'submission',inspector:'inspector',admin:'admin',drilldown:'drilldown'};
+const TITLES={overview:'Overview',attention:'Needs My Attention',actions:'Action Center',notify:'Notify Store',settings:'Buyer Settings',stores:'Store Summary',articles:'Article View',areaView:'Area View',buyerAction:"Buyer's Action",submission:'Submission Status',inspector:'Data Inspector',admin:'Admin Panel'};
+const ROUTES={overview:'overview',attention:'attention',actions:'actions',notify:'notify',settings:'settings',stores:'stores',articles:'articles',areaView:'areaView',buyerAction:'buyerAction',submission:'submission',inspector:'inspector',admin:'admin',drilldown:'drilldown',expiry10:'expiry10'};
 const DEPARTMENTS = ['Bakery', 'Chilled & Dairy', 'Delicatessen', 'Fish', 'Frozen Foods', 'Grocery Food', 'Grocery Non Food', 'Health & Beauty'];
 
 let rawE=[],rawL=[],proc=[],allStoreCodes=[],codeToStore={},emailMapData=[];
 let curPage='overview',selectedIndices=new Set(),pendingAction='';
 let inspMode='e',inspExportType='raw-e';
-let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'nf-dept':new Set(),'ac-bucket':new Set(),'usr-dept':new Set(),'usr-store':new Set(),'ba-dept':new Set(),'av-dept':new Set()};
+let multiDeptSelections={'ac-dept':new Set(),'ss-dept':new Set(),'ar-dept':new Set(),'dd-dept':new Set(),'nf-dept':new Set(),'ac-bucket':new Set(),'usr-dept':new Set(),'usr-store':new Set(),'ba-dept':new Set(),'av-dept':new Set(),'ac-status':new Set(),'ex10-dept':new Set(),'ex10-status':new Set(),'attention-status':new Set(),'attention-dept':new Set()};
 let drilldownMode='soldout';
 let editingIdx=null,editingMode=null;
 let searchDebounce; 
@@ -1538,6 +1562,15 @@ function adjustDensity(val) {
 function isAreaManager() {
   return CURRENT_USER && !CURRENT_USER.isAdmin && CURRENT_USER.stores && CURRENT_USER.stores.trim() !== '' && CURRENT_USER.stores !== 'ALL';
 }
+function isBuyerRole(){return !!CURRENT_USER&&!CURRENT_USER.isAdmin&&!isAreaManager();}
+const DISABLED_ARTICLES_KEY='gala_expiry_disabled_articles';
+function getDisabledArticles(){try{const v=JSON.parse(localStorage.getItem(DISABLED_ARTICLES_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function saveDisabledArticlesStore(list){localStorage.setItem(DISABLED_ARTICLES_KEY,JSON.stringify(list));}
+function articleCatalog(){const m=new Map();proc.forEach(r=>{const a=String(r.Article||'').trim(),b=String(r.Barcode||'').trim();if(a&&!m.has('A:'+a.toLowerCase()))m.set('A:'+a.toLowerCase(),{article:a,barcode:b,description:r.Description||'',department:r.Department||''});if(b&&!m.has('B:'+b.toLowerCase()))m.set('B:'+b.toLowerCase(),{article:a,barcode:b,description:r.Description||'',department:r.Department||''});});return [...m.values()];}
+function findArticleInfo(value){const q=String(value||'').trim().toLowerCase();if(!q)return null;return articleCatalog().find(x=>String(x.article).toLowerCase()===q||String(x.barcode).toLowerCase()===q)||articleCatalog().find(x=>String(x.article).toLowerCase().includes(q)||String(x.barcode).toLowerCase().includes(q)||String(x.description).toLowerCase().includes(q))||null;}
+function getBuyerVisibleProc(){if(!isBuyerRole())return proc;const dis=new Set(getDisabledArticles().map(x=>String(x.article||'').trim().toLowerCase()));return proc.filter(r=>!dis.has(String(r.Article||'').trim().toLowerCase())&&!dis.has(String(r.Barcode||'').trim().toLowerCase()));}
+function isValidityExpired(r){const stock=parseFloat(r.Stock),days=Number(r.DaysLeft),end=parseDate(r.End);return stock>0&&!isNaN(days)&&days>0&&end&&end<TODAY&&(String(r['Action Taken']||'').includes('RTC Price Change')||String(r['Previous Action Info']||'').includes('RTC given till'));}
+function statusClass(s){if(s==='Pending Action')return'pend';if(s==='Action Taken')return'done';if(s==='Validity Expired')return'validity';return'prev';}
 function getUserStores() {
   if (!CURRENT_USER || !CURRENT_USER.stores || CURRENT_USER.stores === 'ALL') return [];
   return CURRENT_USER.stores.split(',').map(s => s.trim()).filter(Boolean);
@@ -1582,6 +1615,8 @@ function sortBy(tableId, key, type) {
   else if (tableId === 't-artweek' || tableId === 't-sum') renderStores();
   else if (tableId === 't-inc') renderIncreasingStocks(fData('ss'));
   else if (tableId === 't-av') renderAreaView();
+  else if (tableId === 't-ex10') renderExpiry10();
+  else if (tableId === 't-attention') renderNeedsAttention();
   else if (tableId === 't-insp') renderInspector();
 }
 
@@ -1602,13 +1637,16 @@ function getSortVal(r, key, type) {
     return order[r['Expiry Risk Bucket']] ?? 99;
   }
   else if (key === 'status') {
-    const order = {'Pending Action':0, 'Previously Actioned':1, 'Action Taken':2};
+    const order = {'Pending Action':0, 'Validity Expired':1, 'Previously Actioned':2, 'Action Taken':3};
     return order[r['Action Status']] ?? 99;
   }
   else if (key === 'action') val = r['Action Taken'];
   else if (key === 'rtc') val = parseFloat(r['RTC Price']) || 0;
   else if (key === 'start') { const d = parseDate(r.Start); return d ? d.getTime() : 0; }
   else if (key === 'end') { const d = parseDate(r.End); return d ? d.getTime() : 0; }
+  else if (key === 'rowid') val = Number(r.RowIndex ?? r._idx) || 0;
+  else if (key === 'priority') val = Number(r._attentionScore) || 0;
+  else if (key === 'reason') val = r._attentionReason;
   else if (key === 'transfer') val = r['Transfer To'];
   else if (key === 'tqty') val = parseFloat(r['Transfer Qty']) || 0;
   else if (key === 'adate') { const d = parseDate(r['Action Date']); return d ? d.getTime() : 0; }
@@ -1662,7 +1700,7 @@ const AC_COLS=[
   {key:'expiry',label:'Expiry',type:'date',render:(r)=>`<td class="mono">${r.ExpiryDate||'—'}</td>`,filterKey:null},
   {key:'days',label:'Days Left',type:'num',render:(r)=>{const d=r.DaysLeft!==''&&r.DaysLeft!==null?Number(r.DaysLeft):null;return`<td>${daysBar(d)}</td>`;},filterKey:null},
   {key:'risk',label:'Risk',type:'risk',render:(r)=>`<td><span class="badge ${bktCls(r['Expiry Risk Bucket'])}">${r['Expiry Risk Bucket']||'—'}</span></td>`,filterKey:'ac-bucket'},
-  {key:'status',label:'Status',type:'status',render:(r)=>{const s=r['Action Status'];const cls=s==='Pending Action'?'pend':s==='Action Taken'?'done':'prev';return`<td><span class="badge ${cls}">${s||'—'}</span></td>`;},filterKey:'ac-status'},
+  {key:'status',label:'Status',type:'status',render:(r)=>{const s=r['Action Status'];const cls=statusClass(s);return`<td><span class="badge ${cls}">${s||'—'}</span></td>`;},filterKey:'ac-status'},
   {key:'prevaction',label:'Prev Action',type:'str',render:(r)=>`<td style="font-size:10px; color:var(--t3); white-space:normal;">${r['Previous Action Info']||'—'}</td>`,filterKey:null},
   {key:'prevprice',label:'Prev Price',type:'str',render:(r)=>`<td style="font-size:10px; color:var(--t3); white-space:normal;">${r['Previous Price Info']||'—'}</td>`,filterKey:null},
   {key:'action',label:'Action(s) Taken',type:'str',render:(r)=>`<td style="${r['Action Taken']?'color:var(--green);font-weight:600':'color:var(--t3)'};white-space:normal;max-width:150px;font-size:11px">${r['Action Taken']||'—'}</td>`,filterKey:null},
@@ -1750,8 +1788,10 @@ function updateAuthUI() {
     const baNav = document.getElementById('n-buyerAction');
     const areaNav = document.getElementById('n-areaView');
     const settingsNav = document.getElementById('n-settings');
+    const attentionNav = document.getElementById('n-attention');
     
-    const filterDeptKeys = ['ac-dept', 'ss-dept', 'ar-dept', 'dd-dept', 'nf-dept', 'ba-dept'];
+    const filterDeptKeys = ['ac-dept', 'ss-dept', 'ar-dept', 'dd-dept', 'nf-dept', 'ba-dept', 'ex10-dept'];
+    multiDeptSelections['ac-status'].clear();multiDeptSelections['ex10-status'].clear();
 
     if (!AUTH_TOKEN || !CURRENT_USER) {
         loginOverlay.style.display = 'flex';
@@ -1765,6 +1805,7 @@ function updateAuthUI() {
         if(baNav) baNav.style.display = 'none';
         if(areaNav) areaNav.style.display = 'none';
         if(settingsNav) settingsNav.style.display = 'none';
+        if(attentionNav) attentionNav.style.display = 'none';
         const inspectorNav = document.getElementById('n-inspector');
         if(inspectorNav) inspectorNav.style.display = 'flex';
         
@@ -1797,6 +1838,7 @@ function updateAuthUI() {
         if(inspectorNav) inspectorNav.style.display = isAM ? 'none' : 'flex';
         // Buyer-only settings
         if(settingsNav) settingsNav.style.display = (!isAdmin && !isAM) ? 'flex' : 'none';
+        if(attentionNav) attentionNav.style.display = (!isAdmin && !isAM) ? 'flex' : 'none';
         
         if (!isAdmin && !isAM && CURRENT_USER.departments && CURRENT_USER.departments !== 'ALL') {
             const userDepts = CURRENT_USER.departments.split(',').map(d => d.trim());
@@ -1838,7 +1880,7 @@ function syncRoute(){
   }
   const route=routeFromHash();
   if(route==='login'){setRouteHash('overview',true);return;}
-  if((route==='admin'&&!CURRENT_USER.isAdmin) || (isAreaManager()&&['actions','notify','settings','admin','inspector'].includes(route)) || (route==='settings' && (CURRENT_USER.isAdmin || isAreaManager())) || (route==='areaView' && !isAreaManager())){
+  if((route==='admin'&&!CURRENT_USER.isAdmin) || (isAreaManager()&&['actions','notify','settings','admin','inspector','attention'].includes(route)) || (route==='settings' && (CURRENT_USER.isAdmin || isAreaManager())) || (route==='areaView' && !isAreaManager()) || (route==='expiry10' && !isBuyerRole()) || (route==='attention' && !isBuyerRole())){
     setRouteHash('overview',true);
     go('overview',{fromHash:true});
     return;
@@ -1847,7 +1889,7 @@ function syncRoute(){
 }
 window.addEventListener('hashchange',syncRoute);
 function go(p, options={}){
-  if(!ROUTES[p] || (p==='admin'&&!CURRENT_USER?.isAdmin) || (p==='settings' && (!CURRENT_USER || CURRENT_USER.isAdmin || isAreaManager())) || (p==='areaView' && !isAreaManager()))return;
+  if(!ROUTES[p] || (p==='admin'&&!CURRENT_USER?.isAdmin) || (p==='settings' && (!CURRENT_USER || CURRENT_USER.isAdmin || isAreaManager())) || (p==='areaView' && !isAreaManager()) || (p==='expiry10' && !isBuyerRole()) || (p==='attention' && !isBuyerRole()))return;
   if(!options.fromHash)setRouteHash(p);
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
@@ -1862,10 +1904,12 @@ function go(p, options={}){
   if(p==='settings'){ loadBuyerSettings(); return; }
   if(p==='areaView'){ populateAreaViewFilters(); renderAreaView(); return; }
   if(p==='buyerAction'){ populateBAFilters(); renderBuyerAction(); return; }
+  if(p==='expiry10'){populateExpiry10Filters();renderExpiry10();return;}
+  if(p==='attention'){populateAttentionFilters();renderNeedsAttention();return;}
   renderPage(p);
 }
 function renderPage(n){
-  if(n==='admin'||n==='drilldown'||n==='notify'||n==='settings'||n==='areaView'||n==='buyerAction')return;
+  if(n==='admin'||n==='drilldown'||n==='notify'||n==='settings'||n==='areaView'||n==='buyerAction'||n==='expiry10'||n==='attention')return;
   ({overview:renderOverview,actions:renderActions,stores:renderStores,articles:renderArticles,submission:renderSubmission,inspector:renderInspector})[n]?.();
 }
 
@@ -1915,8 +1959,8 @@ function sortWeeks(weeks, data) {
 // ══ MULTI-SELECT LOGIC ══
 function toggleMultiSelect(id){const dropdown=document.getElementById(id+'-dropdown');const display=document.getElementById(id+'-display');const isOpen=dropdown.classList.contains('open');document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));if(!isOpen){dropdown.classList.add('open');display.classList.add('active');}}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-container')){document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.ms-display.active').forEach(d=>d.classList.remove('active'));}});
-function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();else if(pfx==='nf-dept')renderNotify();else if(pfx==='ba-dept')renderBuyerAction();else if(pfx==='av-dept')renderAreaView();}
-function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(pfx==='usr-dept'){if(count===0)display.textContent='No Depts Selected';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}else if(pfx==='usr-store'){if(count===0)display.textContent='No Stores Selected';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Stores Selected`;}else{if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}}
+function onMultiDeptChange(pfx,checkbox){if(checkbox.checked)multiDeptSelections[pfx].add(checkbox.value);else multiDeptSelections[pfx].delete(checkbox.value);updateMultiDeptDisplay(pfx);if(pfx==='ac-dept'||pfx==='ac-bucket'||pfx==='ac-status')renderActions();else if(pfx==='ss-dept')renderStores();else if(pfx==='ar-dept')renderArticles();else if(pfx==='dd-dept')renderDrilldown();else if(pfx==='nf-dept')renderNotify();else if(pfx==='ba-dept')renderBuyerAction();else if(pfx==='av-dept')renderAreaView();else if(pfx==='ex10-dept'||pfx==='ex10-status')renderExpiry10();}
+function updateMultiDeptDisplay(pfx){const display=document.getElementById(`${pfx}-display`);if(!display)return;const count=multiDeptSelections[pfx].size;let label='Depts';if(pfx==='ac-bucket')label='Risks';if(pfx==='ac-status'||pfx==='ex10-status')label='Statuses';if(pfx==='usr-dept'){if(count===0)display.textContent='No Depts Selected';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}else if(pfx==='usr-store'){if(count===0)display.textContent='No Stores Selected';else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} Stores Selected`;}else{if(count===0)display.textContent=`All ${label}`;else if(count===1)display.textContent=[...multiDeptSelections[pfx]][0];else display.textContent=`${count} ${label} Selected`;}}
 function renderMultiSelectOpts(pfx,values){const dropdown=document.getElementById(`${pfx}-dropdown`);if(!dropdown)return;dropdown.innerHTML=values.map(v=>`<label class="ms-opt"><input type="checkbox" value="${v}" onchange="onMultiDeptChange('${pfx}',this)" ${multiDeptSelections[pfx].has(v)?'checked':''}><span>${v}</span></label>`).join('')+`<button class="btn btn-sm btn-accent" style="margin-top:8px;width:100%" onclick="event.stopPropagation();toggleMultiSelect('${pfx}')">Done</button>`;}
 
 // ══ PROCESS ROWS ══
@@ -1953,64 +1997,55 @@ function articleKeyOf(r){ return `${r.Barcode||r.Article}|${r.ExpiryDate||''}`; 
 function applyPreviouslyActioned(){
   const actionedMap={};
   proc.forEach(r=>{
-    if(r['Action Status']==='Action Taken'){
-      const key=`${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
-      if(!actionedMap[key]) actionedMap[key] = [];
-      
-      let isValid = false;
-      const act = r['Action Taken'] || '';
-      if(act.includes('RTC Price Change') && r['End']) {
-        const endDate = parseDate(r['End']);
-        if(endDate && endDate >= TODAY) isValid = true;
-      } else if (act.includes('Store Transfer')) {
-        isValid = true;
-      } else if (act.includes('Monitor')) {
-        isValid = true;
-      } else if (act.includes('Clear In Normal Price')) {
-        isValid = true;
-      }
-      
-      if(isValid) {
-        actionedMap[key].push({
-          action: act,
-          end: r['End'] || '',
-          start: r['Start'] || '',
-          rtcPrice: r['RTC Price'] || '',
-          transferTo: r['Transfer To'] || '',
-          transferQty: r['Transfer Qty'] || ''
-        });
-      }
-    }
+    if(r['Action Status']!=='Action Taken') return;
+    const key=`${r.StoreCode}|${r.Barcode||r.Article}|${r.ExpiryDate}`;
+    if(!actionedMap[key]) actionedMap[key]=[];
+    actionedMap[key].push({row:r,action:r['Action Taken']||'',end:r.End||'',start:r.Start||'',rtcPrice:r['RTC Price']||'',transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',actionDate:r['Action Date']||'',ts:r._tsDate||null});
   });
-  
-  proc.forEach(r=>{
-    if(r['Action Status']==='Pending Action'){
-      const key=`${r.StoreCode}|${r.Barcode}|${r.ExpiryDate}`;
-      const pastActions = actionedMap[key];
-      if(pastActions && pastActions.length > 0){
-        r['Action Status']='Previously Actioned';
-        
-        let prevActionTexts = [];
-        let prevPriceTexts = [];
-        
-        pastActions.forEach(a => {
-          if(a.action.includes('RTC Price Change')) {
-            const endDateStr = formatDateToStr(parseDate(a.end)) || a.end;
-            prevActionTexts.push(`RTC given till ${endDateStr}`);
-            if(a.rtcPrice) prevPriceTexts.push(`AED ${a.rtcPrice}`);
-          }
-          if(a.action.includes('Store Transfer')) {
-            prevActionTexts.push(`${a.transferQty || '0'} Units Transferred`);
-            if(a.transferTo) prevPriceTexts.push(a.transferTo);
-          }
-        });
-        
-        r['Previous Action Info'] = prevActionTexts.join(', ');
-        r['Previous Price Info'] = prevPriceTexts.join(', ');
+
+  Object.keys(actionedMap).forEach(key=>{
+    const past=actionedMap[key];
+    const rtc=past.filter(a=>a.action.includes('RTC Price Change')&&parseDate(a.end));
+    // IMPORTANT: when the same article was actioned multiple times, validity is based
+    // only on the latest RTC End date. An older expired RTC must never create
+    // "Validity Expired" while a newer RTC is still valid.
+    rtc.sort((a,b)=>parseDate(b.end)-parseDate(a.end));
+    const latestRTC=rtc[0]||null;
+    const latestEnd=latestRTC?parseDate(latestRTC.end):null;
+    const validity=!!(latestEnd && latestEnd<TODAY);
+
+    // Keep the complete previous-action history, comma separated.
+    past.forEach(a=>{
+      const r=a.row;
+      const pa=[],pp=[];
+      if(a.action.includes('RTC Price Change')){pa.push(`RTC given till ${formatDateToStr(parseDate(a.end))||a.end}`);if(a.rtcPrice)pp.push(`AED ${a.rtcPrice}`);}
+      if(a.action.includes('Store Transfer')){pa.push(`${a.transferQty||'0'} Units Transferred`);if(a.transferTo)pp.push(a.transferTo);}
+      r._actionHistoryPart=pa.join(', '); r._priceHistoryPart=pp.join(', ');
+    });
+
+    // A pending/current submission inherits the previous action history.
+    const current=proc.find(r=>r['Action Status']==='Pending Action' && `${r.StoreCode}|${r.Barcode||r.Article}|${r.ExpiryDate}`===key);
+    if(current){
+      const pa=[],pp=[];
+      past.forEach(a=>{if(a._actionHistoryPart)pa.push(a._actionHistoryPart);if(a._priceHistoryPart)pp.push(a._priceHistoryPart);});
+      current['Previous Action Info']=pa.join(', ');
+      current['Previous Price Info']=pp.join(', ');
+      current['Latest RTC End']=latestRTC?.end||'';
+      current['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
+      current['Action Status']=validity&&parseFloat(current.Stock)>0&&Number(current.DaysLeft)>0?'Validity Expired':'Previously Actioned';
+    } else if(validity){
+      // If there is no pending/current row, only the latest actioned record represents
+      // the current state; older action rows remain historical.
+      const latestRow=past.slice().sort((a,b)=>{const da=a.ts||parseDate(a.actionDate)||parseDate(a.end)||new Date(0);const db=b.ts||parseDate(b.actionDate)||parseDate(b.end)||new Date(0);return db-da;})[0]?.row;
+      if(latestRow && parseFloat(latestRow.Stock)>0 && Number(latestRow.DaysLeft)>0){
+        latestRow['Action Status']='Validity Expired';
+        latestRow['Latest RTC End']=latestRTC?.end||'';
+        latestRow['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
       }
     }
   });
 }
+
 
 // ══ LOAD ALL ══
 async function loadAll(){
@@ -2027,7 +2062,8 @@ async function loadAll(){
   if(er.status==='fulfilled'&&er.value.rows){rawE=er.value.rows;rawL=rawE.filter(r=>r.ActionTaken);proc=processRows(rawE);applyPreviouslyActioned();setDot('e','ok',`<strong>${rawE.length}</strong> rows`);setDot('l','ok',`<strong>${rawL.length}</strong> actioned`);}else{rawE=[];rawL=[];proc=[];setDot('e','err','Data failed');setDot('l','err','—');}
   document.getElementById('ts').textContent=new Date().toLocaleTimeString();btn.classList.remove('loading');
   const pCount=proc.filter(r=>r['Action Status']==='Pending Action').length;const nb=document.getElementById('nb-actions');if(pCount>0){nb.textContent=pCount;nb.classList.add('show');}else nb.classList.remove('show');
-  if(proc.length||allStoreCodes.length){populateFilters();renderPage(curPage);}
+  const attentionCount=getNeedsAttentionData().length;const nab=document.getElementById('nb-attention');if(nab){if(attentionCount>0){nab.textContent=attentionCount;nab.classList.add('show');}else nab.classList.remove('show');}
+  if(proc.length||allStoreCodes.length){populateFilters();populateAttentionFilters();renderPage(curPage);}
 }
 function setDot(w,s,m){document.getElementById('dot-'+w).className='sdot '+s;document.getElementById('inf-'+w).innerHTML=m;}
 
@@ -2046,6 +2082,7 @@ function populateFilters(){
   const ymOpts=ymSet.map(ym=>{const m=ym.match(/^(\d{4})-(\d{2})$/);return m?{val:ym,lbl:MS[+m[2]-1]+' '+m[1]}:{val:ym,lbl:ym};});
   fill('ss-code',codes);fill('ss-week',weeks);fillOpts('ss-ym',ymOpts);renderMultiSelectOpts('ss-dept',depts);
   fill('ac-code',codes);fill('ac-week',weeks);fillOpts('ac-ym',ymOpts);renderMultiSelectOpts('ac-dept',depts);renderMultiSelectOpts('ac-bucket',buckets);
+  renderMultiSelectOpts('ac-status',['Pending Action','Validity Expired','Previously Actioned','Action Taken']);
   fill('dd-code',codes);fill('dd-week',weeks);fillOpts('dd-ym',ymOpts);renderMultiSelectOpts('dd-dept',depts);
   fillOpts('sub-ym',ymOpts);fill('sub-week',weeks);renderMultiSelectOpts('ar-dept',depts);
   fill('ba-code',codes);fillOpts('ba-ym',ymOpts);fill('ba-week',weeks);renderMultiSelectOpts('ba-dept',depts);
@@ -2073,17 +2110,7 @@ function fill(id,vals,allLabel='All'){const el=document.getElementById(id);if(!e
 function fillOpts(id,opts){const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">All</option>';opts.forEach(({val,lbl})=>{const o=document.createElement('option');o.value=val;o.textContent=lbl;el.appendChild(o);});if(opts.some(o=>o.val===cur))el.value=cur;}
 function onCodeChange(pfx){updateStoreDisp(pfx);if(pfx==='ss')renderStores();else if(pfx==='ac')renderActions();else if(pfx==='dd')renderDrilldown();else if(pfx==='ba')renderBuyerAction();}
 function updateStoreDisp(pfx){const code=gv(pfx+'-code');const disp=document.getElementById(pfx+'-store-disp');if(disp)disp.textContent=code?(codeToStore[code]||code):'—';}
-function fData(pfx){
-  let d=[...proc];const code=gv(pfx+'-code'),ym=gv(pfx+'-ym'),week=gv(pfx+'-week');const depts=[...multiDeptSelections[pfx+'-dept']];
-  if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
-  if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
-  if(pfx==='ac'){
-    const st=gv('ac-status');if(st)d=d.filter(r=>r['Action Status']===st);
-    const buckets=[...multiDeptSelections['ac-bucket']];
-    if(buckets.length>0)d=d.filter(r=>buckets.includes(r['Expiry Risk Bucket']));
-  }
-  return d;
-}
+function fData(pfx){let d=[...(isBuyerRole()?getBuyerVisibleProc():proc)];const code=gv(pfx+'-code'),ym=gv(pfx+'-ym'),week=gv(pfx+'-week');const depts=[...(multiDeptSelections[pfx+'-dept']||[])];if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);if(depts.length)d=d.filter(r=>depts.includes(r.Department));if(pfx==='ac'){const sts=[...multiDeptSelections['ac-status']];if(sts.length)d=d.filter(r=>sts.includes(r['Action Status']));const buckets=[...multiDeptSelections['ac-bucket']];if(buckets.length)d=d.filter(r=>buckets.includes(r['Expiry Risk Bucket']));}return d;}
 function resetF(pfx){
   document.querySelectorAll(`[id^="${pfx}-"]`).forEach(el=>{if(el.tagName==='SELECT')el.value='';});
   if(pfx==='ar')document.getElementById('ar-search').value='';
@@ -2091,22 +2118,23 @@ function resetF(pfx){
   if(multiDeptSelections[pfx+'-dept']){multiDeptSelections[pfx+'-dept'].clear();updateMultiDeptDisplay(pfx+'-dept');}
   document.querySelectorAll(`#${pfx}-dept-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
   if(pfx==='ac'){
+    multiDeptSelections['ac-status'].clear();updateMultiDeptDisplay('ac-status');document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=false);
     if(multiDeptSelections['ac-bucket']){multiDeptSelections['ac-bucket'].clear();updateMultiDeptDisplay('ac-bucket');}
     document.querySelectorAll(`#ac-bucket-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
   }
   if(pfx==='ss')renderStores();else if(pfx==='ac')renderActions();else if(pfx==='ar')renderArticles();else if(pfx==='dd')renderDrilldown();else if(pfx==='ba')renderBuyerAction();
 }
-function filterOverdue(){document.getElementById('ac-status').value='Pending Action';renderActions();}
+function filterOverdue(){multiDeptSelections['ac-status'].clear();multiDeptSelections['ac-status'].add('Pending Action');updateMultiDeptDisplay('ac-status');document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=cb.value==='Pending Action');renderActions();}
 function onSearch(){
   clearTimeout(searchDebounce);
-  searchDebounce=setTimeout(()=>{if(curPage==='actions')renderActions();},250);
+  searchDebounce=setTimeout(()=>{if(curPage==='actions')renderActions();else if(curPage==='attention')renderNeedsAttention();},250);
 }
 function buildActivePills(pfx,containerId){
   const filterIds=(pfx==='ac')?['ac-code','ac-ym','ac-week','ac-status']:(pfx==='ss')?['ss-code','ss-ym','ss-week']:[]; 
   const container=document.getElementById(containerId);if(!container)return;
-  let pills=filterIds.map(fid=>{const val=gv(fid);if(!val)return'';const label=FILTER_LABELS[fid]||fid.split('-').pop();return`<span class="filter-pill"><span class="filter-pill-label">${label}</span>${val}</span>`;}).filter(Boolean);
+  let pills=filterIds.filter(fid=>fid!=='ac-status').map(fid=>{const val=gv(fid);if(!val)return'';const label=FILTER_LABELS[fid]||fid.split('-').pop();return`<span class="filter-pill"><span class="filter-pill-label">${label}</span>${val}</span>`;}).filter(Boolean);
   const depts=[...multiDeptSelections[pfx+'-dept']];if(depts.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Depts</span>${depts.join(', ')}</span>`);
-  if(pfx==='ac'){const buckets=[...multiDeptSelections['ac-bucket']];if(buckets.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Risks</span>${buckets.join(', ')}</span>`);}
+  if(pfx==='ac'){const sts=[...multiDeptSelections['ac-status']];if(sts.length)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Status</span>${sts.join(', ')}</span>`);const buckets=[...multiDeptSelections['ac-bucket']];if(buckets.length>0)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Risks</span>${buckets.join(', ')}</span>`);}
   if(pfx==='ar'||pfx==='ss'){const st=gv(pfx+'-search');if(st)pills.push(`<span class="filter-pill"><span class="filter-pill-label">Search</span>${st}</span>`);}
   container.innerHTML=pills.join('');
 }
@@ -2124,10 +2152,78 @@ function detectOverdue(){
   return n;
 }
 
+// ══ NEEDS MY ATTENTION ══
+function populateAttentionFilters(){
+  if(!isBuyerRole())return;
+  const d=getBuyerVisibleProc();
+  fill('attention-code',[...new Set(d.map(r=>r.StoreCode).filter(Boolean))].sort());
+  const ym=[...new Set(d.map(r=>r['Submission Month']).filter(Boolean))].sort();
+  fillOpts('attention-ym',ym.map(v=>{const m=v.match(/^(\d{4})-(\d{2})$/);return m?{val:v,lbl:MS[+m[2]-1]+' '+m[1]}:{val:v,lbl:v};}));
+  fill('attention-week',[...new Set(d.map(r=>r.Week).filter(Boolean))].sort());
+  renderMultiSelectOpts('attention-dept',[...new Set(d.map(r=>r.Department).filter(Boolean))].sort());
+  updateMultiDeptDisplay('attention-dept');
+}
+function attentionReasonMatch(r,reason){
+  const days=Number(r.DaysLeft),stock=parseFloat(r.Stock)||0,status=r['Action Status']||'';
+  const overdue=status==='Pending Action'&&r._tsDate&&Math.round((TODAY-r._tsDate)/86400000)>=14;
+  if(reason==='validity')return status==='Validity Expired';
+  if(reason==='pending')return overdue;
+  if(reason==='critical3')return Number.isFinite(days)&&days>=0&&days<=3;
+  if(reason==='critical7')return Number.isFinite(days)&&days>=0&&days<=7;
+  if(reason==='critical10')return Number.isFinite(days)&&days>=0&&days<=10;
+  if(reason==='critical30')return Number.isFinite(days)&&days>=0&&days<=30;
+  if(reason==='highstock')return stock>=20;
+  return true;
+}
+function getNeedsAttentionData(){
+  if(!isBuyerRole())return [];
+  const st=String(gv('attention-search')||'').trim().toLowerCase(),code=gv('attention-code'),ym=gv('attention-ym'),week=gv('attention-week'),status=gv('attention-status'),reason=gv('attention-reason'),depts=[...multiDeptSelections['attention-dept']];
+  const d=getBuyerVisibleProc().filter(r=>{
+    const rs=r['Action Status']||'',stock=parseFloat(r.Stock)||0,days=Number(r.DaysLeft);
+    // Needs My Attention contains only open, in-date items with stock remaining.
+    if(!['Pending Action','Validity Expired'].includes(rs)||stock<=0||!Number.isFinite(days)||days<0)return false;
+    if(code&&r.StoreCode!==code)return false;if(ym&&r['Submission Month']!==ym)return false;if(week&&r.Week!==week)return false;if(status&&rs!==status)return false;if(depts.length&&!depts.includes(r.Department))return false;if(reason&&!attentionReasonMatch(r,reason))return false;
+    if(st&&!['Article','Barcode','Description','Store','StoreCode','Department'].some(k=>String(r[k]||'').toLowerCase().includes(st)))return false;
+    return true;
+  });
+  return d.map(r=>{
+    const status=r['Action Status']||'',days=Number(r.DaysLeft),stock=parseFloat(r.Stock)||0,overdue=status==='Pending Action'&&r._tsDate&&Math.round((TODAY-r._tsDate)/86400000)>=14;
+    let score=0,why='Open action';
+    if(status==='Validity Expired'){score=100;why='RTC validity expired';}
+    else if(overdue){score=98;why='Pending 14+ days';}
+    else if(days<=3){score=95;why='Expiry ≤3 days';}
+    else if(days<=7){score=90;why='Expiry ≤7 days';}
+    else if(days<=10){score=85;why='Expiry ≤10 days';}
+    else if(days<=30){score=72;why='Expiry ≤30 days';}
+    if(stock>=50)score+=8;else if(stock>=20)score+=5;else if(stock>=10)score+=2;
+    return {...r,_attentionScore:score,_attentionReason:why};
+  }).sort((a,b)=>b._attentionScore-a._attentionScore||(Number(a.DaysLeft)||999)-(Number(b.DaysLeft)||999)||(parseFloat(b.Stock)||0)-(parseFloat(a.Stock)||0));
+}
+function attentionKpiFilter(kind){
+  const ids=['attention-code','attention-ym','attention-week','attention-status','attention-reason'];ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  multiDeptSelections['attention-dept'].clear();updateMultiDeptDisplay('attention-dept');document.querySelectorAll('#attention-dept-dropdown input').forEach(cb=>cb.checked=false);
+  if(kind==='validity')document.getElementById('attention-status').value='Validity Expired';
+  else if(kind==='pending')document.getElementById('attention-status').value='Pending Action';
+  else if(kind==='critical')document.getElementById('attention-reason').value='critical7';
+  else if(kind==='highstock')document.getElementById('attention-reason').value='highstock';
+  renderNeedsAttention();
+}
+function resetAttentionFilters(){['attention-code','attention-ym','attention-week','attention-status','attention-reason','attention-search'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});multiDeptSelections['attention-dept'].clear();updateMultiDeptDisplay('attention-dept');document.querySelectorAll('#attention-dept-dropdown input').forEach(cb=>cb.checked=false);renderNeedsAttention();}
+function renderNeedsAttention(){
+  if(!isBuyerRole())return;
+  const d=getNeedsAttentionData(),validity=d.filter(r=>r['Action Status']==='Validity Expired').length,pending=d.filter(r=>r['Action Status']==='Pending Action').length,critical=d.filter(r=>Number(r.DaysLeft)<=7).length,highStock=d.filter(r=>parseFloat(r.Stock)>=20).length;
+  document.getElementById('kpi-attention').innerHTML=KPI('Needs Attention','red',d.length,'Current filtered queue',`attentionKpiFilter('all')`)+KPI('Validity Expired','yel',validity,'RTC validity ended',`attentionKpiFilter('validity')`)+KPI('Pending','ora',pending,'Awaiting action',`attentionKpiFilter('pending')`)+KPI('Critical ≤7 Days','red',critical,'Expiry approaching',`attentionKpiFilter('critical')`)+KPI('High Stock','acc',highStock,'20+ units remaining',`attentionKpiFilter('highstock')`);
+  document.getElementById('b-attention').textContent=d.length+' items';const nb=document.getElementById('nb-attention');if(nb){if(d.length){nb.textContent=d.length;nb.classList.add('show');}else nb.classList.remove('show');}
+  const cols=[['rowid','Row ID','str'],['priority','Priority','num'],['reason','Reason','str'],['store','Store','str'],['code','Code','str'],['article','Article','str'],['desc','Description','str'],['stock','Stock','num'],['expiry','Expiry','date'],['days','Days Left','num'],['status','Status','status'],['rtc','RTC End','date']];
+  document.querySelector('#t-attention thead tr').innerHTML=cols.map(([l,k,t])=>`<th class="sortable" onclick="sortBy('t-attention','${k}','${t}')">${l}${getSortIcon('t-attention',k)}</th>`).join('');
+  const sd=sortData(d,'t-attention','priority','num');
+  document.querySelector('#t-attention tbody').innerHTML=sd.length?sd.map(r=>{const days=Number(r.DaysLeft);return `<tr onclick="showPop(${r._idx})" style="cursor:pointer"><td class="mono">${r.RowIndex??r._idx??'—'}</td><td><span class="badge ${r._attentionScore>=95?'validity':r._attentionScore>=85?'pend':'prev'}">${r._attentionScore}</span></td><td style="font-size:10px;font-weight:600">${r._attentionReason}</td><td class="b">${r.Store||'—'}</td><td class="mono">${r.StoreCode||'—'}</td><td class="mono b">${r.Article||'—'}</td><td>${r.Description||'—'}</td><td class="mono b">${r.Stock||'—'}</td><td class="mono">${r.ExpiryDate||'—'}</td><td class="mono" style="color:${days<=7?'var(--red)':'var(--orange)'};font-weight:700">${days}</td><td><span class="badge ${statusClass(r['Action Status'])}">${r['Action Status']||'—'}</span></td><td class="mono">${r['Latest RTC End']||r.End||'—'}</td></tr>`}).join(''):'<tr><td colspan="12" style="text-align:center;color:var(--t3);padding:28px">Nothing currently needs your attention</td></tr>';
+}
+
 // ══ OVERVIEW ══
 function renderOverview(){
   if(isAreaManager()){ renderAreaManagerOverview(); return; }
-  detectOverdue();const d=proc;
+  detectOverdue();const d=getBuyerVisibleProc();
   const currentMonth=new Date().toISOString().slice(0,7);
   const mtdData=d.filter(r=>r['Submission Month']===currentMonth);
   const soldOutCount=mtdData.filter(F.soldout).length;
@@ -2140,9 +2236,7 @@ function renderOverview(){
     KPI('Pending Actions','ora',cnt(d,F.pend),'',`drillDownAction('status','Pending Action')`)+
     KPI('Action Taken','grn',cnt(d,F.comp),'',`drillDownAction('status','Action Taken')`);
     
-  document.getElementById('kpi-ov-extra').innerHTML =  
-    KPI('Sold Out (MTD)','blu',soldOutCount,'Stock at 0 this month',`openDrilldownPage('soldout')`) +  
-    KPI('Expired (MTD)','red',expiredCount,'Items expired this month',`openDrilldownPage('expired')`);
+  document.getElementById('kpi-ov-extra').innerHTML = KPI('Expiry ≤10 Days','red',d.filter(r=>Number(r.DaysLeft)>=0&&Number(r.DaysLeft)<=10&&parseFloat(r.Stock)>0).length,'Stock still available',`openExpiry10Page()`) + KPI('Sold Out (MTD)','blu',soldOutCount,'Stock at 0 this month',`openDrilldownPage('soldout')`) + KPI('Expired (MTD)','red',expiredCount,'Items expired this month',`openDrilldownPage('expired')`);
     
   const sm={};
   d.forEach(r=>{const k=r.StoreCode||'?';if(!sm[k])sm[k]={code:k,store:r.Store||k,total:0,l7:0,l30:0,l60:0,p:0,c:0};sm[k].total++;if(F.le7(r))sm[k].l7++;if(F.le30(r))sm[k].l30++;if(F.le30(r))sm[k].l60++;if(F.pend(r))sm[k].p++;if(F.comp(r))sm[k].c++;});
@@ -2234,7 +2328,8 @@ function renderAreaManagerOverview(){
   if(ovTitle)ovTitle.textContent='Store Expiry Summary';
 }
 function drillStore(code){const el=document.getElementById('ac-code');if(el){el.value=code;updateStoreDisp('ac');}go('actions');}
-function drillDownAction(type,val){if(isAreaManager()){go('stores');return;}go('actions');if(type==='risk'){}else if(type==='status')document.getElementById('ac-status').value=val;renderActions();}
+function drillDownAction(type,val){if(isAreaManager()){go('stores');return;}go('actions');if(type==='status'){multiDeptSelections['ac-status'].clear();multiDeptSelections['ac-status'].add(val);updateMultiDeptDisplay('ac-status');document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=cb.value===val);}renderActions();}
+function openExpiry10Page(){if(isBuyerRole())go('expiry10');}
 
 // ══ DRILLDOWN PAGE (Sold Out / Expired) ══
 function openDrilldownPage(mode){
@@ -2329,7 +2424,7 @@ function populateBAFilters(){
 }
 
 function renderBuyerAction(){
-  let d=[...proc];
+  let d=[...(isBuyerRole()?getBuyerVisibleProc():proc)];
   const code=gv('ba-code'),ym=gv('ba-ym'),week=gv('ba-week');
   const depts=[...multiDeptSelections['ba-dept']];
   if(code)d=d.filter(r=>r.StoreCode===code);
@@ -2413,7 +2508,7 @@ function renderBuyerAction(){
 }
 
 function exportBuyerActionXL(){
-  let d=[...proc];
+  let d=[...(isBuyerRole()?getBuyerVisibleProc():proc)];
   const code=gv('ba-code'),ym=gv('ba-ym'),week=gv('ba-week');
   const depts=[...multiDeptSelections['ba-dept']];
   if(code)d=d.filter(r=>r.StoreCode===code);
@@ -2478,11 +2573,20 @@ function loadBuyerSettings(){
   const chk=(id,val)=>{const el=document.getElementById(id);if(el)el.checked=!!val;};
   set('set-to',toEmail);set('set-cc',s.cc);set('set-subject',s.subject);set('set-body',s.body);
   chk('set-confirm',s.confirm);chk('set-remember-actions',s.rememberActions);chk('set-rtc',s.rtc);chk('set-transfer',s.transfer);chk('set-monitor',s.monitor);chk('set-clear',s.clear);
-  previewBuyerEmail();
+  previewBuyerEmail();renderDisabledArticlesSettings();
 }
+function renderDisabledArticlesSettings(){if(!isBuyerRole())return;const list=getDisabledArticles(),box=document.getElementById('disabled-article-list-box');const c=document.getElementById('disabled-article-count');if(c)c.textContent=list.length+' article'+(list.length===1?'':'s')+' disabled';if(box)box.innerHTML=list.length?list.map((x,i)=>`<div class="disabled-article-row"><div class="disabled-article-info"><span class="disabled-article-code">${x.article||'—'}${x.barcode?' · '+x.barcode:''}</span><span class="disabled-article-desc">${x.description||'Description not found'}</span></div><button class="btn btn-sm btn-red" onclick="removeDisabledArticle(${i})"><i class="fa-solid fa-xmark"></i> Remove</button></div>`).join(''):'<div style="font-size:10.5px;color:var(--t3);padding:9px">No disabled articles</div>';}
+function searchDisabledArticleOptions(){const q=gv('disabled-article-search').trim().toLowerCase(),box=document.getElementById('disabled-search-results');if(!box)return;if(!q){box.innerHTML='';return;}const dis=new Set(getDisabledArticles().map(x=>String(x.article).toLowerCase()));const m=articleCatalog().filter(x=>!dis.has(String(x.article).toLowerCase())&&(String(x.article).toLowerCase().includes(q)||String(x.barcode).toLowerCase().includes(q)||String(x.description).toLowerCase().includes(q))).slice(0,8);box.innerHTML=m.map(x=>`<div class="disabled-result"><div class="disabled-article-info"><span class="disabled-article-code">${x.article||x.barcode}</span><span class="disabled-article-desc">${x.description||'—'}</span></div><button class="btn btn-sm btn-accent" onclick="addDisabledArticle('${String(x.article||'').replace(/'/g,"\\'")}')">Add</button></div>`).join('');}
+function addDisabledArticle(v){const info=findArticleInfo(v);if(!info){toast('Article not found in current data','error');return;}const list=getDisabledArticles();if(list.some(x=>String(x.article).toLowerCase()===String(info.article).toLowerCase())){toast('Article already disabled','',2200);return;}list.push({article:info.article,barcode:info.barcode,description:info.description,department:info.department});saveDisabledArticlesStore(list);renderDisabledArticlesSettings();clearDisabledArticleInput();}
+function addDisabledArticleFromSearch(){const v=gv('disabled-article-search');if(v)addDisabledArticle(v);}
+function handleDisabledPaste(){const el=document.getElementById('disabled-article-paste');if(!el)return;const vals=String(el.value||'').split(/\r?\n/).flatMap(x=>x.split(/\t/)[0].split(/[;,]/)).map(x=>x.trim()).filter(x=>x&&!/^article$/i.test(x));let added=0;vals.forEach(v=>{const n=getDisabledArticles().length;addDisabledArticle(v);if(getDisabledArticles().length>n)added++;});el.value='';if(added)toast(added+' article(s) added from Excel paste','success',2500);}
+function removeDisabledArticle(i){const l=getDisabledArticles();l.splice(i,1);saveDisabledArticlesStore(l);renderDisabledArticlesSettings();}
+function saveDisabledArticles(){saveDisabledArticlesStore(getDisabledArticles());renderDisabledArticlesSettings();const st=document.getElementById('disabled-article-status');if(st){st.textContent='Disabled articles saved';setTimeout(()=>st.textContent='',2200);}renderPage(curPage);}
+function clearDisabledArticleInput(){const a=document.getElementById('disabled-article-search'),b=document.getElementById('disabled-article-paste'),r=document.getElementById('disabled-search-results');if(a)a.value='';if(b)b.value='';if(r)r.innerHTML='';}
 function resetBuyerSettings(){sessionStorage.removeItem(BUYER_SETTINGS_KEY);loadBuyerSettings();const st=document.getElementById('settings-status');if(st){st.textContent='Defaults restored';setTimeout(()=>{if(st)st.textContent='';},2200);}}
 function applyBuyerTemplate(template,ctx){return String(template||'').replace(/\{STORE\}/g,ctx.store).replace(/\{STORE_CODE\}/g,ctx.code).replace(/\{WEEK\}/g,ctx.week).replace(/\{MONTH\}/g,ctx.month).replace(/\{ITEM_COUNT\}/g,String(ctx.count)).replace(/\{DATE\}/g,ctx.date).replace(/\{BODY\}/g,ctx.body);}
-function buildNotifyEmailContext(items,code,week,ym,body){return {store:codeToStore[code]||code,code:code,week:week||'All Weeks',month:ym||'All Months',count:items.length,date:new Date().toLocaleDateString(),body:body||''};}
+function formatMonthForMail(ym){const m=String(ym||'').match(/^(\d{4})-(\d{2})$/);return m?`${MS[+m[2]-1]}-${m[1]}`:(ym||'All Months');}
+function buildNotifyEmailContext(items,code,week,ym,body){return {store:codeToStore[code]||code,code:code,week:week||'All Weeks',month:formatMonthForMail(ym),count:items.length,date:new Date().toLocaleDateString(),body:body||''};}
 function parseEmailList(v){return String(v||'').split(/[;,\s]+/).map(x=>x.trim()).filter(Boolean);}
 function persistNotifyActionFilters(){const s=getBuyerSettings();if(!s.rememberActions)return;s.rtc=!!document.getElementById('nf-rtc')?.checked;s.transfer=!!document.getElementById('nf-transfer')?.checked;s.monitor=!!document.getElementById('nf-monitor')?.checked;s.clear=!!document.getElementById('nf-clear')?.checked;sessionStorage.setItem(BUYER_SETTINGS_KEY,JSON.stringify(s));}
 function previewBuyerEmail(){const s=saveBuyerSettings(true);const ctx=buildNotifyEmailContext([{},{},{}],'STORE001','Week 2','2026-09','[Action table is copied separately]');const subject=applyBuyerTemplate(s.subject,ctx);const body=applyBuyerTemplate(s.body,ctx);const el=document.getElementById('settings-preview');if(el)el.textContent='To: Store email from Email Map\nCC: '+(s.cc||'None')+'\nSubject: '+subject+'\n\n'+body;}
@@ -2610,7 +2714,7 @@ function sendNotifyEmail() {
   const ccEmails=parseEmailList(settings.cc).filter(e=>e.toLowerCase()!==toEmail.toLowerCase());
   if(!toEmail){toast('No store email is configured for this store.','error');return;}
   const ym=gv('nf-ym'),week=gv('nf-week');
-  let d=proc.filter(r=>r.StoreCode===code&&r['Action Status']==='Action Taken');
+  let d=getBuyerVisibleProc().filter(r=>r.StoreCode===code&&r['Action Status']==='Action Taken');
   d=d.filter(getNotifyActionFilter());
   if(ym)d=d.filter(r=>r['Submission Month']===ym);
   if(week)d=d.filter(r=>r.Week===week);
@@ -2660,7 +2764,7 @@ function renderActions(){
   const st=gv('globalSearch').toLowerCase();
   const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)):d;
   const sortedFiltered = sortData(filtered, 't-ac', 'StoreCode', 'str');
-  document.getElementById('kpi-ac').innerHTML=KPI('Items','neu',sortedFiltered.length)+KPI('Critical ≤7','red',cnt(sortedFiltered,F.le7))+KPI('≤30 Days','ora',cnt(sortedFiltered,F.le30))+KPI('Pending','ora',cnt(sortedFiltered,F.pend))+KPI('Actioned','grn',cnt(sortedFiltered,F.comp));
+  document.getElementById('kpi-ac').innerHTML=KPI('Items','neu',sortedFiltered.length)+KPI('Critical ≤7','red',cnt(sortedFiltered,F.le7))+KPI('≤30 Days','ora',cnt(sortedFiltered,F.le30))+KPI('Pending','ora',cnt(sortedFiltered,F.pend))+KPI('Actioned','grn',cnt(sortedFiltered,F.comp))+KPI('Validity Expired','yel',cnt(sortedFiltered,r=>r['Action Status']==='Validity Expired'));
   buildActivePills('ac','ac-active-filters');const visCols=getVisibleCols();
   
   document.getElementById('t-ac-hdr').innerHTML=visCols.map(c=>{
@@ -2669,7 +2773,8 @@ function renderActions(){
   }).join('');
   
   document.querySelector('#t-ac tbody').innerHTML=sortedFiltered.map(r=>{const isOverdue=r['Action Status']==='Pending Action'&&r._tsDate&&Math.round((TODAY-r._tsDate)/86400000)>=14;const isSel=selectedIndices.has(r._idx);return`<tr class="${isOverdue?'overdue':''} ${isSel?'selected':''}" onclick="rowClick(event,${r._idx})">${visCols.map(c=>c.key==='chk'?c.render(r):c.key==='desc'?c.render(r,isOverdue):c.render(r)).join('')}</tr>`;}).join('');
-  document.getElementById('b-ac').textContent=sortedFiltered.length+' items';updateToolbar();renderTransferSuggestions();
+  document.getElementById('b-ac').textContent=sortedFiltered.length+' items';updateToolbar();
+  const validity=sortedFiltered.filter(r=>r['Action Status']==='Validity Expired');const vb=document.getElementById('b-validity-expired');if(vb)vb.textContent=validity.length+' items';const vt=document.querySelector('#t-validity-expired tbody');if(vt)vt.innerHTML=validity.length?validity.map(r=>`<tr onclick="showPop(${r._idx})"><td class="b">${r.Store||'—'}</td><td class="mono">${r.StoreCode||'—'}</td><td class="mono b">${r.Article||'—'}</td><td>${r.Description||'—'}</td><td class="mono b">${r.Stock||'—'}</td><td class="mono">${r.ExpiryDate||'—'}</td><td class="mono" style="color:var(--amber);font-weight:700">${r.DaysLeft}</td><td style="font-size:10px">${r['Latest RTC Info']||r['Previous Action Info']||r['Action Taken']||'—'}</td><td style="font-size:10px">${r['Previous Price Info']||('AED '+r['RTC Price'])||'—'}</td><td class="mono">${r['Latest RTC End']||r.End||'—'}</td></tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:18px">No validity-expired items</td></tr>';
 }
 function renderTransferSuggestions(){
   const batchStoreLatestWeeks={};
@@ -2739,9 +2844,16 @@ function exportAreaViewXL(){
   const ws=XLSX.utils.json_to_sheet(rows);autoFitAndTable(ws,rows,Object.keys(rows[0]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Area View');XLSX.writeFile(wb,'AreaView_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+// ══ EXPIRY WITHIN 10 DAYS ══
+function populateExpiry10Filters(){if(!isBuyerRole())return;const d=getBuyerVisibleProc();fill('ex10-code',[...new Set(d.map(r=>r.StoreCode).filter(Boolean))].sort());const ym=[...new Set(d.map(r=>r['Submission Month']).filter(Boolean))].sort();fillOpts('ex10-ym',ym.map(v=>{const m=v.match(/^(\d{4})-(\d{2})$/);return m?{val:v,lbl:MS[+m[2]-1]+' '+m[1]}:{val:v,lbl:v};}));fill('ex10-week',[...new Set(d.map(r=>r.Week).filter(Boolean))].sort());renderMultiSelectOpts('ex10-dept',[...new Set(d.map(r=>r.Department).filter(Boolean))].sort());renderMultiSelectOpts('ex10-status',['Pending Action','Validity Expired','Previously Actioned','Action Taken']);updateStoreDisp('ex10');}
+function getExpiry10Data(){let d=getBuyerVisibleProc().filter(r=>{const x=Number(r.DaysLeft),s=parseFloat(r.Stock);return !isNaN(x)&&x>=0&&x<=10&&!isNaN(s)&&s>0;});const code=gv('ex10-code'),ym=gv('ex10-ym'),week=gv('ex10-week'),de=[...multiDeptSelections['ex10-dept']],st=[...multiDeptSelections['ex10-status']];if(code)d=d.filter(r=>r.StoreCode===code);if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);if(de.length)d=d.filter(r=>de.includes(r.Department));if(st.length)d=d.filter(r=>st.includes(r['Action Status']));return d;}
+function renderExpiry10(){if(!isBuyerRole())return;const d=getExpiry10Data();document.getElementById('kpi-ex10').innerHTML=KPI('Items','neu',d.length)+KPI('Stores','acc',new Set(d.map(r=>r.StoreCode)).size)+KPI('Actioned','grn',d.filter(r=>r['Action Status']==='Action Taken').length)+KPI('Further Action','yel',d.filter(r=>['Pending Action','Validity Expired'].includes(r['Action Status'])).length);document.getElementById('b-ex10').textContent=d.length+' items';const cols=[['Store','Store','str'],['Code','StoreCode','str'],['Article','Article','str'],['Description','Description','str'],['Stock','Stock','num'],['Expiry Date','ExpiryDate','date'],['Days Left','DaysLeft','num'],['Status','Action Status','status'],['Previous Action','Previous Action Info','str'],['Previous Price','Previous Price Info','str'],['RTC End','End','date'],['Action Taken','Action Taken','str']];document.getElementById('t-ex10-hdr').innerHTML=cols.map(([l,k,t])=>`<th class="sortable" onclick="sortBy('t-ex10','${k}','${t}')">${l}${getSortIcon('t-ex10',k)}</th>`).join('');const sd=sortData(d,'t-ex10','Store','str');document.querySelector('#t-ex10 tbody').innerHTML=sd.length?sd.map(r=>`<tr onclick="showPop(${r._idx})"><td class="b">${r.Store||'—'}</td><td class="mono">${r.StoreCode||'—'}</td><td class="mono b">${r.Article||'—'}</td><td>${r.Description||'—'}</td><td class="mono b">${r.Stock||'—'}</td><td class="mono">${r.ExpiryDate||'—'}</td><td class="mono" style="color:var(--red);font-weight:700">${r.DaysLeft}</td><td><span class="badge ${statusClass(r['Action Status'])}">${r['Action Status']||'—'}</span></td><td style="font-size:10px">${r['Previous Action Info']||'—'}</td><td style="font-size:10px">${r['Previous Price Info']||'—'}</td><td class="mono">${r.End||'—'}</td><td style="font-size:10px">${r['Action Taken']||'—'}</td></tr>`).join(''):'<tr><td colspan="12" style="text-align:center;color:var(--t3);padding:28px">No items expire within 10 days with stock remaining</td></tr>';}
+function resetExpiry10Filters(){['ex10-code','ex10-ym','ex10-week'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['ex10-dept','ex10-status'].forEach(k=>{multiDeptSelections[k].clear();updateMultiDeptDisplay(k);document.querySelectorAll('#'+k+'-dropdown input[type=checkbox]').forEach(cb=>cb.checked=false);});renderExpiry10();}
+function exportExpiry10XL(){const d=getExpiry10Data();if(!d.length){toast('No data to export','error');return;}const rows=d.map(r=>({Store:r.Store,StoreCode:r.StoreCode,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,Status:r['Action Status'],PreviousAction:r['Previous Action Info'],PreviousPrice:r['Previous Price Info'],RTCEnd:r.End,ActionTaken:r['Action Taken']}));const ws=XLSX.utils.json_to_sheet(rows);autoFitAndTable(ws,rows,Object.keys(rows[0]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expiry <=10 Days');XLSX.writeFile(wb,'ExpiryWithin10Days_'+new Date().toISOString().slice(0,10)+'.xlsx');}
+
 // ══ ARTICLE VIEW ══
 function renderArticles(){
-  let d=[...proc];const depts=[...multiDeptSelections['ar-dept']];if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
+  let d=[...(isBuyerRole()?getBuyerVisibleProc():proc)];const depts=[...multiDeptSelections['ar-dept']];if(depts.length>0)d=d.filter(r=>depts.includes(r.Department));
   const st=gv('ar-search').toLowerCase();if(st)d=d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st));
   buildActivePills('ar','ar-active-filters');
 
@@ -3160,7 +3272,7 @@ function showPop(idx){
   const r=proc.find(p=>p._idx===idx);if(!r)return;
   const dlNum=r.DaysLeft!==''&&r.DaysLeft!==null?Number(r.DaysLeft):null;
   const dlc=dlNum!==null?(dlNum<=7?'var(--red)':dlNum<=30?'var(--orange)':dlNum<=60?'var(--yellow)':'var(--green)'):'var(--t3)';
-  const bc=bktCls(r['Expiry Risk Bucket']),sc=r['Action Status']==='Pending Action'?'pend':'done';
+  const bc=bktCls(r['Expiry Risk Bucket']),sc=statusClass(r['Action Status']);
   const daysSinceSub=r._tsDate?Math.round((TODAY-r._tsDate)/86400000):null;
   const hasRTC=(r['Action Taken']||'').includes('RTC Price Change');
   const hasTransfer=(r['Action Taken']||'').includes('Store Transfer');
@@ -3374,7 +3486,7 @@ function autoFitAndTable(ws,data,cols){
   }
   return ws;
 }
-const flat = r => {
+const flat = (r, dashDates=false) => {
   const o = {};
   const numCols = ['Stock', 'DaysLeft', 'Transfer Qty', 'RowIndex'];
   const dateCols = ['ExpiryDate', 'Start', 'End', 'Action Date'];
@@ -3384,7 +3496,7 @@ const flat = r => {
       val = val === '' || val === null ? '' : Number(val);
     } else if (dateCols.includes(c)) {
       const parsed = parseDate(val);
-      val = parsed ? formatDateToStr(parsed) : (val || '');
+      val = parsed ? (dashDates ? `${String(parsed.getDate()).padStart(2,'0')}-${String(parsed.getMonth()+1).padStart(2,'0')}-${parsed.getFullYear()}` : formatDateToStr(parsed)) : (val || '');
     }
     o[c] = val;
   });
@@ -3411,7 +3523,8 @@ function exportXL(type){
     if(hideExpired) d = d.filter(r => r['Expiry Risk Bucket'] !== 'Expired');
     if(hideActionedBefore) d = d.filter(r => r['Action Status'] !== 'Previously Actioned');
 
-    data = d.map(flat); fname='ActionCenter'; cols=EXP_COLS;
+    d.sort((a,b)=>{const da=parseDate(a.ExpiryDate),db=parseDate(b.ExpiryDate);return (db?db.getTime():-Infinity)-(da?da.getTime():-Infinity);});
+    data = d.map(r=>flat(r,true)); fname='ActionCenter'; cols=EXP_COLS;
     if(!data.length){alert('No data to export.');return;}
     const ws = XLSX.utils.json_to_sheet(data, {header: cols});
     autoFitAndTable(ws, data, cols);
@@ -3429,6 +3542,12 @@ function exportXL(type){
     }
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Actions');
     XLSX.writeFile(wb, fname + '_' + new Date().toISOString().slice(0,10) + '.xlsx'); return;
+  }
+  else if(type==='attention'){
+    const d=getNeedsAttentionData();
+    if(!d.length){toast('No data to export','error');return;}
+    const rows=d.map(r=>({RowID:r.RowIndex??r._idx,Priority:r._attentionScore,Reason:r._attentionReason,Store:r.Store,StoreCode:r.StoreCode,Article:r.Article,Barcode:r.Barcode,Description:r.Description,Department:r.Department,Stock:r.Stock,ExpiryDate:r.ExpiryDate,DaysLeft:r.DaysLeft,Status:r['Action Status'],PreviousAction:r['Previous Action Info'],PreviousPrice:r['Previous Price Info'],RTCEnd:r['Latest RTC End']||r.End,ActionTaken:r['Action Taken']}));
+    const ws=XLSX.utils.json_to_sheet(rows);autoFitAndTable(ws,rows,Object.keys(rows[0]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Needs My Attention');XLSX.writeFile(wb,'NeedsMyAttention_'+new Date().toISOString().slice(0,10)+'.xlsx');return;
   }
   else if(type==='articles'){
     const d=fData('ar');const st=gv('ar-search').toLowerCase();const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)):d;
