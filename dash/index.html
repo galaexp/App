@@ -3477,6 +3477,24 @@ async function executeAction(){
 // ══ EXPORT ══
 const EXP_COLS=['RowIndex','Store','StoreCode','Article','Barcode','Description','Department','Stock','ExpiryDate','DaysLeft','Action Status','Previous Action Info','Previous Price Info','Action Taken','RTC Price','Start','End','Transfer To','Transfer Qty','Action Date','Week','Submission Month','Sub Month Display','Expiry Risk Bucket','Year'];
 function autoFitAndTable(ws,data,cols){
+  // Keep ExpiryDate as a real Excel date value, displayed as dd-mm-yyyy.
+  // Excel stores dates as serial numbers; the number format controls the display.
+  const expiryColIdx=cols.indexOf('ExpiryDate');
+  if(expiryColIdx>=0){
+    data.forEach((row,i)=>{
+      const parsed=parseDate(row.ExpiryDate);
+      if(!parsed)return;
+      const cellRef=XLSX.utils.encode_cell({r:i+1,c:expiryColIdx});
+      const cell=ws[cellRef];
+      if(!cell)return;
+      const serial=(Date.UTC(parsed.getFullYear(),parsed.getMonth(),parsed.getDate())-Date.UTC(1899,11,30))/86400000;
+      cell.t='n';
+      cell.v=serial;
+      cell.z='dd-mm-yyyy';
+      delete cell.w;
+    });
+  }
+
   const colWidths=cols.map(col=>{let maxLen=col.length;data.forEach(row=>{const val=row[col]!==undefined&&row[col]!==null?String(row[col]):'';if(val.length>maxLen)maxLen=val.length;});return{wch:Math.min(maxLen+2,60)};});
   ws['!cols']=colWidths;
   const rowCount=data.length,colCount=cols.length;
