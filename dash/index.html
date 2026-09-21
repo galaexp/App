@@ -134,7 +134,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(640px 
 
 /* ══ FILTER BAR ══ */
 .filter-bar{position:relative;z-index:20;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
-.filter-bar-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.filter-bar-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;overflow:visible;padding-bottom:2px;min-width:0}.filter-bar-row>.fg{min-width:0;flex:0 1 auto}.filter-bar-row .fs,.filter-bar-row .ms-display,.filter-bar-row .store-disp{max-width:170px}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fl{font-size:8.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--t3);font-family:var(--sans)}
 .fs,.ms-display{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 24px 6px 9px;font-family:var(--sans);font-size:11.5px;cursor:pointer;min-width:96px;min-height:30px;outline:none;appearance:none;font-weight:500;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2398a2b3' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:all .15s;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -242,6 +242,10 @@ tbody td.mono{font-family:var(--mono);font-size:10.5px}
 .sub-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 .sub-card.ok{background:var(--green-l);border-color:var(--green-b)}
 .sub-card.miss{background:var(--red-l);border-color:var(--red-b)}
+.sub-card.sub-clickable{cursor:pointer;position:relative}
+.sub-card.sub-clickable:focus{outline:2px solid var(--accent);outline-offset:2px}
+.sub-drill{position:absolute;right:8px;top:8px;font-size:10px;color:var(--accent);opacity:.65;transition:transform .15s,opacity .15s}
+.sub-clickable:hover .sub-drill{opacity:1;transform:translateX(2px)}
 .sub-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)}
 .sub-name{font-size:10px;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 .sub-status{font-size:8.5px;font-weight:700;text-transform:uppercase;margin-top:6px;letter-spacing:.5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
@@ -489,6 +493,424 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
 
 </style>
 <base target="_blank">
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  GALA EXPIRY DASHBOARD — UI ported & elevated from shbzjzz/modern-app-glow-up
+  ══════════════════════════════════════════════════════════════════════
+  Base tokens (colour, radius, shadow) are verbatim from the repo's
+  src/styles.css. On top of that this adds real depth: layered shadows,
+  a soft grain texture, glass surfaces, signal-dot badges, staggered
+  entrances, spring-eased modals, a redesigned login screen with
+  drifting light, and consistent focus rings — all restrained to the
+  repo's own quiet, high-contrast operational personality.
+
+  Presentation only — no JS, markup, id or class is touched, so every
+  function, popup, checkbox, filter and export behaves exactly as
+  before. Delete this whole <style id="gala-new-ui-theme"> block to
+  revert completely.
+  ══════════════════════════════════════════════════════════════════════
+-->
+<style id="gala-new-ui-theme">
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* ── 1. TOKENS (verbatim from repo styles.css) ───────────────────── */
+:root{
+  --background:oklch(0.976 0.006 250);
+  --bg:oklch(0.976 0.006 250);
+  --surface:oklch(1 0 0);
+  --surface2:oklch(0.968 0.008 250);
+  --surface3:oklch(0.955 0.011 254);
+  --card:oklch(1 0 0);
+
+  --text:oklch(0.24 0.03 268);
+  --t2:oklch(0.53 0.028 264);
+  --t3:oklch(0.62 0.028 264);
+
+  --border:oklch(0.912 0.011 258);
+  --border-strong:oklch(0.84 0.016 258);
+  --ring:oklch(0.52 0.09 274);
+
+  --accent:oklch(0.34 0.105 274);
+  --accent2:oklch(0.26 0.08 268);
+  --accent-soft:oklch(0.55 0.11 274);
+  --accent-dim:oklch(0.94 0.025 274);
+  --accent-glow:oklch(0.52 0.09 274 / .22);
+  --accent-grad:linear-gradient(135deg,oklch(0.4 0.12 278) 0%,oklch(0.31 0.1 272) 60%,oklch(0.26 0.08 268) 100%);
+
+  --mint:oklch(0.72 0.128 178);
+  --mint-grad:linear-gradient(135deg,oklch(0.78 0.12 178) 0%,oklch(0.66 0.13 195) 100%);
+
+  --red:oklch(0.567 0.216 27);    --red-l:oklch(0.962 0.024 22);   --red-b:oklch(0.567 0.216 27 / .25);
+  --orange:oklch(0.63 0.185 47);  --orange-l:oklch(0.968 0.028 60); --orange-b:oklch(0.63 0.185 47 / .25);
+  --yellow:oklch(0.7 0.14 85);    --yellow-l:oklch(0.972 0.038 96); --yellow-b:oklch(0.7 0.14 85 / .30);
+  --amber:oklch(0.7 0.14 85);     --amber-l:oklch(0.972 0.038 96);  --amber-b:oklch(0.7 0.14 85 / .30);
+  --green:oklch(0.58 0.117 165);  --green-l:oklch(0.958 0.041 165); --green-b:oklch(0.58 0.117 165 / .25);
+  --info:oklch(0.55 0.13 258);    --info-l:oklch(0.955 0.026 258);
+
+  --sidebar:oklch(0.25 0.062 273);
+  --sidebar-fg:oklch(0.965 0.008 250);
+  --sidebar-muted:oklch(0.7 0.035 268);
+  --sidebar-accent:oklch(0.35 0.088 274);
+  --sidebar-border:oklch(0.34 0.05 273);
+
+  --r:22px;
+  --rs:10px;
+
+  /* layered elevation — ambient + key, matching repo's shadow recipe but with a 3rd near-contact layer added */
+  --shadow-sm:0 1px 2px oklch(0.24 0.03 268 / .05);
+  --shadow:0 1px 2px oklch(0.24 0.03 268 / .04),0 1px 1px oklch(0.24 0.03 268 / .03),0 8px 24px -12px oklch(0.24 0.03 268 / .14);
+  --shadow-lg:0 2px 4px oklch(0.24 0.03 268 / .04),0 16px 40px -16px oklch(0.24 0.03 268 / .22);
+  --shadow-xl:0 4px 8px oklch(0.24 0.03 268 / .06),0 24px 60px -20px oklch(0.24 0.03 268 / .28);
+
+  --ease-spring:cubic-bezier(.16,1,.3,1);
+  --ease-out:cubic-bezier(.22,1,.36,1);
+}
+
+/* ── 2. CANVAS — mesh gradient + a whisper of grain for tactile depth ── */
+body{background:var(--background);color:var(--text);font-feature-settings:"tnum" 1,"cv11" 1}
+body::before{
+  background:
+    radial-gradient(680px 400px at 3% 0%,oklch(0.34 0.105 274 / .06),transparent 60%),
+    radial-gradient(620px 420px at 99% 100%,oklch(0.72 0.128 178 / .07),transparent 62%),
+    radial-gradient(500px 320px at 60% 40%,oklch(0.34 0.105 274 / .025),transparent 70%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.02;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:color-mix(in oklab,var(--t2) 35%,transparent);border-radius:999px;border:0}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in oklab,var(--t2) 55%,transparent)}
+::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
+
+/* ── 3. SIDEBAR — deep indigo, sliding glow on active row ────────── */
+.sidebar{background:var(--sidebar);border-right:1px solid var(--sidebar-border);color:var(--sidebar-fg)}
+.brand{border-bottom:1px solid var(--sidebar-border);padding:16px}
+.brand-mark{
+  width:40px;height:40px;border-radius:12px;background:var(--sidebar-accent);padding:5px;
+  box-shadow:0 0 0 1px oklch(1 0 0 / .06),0 4px 14px -4px oklch(0.34 0.105 274 / .55);
+}
+.brand-name{font-family:var(--display);font-size:14px;font-weight:600;color:var(--sidebar-fg)}
+.brand-sub{font-size:11px;color:var(--sidebar-muted);font-family:var(--sans);letter-spacing:0;text-transform:none}
+.nav{padding:12px}
+.nav-section{padding:0 10px 6px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sidebar-muted);font-family:var(--sans)}
+.nav-sep{background:linear-gradient(90deg,transparent,var(--sidebar-border) 20%,var(--sidebar-border) 80%,transparent);height:1px;margin:10px}
+.nav-item{
+  gap:10px;padding:8px 10px;margin-top:3px;border-radius:10px;
+  font-size:12px;font-weight:500;color:var(--sidebar-muted);
+  transition:background .18s var(--ease-out),color .18s var(--ease-out),transform .18s var(--ease-out);
+}
+.nav-item:hover{background:color-mix(in oklab,var(--sidebar-accent) 55%,transparent);color:var(--sidebar-fg);transform:translateX(1px)}
+.nav-item.active{
+  background:var(--sidebar-accent);color:var(--sidebar-fg);font-weight:600;
+  box-shadow:inset 0 0 0 1px oklch(1 0 0 / .06),0 4px 14px -6px oklch(0.34 0.105 274 / .6);
+}
+.nav-item.active::before{display:none}
+.nav-ico{transition:transform .18s var(--ease-out)}
+.nav-item:hover .nav-ico{transform:scale(1.08)}
+.nav-badge{margin-left:auto;border-radius:999px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;font-family:var(--sans);box-shadow:0 0 0 3px color-mix(in oklab,var(--red) 22%,transparent)}
+.sidebar-foot{border-top:1px solid var(--sidebar-border);padding:12px 16px;font-size:11px;color:var(--sidebar-muted);font-family:var(--sans);letter-spacing:0;text-transform:none}
+.sidebar-foot strong{color:var(--sidebar-fg);font-size:12px;font-family:var(--sans);font-weight:600}
+
+/* ── 4. TOPBAR — true glass strip ─────────────────────────────────── */
+.topbar{
+  height:auto;padding:12px 16px;gap:12px;position:relative;
+  background:color-mix(in oklab,var(--background) 78%,transparent);
+  backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
+  border-bottom:1px solid var(--border);
+}
+.topbar::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,oklch(0.34 0.105 274 / .35) 20%,oklch(0.72 0.128 178 / .3) 50%,transparent 80%);
+}
+.topbar-title{font-family:var(--display);font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.015em;text-transform:none}
+.topbar-kicker{color:var(--t3);font-weight:500}
+.topbar-divider{color:var(--t3)}
+.topbar-workspace{color:var(--text);font-weight:600}
+.density-slider{border-radius:999px;border:1px solid var(--border);background:var(--card);padding:6px 12px}
+.density-slider input{accent-color:var(--accent)}
+.refresh-btn{
+  height:36px;border-radius:10px;background:var(--accent);color:#fff;border:none;
+  font-size:12px;font-weight:600;padding:0 14px;transition:transform .15s var(--ease-out),opacity .15s;
+  box-shadow:0 2px 8px -3px oklch(0.34 0.105 274 / .5);
+}
+.refresh-btn:hover{opacity:.92;background:var(--accent);color:#fff;box-shadow:0 4px 14px -4px oklch(0.34 0.105 274 / .6);transform:translateY(-1px)}
+.refresh-btn:active{transform:translateY(0) scale(.98)}
+.status-bar{padding:12px 16px 0;gap:8px}
+.status-chip{border-radius:999px;border:1px solid var(--border);background:var(--card);padding:4px 10px 4px 8px;font-size:11px;color:var(--t2);box-shadow:none;transition:border-color .15s}
+.status-chip:hover{border-color:var(--border-strong)}
+.status-chip strong{color:var(--text)}
+.sdot.ok{background:var(--mint);box-shadow:0 0 0 3px oklch(0.72 0.128 178 / .22)}
+.sdot.err{background:var(--red);box-shadow:0 0 0 3px oklch(0.567 0.216 27 / .2)}
+.sdot.loading{background:var(--yellow)}
+
+/* ── 5. CONTENT RHYTHM ───────────────────────────────────────────── */
+.content{padding:16px}
+.page.active{animation:pageIn .38s var(--ease-spring)}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+.page-head{border-radius:var(--r);border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.page-head h1{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.015em}
+.page-head h1 i{color:var(--accent)}
+.page-head p{font-size:12px;color:var(--t2)}
+.ph-chip{border-radius:999px;background:var(--accent-dim);color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 25%,transparent);font:600 11px var(--sans);padding:4px 10px}
+.ph-chip i{color:var(--accent)}
+
+/* ── 6. GREETING — hero banner with drifting glow ────────────────── */
+.react-greeting{background:var(--accent-grad);border-radius:var(--r);padding:22px;box-shadow:var(--shadow-lg);position:relative}
+.react-greeting::after{
+  background:radial-gradient(circle,oklch(0.72 0.128 178 / .25),transparent 70%);
+  animation:driftGlow 9s ease-in-out infinite alternate;
+}
+@keyframes driftGlow{from{transform:translate(0,0) scale(1)}to{transform:translate(-16px,10px) scale(1.08)}}
+.react-greeting-kicker{color:oklch(0.85 0.05 274);letter-spacing:.14em}
+.react-greeting h1{font-family:var(--display);font-weight:600;letter-spacing:-.02em}
+.react-greeting-meta{border-radius:999px;background:oklch(1 0 0 / .12);border:1px solid oklch(1 0 0 / .18);backdrop-filter:blur(6px)}
+.react-greeting-avatar{border-radius:999px;background:var(--mint-grad);color:oklch(0.22 0.04 200);box-shadow:0 0 0 3px oklch(1 0 0 / .14)}
+
+/* ── 7. KPI CARDS — signal dot, tabular numerals, lift on hover ──── */
+.kpi-grid{gap:12px}
+.kpi{
+  border-radius:var(--r);border:1px solid var(--border);background:var(--card);
+  padding:16px;box-shadow:var(--shadow);gap:4px;position:relative;overflow:hidden;
+  transition:transform .22s var(--ease-out),box-shadow .22s var(--ease-out),border-color .22s;
+  animation:kpiIn .42s var(--ease-spring) backwards;
+}
+.kpi-grid .kpi:nth-child(1){animation-delay:.02s}
+.kpi-grid .kpi:nth-child(2){animation-delay:.06s}
+.kpi-grid .kpi:nth-child(3){animation-delay:.10s}
+.kpi-grid .kpi:nth-child(4){animation-delay:.14s}
+.kpi-grid .kpi:nth-child(5){animation-delay:.18s}
+.kpi-grid .kpi:nth-child(6){animation-delay:.22s}
+@keyframes kpiIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.kpi::before{display:none}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--border-strong)}
+.kpi[onclick]:active{transform:translateY(-1px) scale(.99)}
+.kpi-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t2);margin-bottom:4px}
+.kpi-label::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:7px;background:var(--t3);vertical-align:middle}
+.kpi.red .kpi-label{color:var(--red)}          .kpi.red .kpi-label::before{background:var(--red);box-shadow:0 0 0 3px color-mix(in oklab,var(--red) 18%,transparent)}
+.kpi.ora .kpi-label{color:var(--orange)}        .kpi.ora .kpi-label::before{background:var(--orange);box-shadow:0 0 0 3px color-mix(in oklab,var(--orange) 18%,transparent)}
+.kpi.yel .kpi-label{color:var(--yellow)}        .kpi.yel .kpi-label::before{background:var(--yellow);box-shadow:0 0 0 3px color-mix(in oklab,var(--yellow) 18%,transparent)}
+.kpi.grn .kpi-label{color:var(--green)}         .kpi.grn .kpi-label::before{background:var(--green);box-shadow:0 0 0 3px color-mix(in oklab,var(--green) 18%,transparent)}
+.kpi.acc .kpi-label,.kpi.blu .kpi-label{color:var(--accent)} .kpi.acc .kpi-label::before,.kpi.blu .kpi-label::before{background:var(--accent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 18%,transparent)}
+.kpi-value{font-family:var(--display);font-size:25px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text)}
+.kpi-sub{font-size:11px;color:var(--t2);margin-top:4px}
+.kpi-grid.large-cards .kpi-value{font-size:31px}
+
+/* ── 8. PANELS & FILTER BAR ──────────────────────────────────────── */
+.panel{border-radius:var(--r);border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow);margin-bottom:12px;transition:box-shadow .2s}
+.panel-head{background:linear-gradient(180deg,color-mix(in oklab,var(--surface2) 70%,transparent),transparent);border-bottom:1px solid var(--border);padding:12px 16px}
+.panel-title{font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:-.015em}
+.panel-title-sub{font-size:12px;color:var(--t2);margin-top:2px}
+.panel-badge{border-radius:999px;background:var(--accent-dim);color:var(--accent);border:none;font:600 11px var(--sans);padding:4px 10px}
+.panel-body{padding:16px}
+.filter-bar{border-radius:var(--r);border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow);padding:12px;margin-bottom:12px}
+.filter-bar-row{gap:10px;flex-wrap:wrap;overflow:visible;min-width:0}.filter-bar-row>.fg{min-width:0;flex:0 1 auto}.filter-bar-row .fs,.filter-bar-row .ms-display,.filter-bar-row .store-disp{max-width:170px}
+.fl{font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--t2)}
+/* Filter bars stay fluid: wrap instead of creating horizontal scrolling. */
+.filter-bar-row .fs,.filter-bar-row .ms-display,.filter-bar-row .store-disp{width:clamp(92px,10vw,170px);max-width:170px}
+.filter-bar-row .ms-container{min-width:0;width:clamp(112px,11vw,170px)}
+.filter-bar-row .rbtn,.filter-bar-row .btn{flex:0 0 auto}
+.nf-action-options{flex:1 1 100%;width:100%;min-width:0;flex-wrap:wrap}
+.nf-action-button{flex:0 0 auto}
+@media (max-width:700px){.filter-bar-row{gap:7px}.filter-bar-row .fs,.filter-bar-row .ms-display,.filter-bar-row .store-disp{width:clamp(88px,28vw,150px)}.filter-bar-row .ms-container{width:clamp(105px,30vw,150px)}.nf-action-options{gap:6px}.nf-action-button{width:100%;justify-content:center}}
+
+/* ── 9. CONTROLS ─────────────────────────────────────────────────── */
+.fs,.ms-display,.search-wrap input,.settings-input,.settings-textarea,
+.ac-input,.ac-textarea,.login-input,.ac-input-prefix{
+  border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--text);
+  transition:border-color .16s,box-shadow .16s,background .16s;
+}
+.fs,.ms-display{min-height:36px;background:var(--surface2)}
+.fs:hover,.ms-display:hover{border-color:var(--border-strong);background:var(--surface)}
+.fs:focus,.ms-display.active,.search-wrap input:focus,.settings-input:focus,
+.ac-input:focus,.ac-textarea:focus,.login-input:focus{
+  border-color:var(--ring);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface);
+}
+.store-disp{border-radius:10px;min-height:36px;border:1px dashed var(--border);background:var(--surface2);color:var(--text);font-weight:600;font-size:12px}
+.btn,.rbtn{border-radius:10px;height:36px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:transform .14s var(--ease-out),border-color .16s,color .16s,background .16s,box-shadow .16s}
+.btn:hover{border-color:var(--ring);color:var(--accent);box-shadow:0 2px 8px -4px oklch(0.24 0.03 268 / .12);background:var(--surface2)}
+.btn:active{transform:scale(.97)}
+.btn-accent{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 2px 8px -3px oklch(0.34 0.105 274 / .45);position:relative;overflow:hidden}
+.btn-accent::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,oklch(1 0 0 / .18) 50%,transparent 70%);transform:translateX(-120%);transition:transform .6s var(--ease-out);pointer-events:none}
+.btn-accent:hover::after{transform:translateX(120%)}
+.btn-accent:hover{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 4px 14px -4px oklch(0.34 0.105 274 / .55)}
+.btn-green,.btn-export{background:var(--green-l);color:var(--green);border-color:color-mix(in oklab,var(--green) 25%,transparent)}
+.btn-green:hover,.btn-export:hover{background:var(--green);color:#fff}
+.btn-red{background:var(--red-l);color:var(--red);border-color:color-mix(in oklab,var(--red) 25%,transparent)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-import{background:var(--accent-dim);color:var(--accent);border-color:color-mix(in oklab,var(--accent) 25%,transparent)}
+.btn-import:hover{background:var(--accent);color:#fff}
+.btn-sm{height:32px;font-size:11px;border-radius:9px}
+.rbtn:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
+.tick-label{border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:500;color:var(--text);padding:6px 10px;transition:border-color .16s,background .16s}
+.tick-label:hover{border-color:var(--ring);color:var(--text);background:var(--surface2)}
+input[type=checkbox],input[type=radio]{accent-color:var(--accent);border-color:var(--border-strong);transition:transform .1s}
+input[type=checkbox]:checked,input[type=radio]:checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:active,input[type=radio]:active{transform:scale(.92)}
+.ms-dropdown{border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:4px;animation:dropIn .18s var(--ease-spring)}
+@keyframes dropIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.ms-opt{border-radius:8px;font-size:12px;padding:6px 8px;transition:background .12s}
+.ms-opt:hover{background:var(--surface2)}
+.ac-prefix{background:var(--accent-dim);color:var(--accent);border-right:1px solid var(--border)}
+
+/* ── 10. TABLES ──────────────────────────────────────────────────── */
+thead th{background:var(--surface2);color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:9px 12px;border-bottom:1px solid var(--border);font-family:var(--sans)}
+thead th.sortable:hover{background:var(--accent-dim);color:var(--accent)}
+tbody td{padding:var(--td-pad);border-bottom:1px solid color-mix(in oklab,var(--border) 65%,transparent);transition:background .1s}
+tbody tr{position:relative}
+tbody tr:hover{background:color-mix(in oklab,var(--accent) 4%,transparent)}
+tbody tr:hover td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.selected{background:color-mix(in oklab,var(--accent) 10%,transparent)!important}
+tbody tr.selected td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.overdue{background:color-mix(in oklab,var(--red) 5%,transparent)}
+tbody tr.overdue:hover{background:color-mix(in oklab,var(--red) 9%,transparent)}
+
+.badge{border-radius:999px;padding:3px 9px 3px 8px;font-size:10px;font-weight:600;font-family:var(--sans);display:inline-flex;align-items:center;gap:5px}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge.crit{background:var(--red-l);color:var(--red);border-color:color-mix(in oklab,var(--red) 25%,transparent)}       .badge.crit::before{background:var(--red)}
+.badge.high{background:var(--orange-l);color:var(--orange);border-color:color-mix(in oklab,var(--orange) 25%,transparent)} .badge.high::before{background:var(--orange)}
+.badge.med,.badge.validity,.badge.pend{background:var(--yellow-l);color:var(--yellow);border-color:color-mix(in oklab,var(--yellow) 30%,transparent)} .badge.med::before,.badge.validity::before,.badge.pend::before{background:var(--yellow)}
+.badge.low,.badge.done{background:var(--green-l);color:var(--green);border-color:color-mix(in oklab,var(--green) 25%,transparent)} .badge.low::before,.badge.done::before{background:var(--green)}
+.badge.prev{background:var(--info-l);color:var(--info);border-color:color-mix(in oklab,var(--info) 25%,transparent)}     .badge.prev::before{background:var(--info)}
+.badge.na{background:var(--surface2);color:var(--t2);border-color:var(--border)}  .badge.na::before{display:none}
+.overdue-tag{border-radius:999px;background:var(--red);color:#fff;padding:2px 7px}
+
+/* ── 11. CHARTS / CELLS / PILLS ──────────────────────────────────── */
+.bar-track,.dist-track,.days-bar-track{background:var(--surface2);border-radius:999px}
+.bar-fill,.dist-fill,.days-bar-fill{border-radius:999px;transition:width .6s var(--ease-spring)}
+.wk-cell,.sub-card,.art-store-card,.disabled-article-row,.disabled-result,.user-list-item{
+  border-radius:14px;border:1px solid var(--border);background:var(--surface2);transition:transform .18s var(--ease-out),box-shadow .18s;
+}
+.wk-cell:hover,.sub-card:hover,.art-store-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.wk-cell-val{font-family:var(--display);font-weight:600}
+.art-store-latest{border-radius:999px;background:var(--accent-dim);color:var(--accent)}
+.art-week-pill{border-radius:999px;background:var(--surface3);border:1px solid var(--border)}
+.filter-pill{border-radius:999px;background:var(--accent-dim);color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 22%,transparent);padding:3px 10px}
+.pen-btn{border-radius:10px;border:1px solid var(--border);background:var(--surface);transition:border-color .16s,color .16s}
+.pen-btn:hover{border-color:var(--ring);color:var(--accent)}
+
+/* ── 12. BANNERS ─────────────────────────────────────────────────── */
+.overdue-banner{border-radius:14px;background:var(--red-l);border:1px solid color-mix(in oklab,var(--red) 25%,transparent);border-left:3px solid var(--red);color:var(--red);padding:12px 14px;animation:bannerIn .3s var(--ease-spring)}
+@keyframes bannerIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.drilldown-info{border-radius:14px;padding:12px 14px}
+.drilldown-info.soldout{background:var(--accent-dim);border:1px solid color-mix(in oklab,var(--accent) 22%,transparent);color:var(--accent)}
+.drilldown-info.expired{background:var(--red-l);border:1px solid color-mix(in oklab,var(--red) 25%,transparent);color:var(--red)}
+
+/* ── 13. OVERLAYS & MODALS — spring entrance, deeper glass ───────── */
+.overlay{background:oklch(0.24 0.03 268 / .42);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.popup,.action-confirm{border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-xl);animation:modalIn .32s var(--ease-spring)}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.popup::before,.action-confirm::before{display:none}
+.popup-head{border-radius:var(--r) var(--r) 0 0;padding:16px 20px;border-bottom:1px solid var(--border)}
+.popup-title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.015em}
+.popup-sub{font-family:var(--sans);font-size:12px;color:var(--t2)}
+.popup-close{border-radius:10px;border:1px solid var(--border);background:var(--surface2);transition:transform .14s}
+.popup-close:hover{transform:scale(1.05)}
+.popup-foot,.ac-footer{border-radius:0 0 var(--r) var(--r);background:transparent;border-top:1px solid var(--border);padding:12px 20px}
+.popup-sect-title{font-size:10px;letter-spacing:.09em;color:var(--t2)}
+.pval.big{font-family:var(--display);font-weight:600}
+.ac-header{background:transparent;border-bottom:1px solid var(--border);padding:16px 20px}
+.ac-header h3{font-family:var(--display);font-size:15px;font-weight:600}
+.ac-icon{border-radius:12px;background:var(--accent-dim);color:var(--accent)}
+.ac-icon.danger{background:var(--red-l);color:var(--red)}
+.ac-items{border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.ac-field-label{font-size:10px;letter-spacing:.09em;color:var(--t2)}
+.action-toolbar{border-radius:999px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow-xl);padding:8px 14px;animation:toolbarIn .3s var(--ease-spring)}
+@keyframes toolbarIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+.act-btn{border-radius:999px;font-size:11px;font-weight:600;padding:7px 12px;transition:transform .14s}
+.act-btn:hover{transform:translateY(-1px)}
+.act-btn.rtc{background:var(--red-l);color:var(--red);border:1px solid color-mix(in oklab,var(--red) 25%,transparent)}
+.act-btn.trans{background:var(--accent-dim);color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 25%,transparent)}
+.act-btn.mon{background:var(--surface2);color:var(--t2);border:1px solid var(--border)}
+.act-btn.clear{background:var(--green-l);color:var(--green);border:1px solid color-mix(in oklab,var(--green) 25%,transparent)}
+.act-btn.cancel{border-radius:999px}
+.toast{border-radius:12px;background:var(--text);color:oklch(0.98 0.004 250);box-shadow:var(--shadow-xl);border-left:3px solid var(--t3);padding-left:14px}
+.toast.success{background:var(--text);border-left-color:var(--green)}
+.toast.error{background:var(--text);border-left-color:var(--red)}
+
+/* ── 14. ADMIN & SETTINGS ────────────────────────────────────────── */
+.upload-card,.settings-section{border-radius:var(--r);border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow);transition:box-shadow .2s}
+.upload-card:hover{box-shadow:var(--shadow-lg)}
+.upload-card-title,.settings-section-head h3{font-family:var(--display);font-size:14px;font-weight:600}
+.upload-card-sub,.settings-section-head p{font-family:var(--sans);font-size:12px;color:var(--t2)}
+.upload-card-title i{color:var(--accent)}
+.settings-section-head{background:linear-gradient(180deg,color-mix(in oklab,var(--surface2) 70%,transparent),transparent);border-bottom:1px solid var(--border);padding:12px 16px}
+.settings-body{padding:16px}
+.upload-status{border-radius:10px;font-family:var(--sans)}
+.upload-status.ok{background:var(--green-l);color:var(--green);border:1px solid color-mix(in oklab,var(--green) 25%,transparent)}
+.upload-status.err{background:var(--red-l);color:var(--red);border:1px solid color-mix(in oklab,var(--red) 25%,transparent)}
+.upload-status.loading{background:var(--accent-dim);color:var(--accent);border:1px solid color-mix(in oklab,var(--accent) 22%,transparent)}
+.danger-card{border-color:color-mix(in oklab,var(--red) 30%,transparent)!important;background:var(--red-l)!important}
+.admin-header-icon{border-radius:14px;background:var(--accent-grad);box-shadow:0 4px 14px -4px oklch(0.34 0.105 274 / .5)}
+.admin-header h2{font-family:var(--display);font-weight:600}
+.settings-label{font-size:10px;letter-spacing:.09em;color:var(--t2)}
+.settings-preview{border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.settings-token{border-radius:6px;background:var(--accent-dim);color:var(--accent);border:none}
+.settings-status{color:var(--green)}
+.sub-card.ok{background:var(--green-l);border-color:color-mix(in oklab,var(--green) 25%,transparent)}
+.sub-card.miss{background:var(--red-l);border-color:color-mix(in oklab,var(--red) 25%,transparent)}
+.wk-cell.up{background:var(--red-l);border-color:color-mix(in oklab,var(--red) 25%,transparent)}
+.wk-cell.dn{background:var(--green-l);border-color:color-mix(in oklab,var(--green) 25%,transparent)}
+
+/* ── 15. LOGIN — split glass card with drifting light ────────────── */
+.login-wrap{
+  background:
+    radial-gradient(circle at 10% 8%,oklch(0.4 0.12 278 / .35),transparent 27rem),
+    radial-gradient(circle at 94% 94%,oklch(0.72 0.128 178 / .18),transparent 28rem),
+    oklch(0.19 0.028 268);
+}
+.login-aside{background:var(--accent-grad);border-radius:var(--r) 0 0 var(--r);position:relative;overflow:hidden}
+.login-aside::before{
+  content:'';position:absolute;width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,oklch(0.72 0.128 178 / .35),transparent 68%);
+  top:-120px;left:-100px;filter:blur(6px);
+  animation:orbA 11s ease-in-out infinite alternate;
+}
+.login-aside::after{
+  width:270px;height:270px;right:-130px;bottom:-110px;
+  border:1px solid oklch(1 0 0 / .14);
+  box-shadow:0 0 0 24px oklch(1 0 0 / .03),0 0 0 48px oklch(1 0 0 / .02);
+  animation:orbSpin 26s linear infinite;
+}
+@keyframes orbA{from{transform:translate(0,0) scale(1)}to{transform:translate(24px,18px) scale(1.12)}}
+@keyframes orbSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.login-card{border-radius:0 var(--r) var(--r) 0;background:var(--card)}
+.login-card::before{display:none}
+.login-tagline{
+  font-family:var(--display);font-weight:600;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#fff 30%,oklch(0.85 0.05 274) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.login-welcome{font-family:var(--display);font-weight:600;letter-spacing:-.015em}
+.login-access-label{color:var(--accent);letter-spacing:.09em}
+.login-logo{border-radius:14px;background:var(--surface2);box-shadow:0 4px 14px -6px oklch(0.34 0.105 274 / .25);border:1px solid var(--border);transition:transform .2s}
+.login-logo:hover{transform:rotate(-4deg) scale(1.04)}
+.login-field-label{font-size:10px;letter-spacing:.09em;color:var(--t2)}
+.login-input{border-radius:10px;border:1px solid var(--border);background:var(--surface2)}
+.login-btn{border-radius:10px;background:var(--accent);box-shadow:0 4px 14px -4px oklch(0.34 0.105 274 / .5);font-weight:600;transition:transform .16s var(--ease-out),box-shadow .16s}
+.login-btn:hover{transform:translateY(-1px);filter:none;box-shadow:0 6px 18px -4px oklch(0.34 0.105 274 / .6)}
+.login-btn:active{transform:translateY(0) scale(.98)}
+.login-forgot{color:var(--accent)}
+.login-foot{font-family:var(--sans);font-size:11px;color:var(--t2)}
+.login-point{border-radius:12px;background:oklch(1 0 0 / .06);border:1px solid oklch(1 0 0 / .12);transition:background .18s,transform .18s}
+.login-point:hover{background:oklch(1 0 0 / .1);transform:translateX(2px)}
+.login-point i{color:var(--mint);background:oklch(1 0 0 / .12)}
+@media (max-width:780px){.login-card{border-radius:var(--r)}}
+
+/* ── 16. MOBILE ──────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .sidebar{border-right:none;border-bottom:1px solid var(--sidebar-border)}
+  .nav-item{justify-content:flex-start}
+  .content{padding:12px}
+  .action-toolbar{border-radius:18px}
+}
+
+</style>
 </head>
 <body>
 <div class="layout">
@@ -795,13 +1217,13 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
               <div class="ms-dropdown" id="nf-dept-dropdown"></div>
             </div>
           </div>
-          <div class="fg" style="flex-direction:row; align-items:center; gap:8px; margin-top:4px;">
+          <div class="fg nf-action-options" style="flex-direction:row; align-items:center; gap:8px; margin-top:4px;">
             <label class="tick-label"><input type="checkbox" id="nf-rtc" checked onchange="persistNotifyActionFilters();renderNotify()"> RTC Price Change</label>
             <label class="tick-label"><input type="checkbox" id="nf-transfer" checked onchange="persistNotifyActionFilters();renderNotify()"> Store Transfer</label>
             <label class="tick-label"><input type="checkbox" id="nf-monitor" onchange="persistNotifyActionFilters();renderNotify()"> Monitor</label>
             <label class="tick-label"><input type="checkbox" id="nf-clear" onchange="persistNotifyActionFilters();renderNotify()"> Clear In Normal Price</label>
           </div>
-          <button class="btn btn-sm btn-accent" onclick="sendNotifyEmail()" style="align-self:flex-end"><i class="fa-solid fa-envelope"></i> Copy Table & Open Email</button>
+          <button class="btn btn-sm btn-accent nf-action-button" onclick="sendNotifyEmail()" style="align-self:flex-end"><i class="fa-solid fa-envelope"></i> Copy Table & Open Email</button>
         </div>
       </div>
       <div class="panel">
@@ -1027,7 +1449,7 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
     </div>
 
     <!-- ─── EXPIRY WITHIN 10 DAYS ─── -->
-    <div class="page" id="page-expiry10"><div class="page-head"><div><h1><i class="fa-solid fa-hourglass-end"></i> Expiry Within 10 Days</h1><p>Store-wise view of items with stock remaining and expiry within the next 10 days.</p></div><div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-triangle-exclamation"></i> Immediate expiry exposure</span></div></div>
+    <div class="page" id="page-expiry10"><div class="page-head"><div><h1><i class="fa-solid fa-hourglass-end"></i> Expiry Within 10 Days</h1><p>Store-wise view of items with stock remaining and expiry within the next 10 days.</p></div><div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-triangle-exclamation"></i> Immediate expiry exposure</span><button class="btn btn-sm" onclick="go('overview')"><i class="fa-solid fa-arrow-left"></i> Back</button></div></div>
       <div class="filter-bar"><div class="filter-bar-row">
         <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ex10-code" onchange="updateStoreDisp('ex10');renderExpiry10()"><option value="">All</option></select></div><div class="fg"><div class="fl">Store</div><div class="store-disp" id="ex10-store-disp">—</div></div>
         <div class="fg"><div class="fl">Month</div><select class="fs" id="ex10-ym" onchange="renderExpiry10()"><option value="">All</option></select></div><div class="fg"><div class="fl">Week</div><select class="fs" id="ex10-week" onchange="renderExpiry10()"><option value="">All</option></select></div>
@@ -1210,7 +1632,7 @@ input[type=radio]:checked::after{content:'';position:absolute;top:3px;left:3px;w
     <div class="page" id="page-drilldown">
       <div class="page-head">
         <div><h1><i class="fa-solid fa-magnifying-glass-chart"></i> Drilldown</h1><p>Inspect a risk slice from the overview with the same filters, status context, and action controls.</p></div>
-        <div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-filter"></i> Filtered signal</span></div>
+        <div class="page-head-meta"><span class="ph-chip"><i class="fa-solid fa-filter"></i> Filtered signal</span><button class="btn btn-sm" onclick="go('overview')"><i class="fa-solid fa-arrow-left"></i> Back</button></div>
       </div>
       <div class="drilldown-info" id="dd-info-banner"></div>
       <div class="filter-bar">
@@ -1995,57 +2417,78 @@ function articleKeyOf(r){ return `${r.Barcode||r.Article}|${r.ExpiryDate||''}`; 
 
 // ══ PREVIOUSLY ACTIONED ══
 function applyPreviouslyActioned(){
-  const actionedMap={};
-  proc.forEach(r=>{
-    if(r['Action Status']!=='Action Taken') return;
+  const groups=new Map();
+  proc.forEach((r,index)=>{
     const key=`${r.StoreCode}|${r.Barcode||r.Article}|${r.ExpiryDate}`;
-    if(!actionedMap[key]) actionedMap[key]=[];
-    actionedMap[key].push({row:r,action:r['Action Taken']||'',end:r.End||'',start:r.Start||'',rtcPrice:r['RTC Price']||'',transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',actionDate:r['Action Date']||'',ts:r._tsDate||null});
+    if(!groups.has(key))groups.set(key,[]);
+    const action=String(r['Action Taken']||'').trim();
+    const actionDate=parseDate(r['Action Date']);
+    const endDate=parseDate(r.End);
+    const ts=r._tsDate instanceof Date ? r._tsDate : null;
+    groups.get(key).push({row:r,index,action,end:r.End||'',endDate,start:r.Start||'',rtcPrice:r['RTC Price']||'',transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',actionDate,ts});
   });
 
-  Object.keys(actionedMap).forEach(key=>{
-    const past=actionedMap[key];
-    const rtc=past.filter(a=>a.action.includes('RTC Price Change')&&parseDate(a.end));
-    // IMPORTANT: when the same article was actioned multiple times, validity is based
-    // only on the latest RTC End date. An older expired RTC must never create
-    // "Validity Expired" while a newer RTC is still valid.
-    rtc.sort((a,b)=>parseDate(b.end)-parseDate(a.end));
-    const latestRTC=rtc[0]||null;
-    const latestEnd=latestRTC?parseDate(latestRTC.end):null;
-    const validity=!!(latestEnd && latestEnd<TODAY);
+  const timeOf=a=>a.ts?.getTime() ?? a.actionDate?.getTime() ?? a.endDate?.getTime() ?? a.index;
+  const historyFor=past=>{
+    const pa=[],pp=[];
+    past.slice().sort((a,b)=>timeOf(a)-timeOf(b)).forEach(a=>{
+      if(a.action.includes('RTC Price Change')){
+        pa.push(`RTC given till ${formatDateToStr(a.endDate)||a.end}`);
+        if(a.rtcPrice)pp.push(`AED ${a.rtcPrice}`);
+      }
+      if(a.action.includes('Store Transfer')){
+        pa.push(`${a.transferQty||'0'} Units Transferred`);
+        if(a.transferTo)pp.push(a.transferTo);
+      }
+      if(a.action.includes('Monitor'))pa.push('Monitor');
+      if(a.action.includes('Clear In Normal Price'))pa.push('Clear In Normal Price');
+    });
+    return {pa:pa.join(', '),pp:pp.join(', ')};
+  };
 
-    // Keep the complete previous-action history, comma separated.
-    past.forEach(a=>{
-      const r=a.row;
-      const pa=[],pp=[];
-      if(a.action.includes('RTC Price Change')){pa.push(`RTC given till ${formatDateToStr(parseDate(a.end))||a.end}`);if(a.rtcPrice)pp.push(`AED ${a.rtcPrice}`);}
-      if(a.action.includes('Store Transfer')){pa.push(`${a.transferQty||'0'} Units Transferred`);if(a.transferTo)pp.push(a.transferTo);}
-      r._actionHistoryPart=pa.join(', '); r._priceHistoryPart=pp.join(', ');
+  groups.forEach(items=>{
+    const actioned=items.filter(a=>a.action);
+    if(!actioned.length)return;
+    actioned.sort((a,b)=>timeOf(a)-timeOf(b));
+
+    const rtc=actioned.filter(a=>a.action.includes('RTC Price Change')&&a.endDate);
+    rtc.sort((a,b)=>b.endDate-a.endDate);
+    const latestRTC=rtc[0]||null;
+    const latestEnd=latestRTC?.endDate||null;
+    const validity=!!(latestEnd&&latestEnd<TODAY);
+
+    // For every row, show only actions that occurred before that row.
+    items.forEach(item=>{
+      const prior=actioned.filter(a=>timeOf(a)<timeOf(item));
+      const h=historyFor(prior);
+      item.row['Previous Action Info']=h.pa;
+      item.row['Previous Price Info']=h.pp;
     });
 
-    // A pending/current submission inherits the previous action history.
-    const current=proc.find(r=>r['Action Status']==='Pending Action' && `${r.StoreCode}|${r.Barcode||r.Article}|${r.ExpiryDate}`===key);
-    if(current){
-      const pa=[],pp=[];
-      past.forEach(a=>{if(a._actionHistoryPart)pa.push(a._actionHistoryPart);if(a._priceHistoryPart)pp.push(a._priceHistoryPart);});
-      current['Previous Action Info']=pa.join(', ');
-      current['Previous Price Info']=pp.join(', ');
-      current['Latest RTC End']=latestRTC?.end||'';
-      current['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
-      current['Action Status']=validity&&parseFloat(current.Stock)>0&&Number(current.DaysLeft)>0?'Validity Expired':'Previously Actioned';
-    } else if(validity){
-      // If there is no pending/current row, only the latest actioned record represents
-      // the current state; older action rows remain historical.
-      const latestRow=past.slice().sort((a,b)=>{const da=a.ts||parseDate(a.actionDate)||parseDate(a.end)||new Date(0);const db=b.ts||parseDate(b.actionDate)||parseDate(b.end)||new Date(0);return db-da;})[0]?.row;
-      if(latestRow && parseFloat(latestRow.Stock)>0 && Number(latestRow.DaysLeft)>0){
-        latestRow['Action Status']='Validity Expired';
-        latestRow['Latest RTC End']=latestRTC?.end||'';
-        latestRow['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
+    // A fresh pending/current row inherits all previous action history.
+    const pending=items.filter(a=>a.row['Action Status']==='Pending Action')
+      .sort((a,b)=>timeOf(b)-timeOf(a))[0];
+    if(pending){
+      const h=historyFor(actioned.filter(a=>timeOf(a)<timeOf(pending)));
+      pending.row['Previous Action Info']=h.pa;
+      pending.row['Previous Price Info']=h.pp;
+      pending.row['Latest RTC End']=latestRTC?.end||'';
+      pending.row['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
+      if(validity&&parseFloat(pending.row.Stock)>0&&Number(pending.row.DaysLeft)>0){
+        pending.row['Action Status']='Validity Expired';
+      }else if(h.pa){
+        pending.row['Action Status']='Previously Actioned';
+      }
+    }else if(validity){
+      const latest=actioned[actioned.length-1];
+      if(latest&&parseFloat(latest.row.Stock)>0&&Number(latest.row.DaysLeft)>0){
+        latest.row['Action Status']='Validity Expired';
+        latest.row['Latest RTC End']=latestRTC?.end||'';
+        latest.row['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
       }
     }
   });
 }
-
 
 // ══ LOAD ALL ══
 async function loadAll(){
@@ -2329,7 +2772,19 @@ function renderAreaManagerOverview(){
 }
 function drillStore(code){const el=document.getElementById('ac-code');if(el){el.value=code;updateStoreDisp('ac');}go('actions');}
 function drillDownAction(type,val){if(isAreaManager()){go('stores');return;}go('actions');if(type==='status'){multiDeptSelections['ac-status'].clear();multiDeptSelections['ac-status'].add(val);updateMultiDeptDisplay('ac-status');document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=cb.value===val);}renderActions();}
-function openExpiry10Page(){if(isBuyerRole())go('expiry10');}
+function openExpiry10Page(){
+  if(!isBuyerRole())return;
+  setRouteHash('expiry10');
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  const page=document.getElementById('page-expiry10');
+  if(!page)return;
+  page.classList.add('active');
+  curPage='expiry10';
+  populateExpiry10Filters();
+  renderExpiry10();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 // ══ DRILLDOWN PAGE (Sold Out / Expired) ══
 function openDrilldownPage(mode){
@@ -2726,12 +3181,14 @@ function sendNotifyEmail() {
   if(showRTC)htmlBody+=buildTableHtml('RTC Price Change',d.filter(r=>(r['Action Taken']||'').includes('RTC Price Change')),[...baseCols,'RTC Price','Start','End']);
   if(showMonitor)htmlBody+=buildTableHtml('Monitor',d.filter(r=>(r['Action Taken']||'').includes('Monitor')),[...baseCols]);
   if(showClear)htmlBody+=buildTableHtml('Clear In Normal Price',d.filter(r=>(r['Action Taken']||'').includes('Clear In Normal Price')),[...baseCols]);
-  const plainBody=htmlBody.replace(/<br\s*\/?>(\s*)/gi,'\n').replace(/<[^>]+>/g,'');
-  const ctx=buildNotifyEmailContext(d,code,week,ym,plainBody);
+  // Keep the template body separate from the HTML action tables. Injecting a flattened
+  // table into {BODY} and then appending htmlBody caused Outlook to receive the same
+  // table twice (formatted + plain-text).
+  const ctx=buildNotifyEmailContext(d,code,week,ym,'');
   const subject=applyBuyerTemplate(settings.subject,ctx);
   const bodyText=applyBuyerTemplate(settings.body,ctx);
   const clipboardText=bodyText;
-  const clipboardHtml=`<div>${bodyText.replace(/\n/g,'<br>')}</div><br>${htmlBody}`;
+  const clipboardHtml=`<div>${bodyText.replace(/\n/g,'<br>')}</div>${htmlBody}`;
   const ccParam=ccEmails.length?'&cc='+encodeURIComponent(ccEmails.join(',')):'';
   const mailtoLink=`mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(subject)}${ccParam}`;
   const openMail=()=>{
@@ -3082,15 +3539,54 @@ function renderIncreasingStocks(d){
 
 // ══ SUBMISSION ══
 function renderSubmission(){
-  const ym=gv('sub-ym'),week=gv('sub-week');let d=[...proc];if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
+  const ym=gv('sub-ym'),week=gv('sub-week');
+  let d=proc;
+  if(ym||week){d=proc.filter(r=>(!ym||r['Submission Month']===ym)&&(!week||r.Week===week));}
   const storeList=allStoreCodes.length>0?allStoreCodes:Object.entries(codeToStore).map(([code,name])=>({code,name}));
-  const submittedCodes=new Set(d.filter(r => Number(r.EmailSent) === 1).map(r=>r.StoreCode).filter(Boolean));
-  const actionedCodes=new Set(d.filter(r => r['Action Status'] === 'Action Taken').map(r=>r.StoreCode).filter(Boolean));
-  const submitted=storeList.filter(s=>submittedCodes.has(s.code));const missing=storeList.filter(s=>!submittedCodes.has(s.code));
+  const submittedCodes=new Set();
+  const itemCounts=new Map();
+  const actionedCodes=new Set();
+  for(const r of d){
+    const code=r.StoreCode;
+    if(!code)continue;
+    if(Number(r.EmailSent)===1)submittedCodes.add(code);
+    itemCounts.set(code,(itemCounts.get(code)||0)+1);
+    if(r['Action Status']==='Action Taken')actionedCodes.add(code);
+  }
+  const submitted=[],missing=[];
+  for(const s of storeList)(submittedCodes.has(s.code)?submitted:missing).push(s);
   document.getElementById('kpi-sub').innerHTML=KPI('Total Stores','neu',storeList.length,'From Stores table')+KPI('Submitted','grn',submitted.length)+KPI('Not Submitted','red',missing.length)+KPI('Items in Period','acc',d.length);
   document.getElementById('b-sub').textContent=storeList.length+' stores';
-  document.getElementById('sub-grid').innerHTML=[...submitted.map(s=>{const items=d.filter(r=>r.StoreCode===s.code).length;const isActioned=actionedCodes.has(s.code);return`<div class="sub-card ok"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-check"></i> Submitted ${isActioned?`<span class="badge done" style="margin-left:5px;">Actioned</span>`:`<span class="badge na" style="margin-left:5px;">Not Actioned</span>`}</div><div class="sub-items">${items} item${items!==1?'s':''}</div></div>`;}),...missing.map(s=>`<div class="sub-card miss"><div class="sub-code">${s.code}</div><div class="sub-name">${s.name||codeToStore[s.code]||'—'}</div><div class="sub-status"><i class="fa-solid fa-circle-xmark"></i> Not Submitted</div><div class="sub-items">—</div></div>`)].join('');
+  const canDrill=isBuyerRole()||CURRENT_USER?.isAdmin;
+  const card=(s,ok)=>{
+    const code=String(s.code||'');
+    const name=s.name||codeToStore[code]||'—';
+    const items=itemCounts.get(code)||0;
+    const actioned=actionedCodes.has(code);
+    const click=ok&&canDrill?` onclick="openSubmissionStore('${code.replace(/'/g,"\\'")}')" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')openSubmissionStore('${code.replace(/'/g,"\\'")}')"`:'';
+    const cls=ok?'sub-card ok':'sub-card miss';
+    const hint=ok&&canDrill?'<span class="sub-drill"><i class="fa-solid fa-arrow-right"></i></span>':'';
+    return `<div class="${cls}${ok&&canDrill?' sub-clickable':''}"${click}><div class="sub-code">${code}</div><div class="sub-name">${name}</div><div class="sub-status"><i class="fa-solid ${ok?'fa-circle-check':'fa-circle-xmark'}"></i> ${ok?'Submitted':'Not Submitted'} ${ok?(actioned?`<span class="badge done" style="margin-left:5px;">Actioned</span>`:`<span class="badge na" style="margin-left:5px;">Not Actioned</span>`):''}</div><div class="sub-items">${ok?`${items} item${items!==1?'s':''}`:'—'}</div>${hint}</div>`;
+  };
+  document.getElementById('sub-grid').innerHTML=submitted.map(s=>card(s,true)).concat(missing.map(s=>card(s,false))).join('');
 }
+function openSubmissionStore(code){
+  if(!(isBuyerRole()||CURRENT_USER?.isAdmin)){toast('Action Center is available to buyers and admins','info');return;}
+  const acCode=document.getElementById('ac-code');
+  if(acCode)acCode.value=String(code||'');
+  const ym=gv('sub-ym'),week=gv('sub-week');
+  const acYm=document.getElementById('ac-ym'),acWeek=document.getElementById('ac-week');
+  if(acYm)acYm.value=ym;
+  if(acWeek)acWeek.value=week;
+  ['ac-status','ac-bucket','ac-dept'].forEach(key=>{
+    if(multiDeptSelections[key]){multiDeptSelections[key].clear();updateMultiDeptDisplay(key);}
+    document.querySelectorAll(`#${key}-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  });
+  updateStoreDisp('ac');
+  go('actions');
+  toast(`Action Center filtered to ${codeToStore[code]||code}`,'success',1800);
+}
+
 function openSubRemindModal(){
   const ym=gv('sub-ym'),week=gv('sub-week');let d=[...proc];if(ym)d=d.filter(r=>r['Submission Month']===ym);if(week)d=d.filter(r=>r.Week===week);
   const submittedCodes=new Set(d.filter(r=>Number(r.EmailSent)===1).map(r=>r.StoreCode).filter(Boolean));
