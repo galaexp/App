@@ -717,6 +717,40 @@ body::after{
 .filter-bar-row .rbtn,.filter-bar-row .btn{flex:0 0 auto}
 .nf-action-options{flex:1 1 100%;width:100%;min-width:0;flex-wrap:wrap}
 .nf-action-button{flex:0 0 auto}
+/* Action Center: keep the complete filter bar on one line without horizontal scrolling. */
+#page-actions .ac-filter-row{
+  flex-wrap:nowrap;
+  gap:5px;
+  width:100%;
+  min-width:0;
+  overflow:visible;
+}
+#page-actions .ac-filter-row>.fg{
+  min-width:0;
+  flex:1 1 0;
+}
+#page-actions .ac-filter-row>.fg:nth-child(1){flex:0 1 92px}
+#page-actions .ac-filter-row>.fg:nth-child(2){flex:0 1 112px}
+#page-actions .ac-filter-row>.fg:nth-child(3){flex:0 1 102px}
+#page-actions .ac-filter-row>.fg:nth-child(4){flex:0 1 92px}
+#page-actions .ac-filter-row>.fg:nth-child(5){flex:0 1 112px}
+#page-actions .ac-filter-row>.fg:nth-child(6){flex:0 1 112px}
+#page-actions .ac-filter-row>.fg:nth-child(7){flex:0 1 98px}
+#page-actions .ac-filter-row .fs,
+#page-actions .ac-filter-row .store-disp,
+#page-actions .ac-filter-row .ms-container,
+#page-actions .ac-filter-row .ms-display{
+  width:100%;
+  min-width:0;
+  max-width:none;
+}
+#page-actions .ac-filter-row .fl{font-size:9px;margin-bottom:3px;white-space:nowrap}
+#page-actions .ac-filter-row .fs,
+#page-actions .ac-filter-row .store-disp,
+#page-actions .ac-filter-row .ms-display{font-size:10px;padding-left:7px;padding-right:7px}
+#page-actions .ac-filter-row>.rbtn,
+#page-actions .ac-filter-row>.btn{flex:0 0 auto;white-space:nowrap;padding-left:8px;padding-right:8px}
+
 @media (max-width:700px){.filter-bar-row{gap:7px}.filter-bar-row .fs,.filter-bar-row .ms-display,.filter-bar-row .store-disp{width:clamp(88px,28vw,150px)}.filter-bar-row .ms-container{width:clamp(105px,30vw,150px)}.nf-action-options{gap:6px}.nf-action-button{width:100%;justify-content:center}}
 
 /* ── 9. CONTROLS ─────────────────────────────────────────────────── */
@@ -982,7 +1016,7 @@ tbody tr.overdue:hover{background:color-mix(in oklab,var(--red) 9%,transparent)}
       <div class="topbar-title" id="ptitle" aria-label="Current workspace">
         <span class="topbar-kicker">GALA MARKETS</span>
         <span class="topbar-divider">/</span>
-        <span class="topbar-workspace">EXPIRY CONTROL ROOM</span>
+        <span class="topbar-workspace">EXPIRY DASHBOARD</span>
       </div>
     </div>
     <div class="density-slider">
@@ -1121,7 +1155,7 @@ tbody tr.overdue:hover{background:color-mix(in oklab,var(--red) 9%,transparent)}
         <div><strong id="overdue-count2">0</strong> overdue items highlighted below.</div>
       </div>
       <div class="filter-bar">
-        <div class="filter-bar-row">
+        <div class="filter-bar-row ac-filter-row">
           <div class="fg"><div class="fl">Store Code</div><select class="fs" id="ac-code" onchange="onCodeChange('ac')"><option value="">All</option></select></div>
           <div class="fg"><div class="fl">Store</div><div class="store-disp" id="ac-store-disp">—</div></div>
           <div class="fg"><div class="fl">Month</div><select class="fs" id="ac-ym" onchange="renderActions()"><option value="">All</option></select></div>
@@ -2771,19 +2805,44 @@ function renderAreaManagerOverview(){
   if(ovTitle)ovTitle.textContent='Store Expiry Summary';
 }
 function drillStore(code){const el=document.getElementById('ac-code');if(el){el.value=code;updateStoreDisp('ac');}go('actions');}
-function drillDownAction(type,val){if(isAreaManager()){go('stores');return;}go('actions');if(type==='status'){multiDeptSelections['ac-status'].clear();multiDeptSelections['ac-status'].add(val);updateMultiDeptDisplay('ac-status');document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=cb.value===val);}renderActions();}
+function drillDownAction(type,val){
+  if(isAreaManager()){go('stores');return;}
+  // Always enter Action Center first, then apply the requested KPI filter.
+  go('actions');
+  const clearMulti=(key)=>{
+    if(multiDeptSelections[key])multiDeptSelections[key].clear();
+    updateMultiDeptDisplay(key);
+    document.querySelectorAll(`#${key}-dropdown input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  };
+  clearMulti('ac-status');
+  clearMulti('ac-bucket');
+  if(type==='status'&&val){
+    multiDeptSelections['ac-status'].add(val);
+    updateMultiDeptDisplay('ac-status');
+    document.querySelectorAll('#ac-status-dropdown input[type=checkbox]').forEach(cb=>cb.checked=cb.value===val);
+  }else if(type==='risk'){
+    // Critical ≤7 is the <7 Days bucket. ≤30 combines <7 and 7–30.
+    if(val==='<7 Days'){
+      multiDeptSelections['ac-bucket'].add('<7 Days');
+    }else if(val==='30 Days'){
+      multiDeptSelections['ac-bucket'].add('<7 Days');
+      multiDeptSelections['ac-bucket'].add('7–30 Days');
+    }
+    updateMultiDeptDisplay('ac-bucket');
+    document.querySelectorAll('#ac-bucket-dropdown input[type=checkbox]').forEach(cb=>cb.checked=multiDeptSelections['ac-bucket'].has(cb.value));
+  }
+  renderActions();
+} 
 function openExpiry10Page(){
-  if(!isBuyerRole())return;
-  setRouteHash('expiry10');
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  if(!isBuyerRole()){
+    toast('Expiry ≤10 Days is available to buyers','info');
+    return;
+  }
   const page=document.getElementById('page-expiry10');
   if(!page)return;
-  page.classList.add('active');
-  curPage='expiry10';
-  populateExpiry10Filters();
-  renderExpiry10();
-  window.scrollTo({top:0,behavior:'smooth'});
+  // Use the normal router so the page state, hash and render lifecycle stay in sync.
+  go('expiry10');
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
 }
 
 // ══ DRILLDOWN PAGE (Sold Out / Expired) ══
@@ -2991,7 +3050,7 @@ const BUYER_SETTINGS_KEY='gala_expiry_buyer_notify_settings';
 const DEFAULT_BUYER_SETTINGS={
   cc:'',
   subject:'Expiry Actions Updated – {STORE} – {WEEK}',
-  body:'Dear Manager,\n\nPlease find the updated expiry actions for {STORE}.\nWeek: {WEEK}\nMonth: {MONTH}\nItems: {ITEM_COUNT}\n\n{BODY}\n\nRegards,\nGala Markets',
+  body:'Dear Manager,\n\nPlease find the updated expiry actions for {STORE}.\nWeek: {WEEK}\nMonth: {MONTH}\nItems: {ITEM_COUNT}\n\n{BODY}\n',
   confirm:true,
   rememberActions:true,
   rtc:true,
@@ -3221,7 +3280,7 @@ function renderActions(){
   const st=gv('globalSearch').toLowerCase();
   const filtered=st?d.filter(r=>(r.Article||'').toLowerCase().includes(st)||(r.Description||'').toLowerCase().includes(st)||(r.Barcode||'').toLowerCase().includes(st)):d;
   const sortedFiltered = sortData(filtered, 't-ac', 'StoreCode', 'str');
-  document.getElementById('kpi-ac').innerHTML=KPI('Items','neu',sortedFiltered.length)+KPI('Critical ≤7','red',cnt(sortedFiltered,F.le7))+KPI('≤30 Days','ora',cnt(sortedFiltered,F.le30))+KPI('Pending','ora',cnt(sortedFiltered,F.pend))+KPI('Actioned','grn',cnt(sortedFiltered,F.comp))+KPI('Validity Expired','yel',cnt(sortedFiltered,r=>r['Action Status']==='Validity Expired'));
+  document.getElementById('kpi-ac').innerHTML=KPI('Items','neu',sortedFiltered.length,'All matching items',`drillDownAction('all','')`)+KPI('Critical ≤7','red',cnt(sortedFiltered,F.le7),'Immediate expiry exposure',`drillDownAction('risk','<7 Days')`)+KPI('≤30 Days','ora',cnt(sortedFiltered,F.le30),'Expiry within 30 days',`drillDownAction('risk','30 Days')`)+KPI('Pending','ora',cnt(sortedFiltered,F.pend),'Pending buyer action',`drillDownAction('status','Pending Action')`)+KPI('Actioned','grn',cnt(sortedFiltered,F.comp),'Completed actions',`drillDownAction('status','Action Taken')`)+KPI('Validity Expired','yel',cnt(sortedFiltered,r=>r['Action Status']==='Validity Expired'),'RTC validity ended',`drillDownAction('status','Validity Expired')`);
   buildActivePills('ac','ac-active-filters');const visCols=getVisibleCols();
   
   document.getElementById('t-ac-hdr').innerHTML=visCols.map(c=>{
