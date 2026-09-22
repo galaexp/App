@@ -2459,10 +2459,19 @@ function applyPreviouslyActioned(){
     const actionDate=parseDate(r['Action Date']);
     const endDate=parseDate(r.End);
     const ts=r._tsDate instanceof Date ? r._tsDate : null;
-    groups.get(key).push({row:r,index,action,end:r.End||'',endDate,start:r.Start||'',rtcPrice:r['RTC Price']||'',transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',actionDate,ts});
+    groups.get(key).push({
+      row:r,index,action,end:r.End||'',endDate,
+      start:r.Start||'',rtcPrice:r['RTC Price']||'',
+      transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',
+      actionDate,ts
+    });
   });
 
+  // Use the actual chronology of the action/record, not the RTC end date,
+  // to determine which RTC is the latest one.  The latest RTC's end date
+  // controls whether the current article's RTC validity has expired.
   const timeOf=a=>a.ts?.getTime() ?? a.actionDate?.getTime() ?? a.endDate?.getTime() ?? a.index;
+
   const historyFor=past=>{
     const pa=[],pp=[];
     past.slice().sort((a,b)=>timeOf(a)-timeOf(b)).forEach(a=>{
@@ -2485,11 +2494,14 @@ function applyPreviouslyActioned(){
     if(!actioned.length)return;
     actioned.sort((a,b)=>timeOf(a)-timeOf(b));
 
-    const rtc=actioned.filter(a=>a.action.includes('RTC Price Change')&&a.endDate);
-    rtc.sort((a,b)=>b.endDate-a.endDate);
+    // IMPORTANT: latest RTC means the most recently recorded RTC action,
+    // not the RTC with the furthest End date.
+    const rtc=actioned
+      .filter(a=>a.action.includes('RTC Price Change')&&a.endDate)
+      .sort((a,b)=>timeOf(b)-timeOf(a));
     const latestRTC=rtc[0]||null;
     const latestEnd=latestRTC?.endDate||null;
-    const validity=!!(latestEnd&&latestEnd<TODAY);
+    const validityExpired=!!(latestEnd&&latestEnd<TODAY);
 
     // For every row, show only actions that occurred before that row.
     items.forEach(item=>{
@@ -2499,26 +2511,44 @@ function applyPreviouslyActioned(){
       item.row['Previous Price Info']=h.pp;
     });
 
-    // A fresh pending/current row inherits all previous action history.
-    const pending=items.filter(a=>a.row['Action Status']==='Pending Action')
+    // Find the latest current/pending record first. This is the row that
+    // represents the article in the current submission period/week.
+    const pending=items
+      .filter(a=>a.row['Action Status']==='Pending Action')
       .sort((a,b)=>timeOf(b)-timeOf(a))[0];
-    if(pending){
-      const h=historyFor(actioned.filter(a=>timeOf(a)<timeOf(pending)));
-      pending.row['Previous Action Info']=h.pa;
-      pending.row['Previous Price Info']=h.pp;
-      pending.row['Latest RTC End']=latestRTC?.end||'';
-      pending.row['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
-      if(validity&&parseFloat(pending.row.Stock)>0&&Number(pending.row.DaysLeft)>0){
-        pending.row['Action Status']='Validity Expired';
-      }else if(h.pa){
-        pending.row['Action Status']='Previously Actioned';
+
+    // If there is no pending row, use the latest row with stock remaining
+    // and an unexpired article. This keeps an already-actioned row visible
+    // as Validity Expired when its RTC validity subsequently ends.
+    const validityRow=pending || items
+      .filter(a=>parseFloat(a.row.Stock)>0 && Number(a.row.DaysLeft)>0)
+      .sort((a,b)=>timeOf(b)-timeOf(a))[0];
+
+    if(validityRow){
+      const prior=actioned.filter(a=>timeOf(a)<timeOf(validityRow));
+      const h=historyFor(prior);
+
+      if(validityRow.row['Action Status']==='Pending Action'){
+        validityRow.row['Previous Action Info']=h.pa;
+        validityRow.row['Previous Price Info']=h.pp;
       }
-    }else if(validity){
-      const latest=actioned[actioned.length-1];
-      if(latest&&parseFloat(latest.row.Stock)>0&&Number(latest.row.DaysLeft)>0){
-        latest.row['Action Status']='Validity Expired';
-        latest.row['Latest RTC End']=latestRTC?.end||'';
-        latest.row['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
+
+      validityRow.row['Latest RTC End']=latestRTC?.end||'';
+      validityRow.row['Latest RTC Info']=latestRTC
+        ? `RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`
+        : '';
+
+      const stock=parseFloat(validityRow.row.Stock)||0;
+      const daysLeft=Number(validityRow.row.DaysLeft);
+
+      // VALIDITY EXPIRED definition:
+      // 1. Latest RTC validity End date is before today
+      // 2. Stock is still available
+      // 3. The article itself has not expired
+      if(validityExpired && stock>0 && Number.isFinite(daysLeft) && daysLeft>0){
+        validityRow.row['Action Status']='Validity Expired';
+      }else if(validityRow.row['Action Status']==='Pending Action' && h.pa){
+        validityRow.row['Action Status']='Previously Actioned';
       }
     }
   });
