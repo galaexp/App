@@ -9,7 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;600;700;800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.6.1/dist/handsontable.full.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/handsontable@14.6.1/dist/handsontable.full.min.js"></script>
 <style>
 :root {
   --bg:            #f8fafd;
@@ -244,6 +246,59 @@ td.r { text-align:right; }
 .badge.low { background:var(--green-l); color:var(--green); border-color:var(--green-b); }
 .badge.na { background:rgba(28,25,23,0.05); color:var(--t3); border-color:var(--border); }
 
+
+/* G-LIST / HANDSONTABLE */
+.glist-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.glist-toolbar .btn { min-height:32px; }
+.glist-search { min-width:190px; }
+.glist-grid-wrap { overflow:hidden; border-radius:10px; border:1px solid var(--border-strong); }
+#glist-grid { width:100%; height:calc(100vh - 355px); min-height:420px; overflow:hidden; background:#fff; }
+
+/* undo global table/thead/tbody styles leaking into Handsontable */
+#glist-grid table.htCore { min-width:0; }
+#glist-grid table.htCore thead th,
+#glist-grid table.htCore tbody th { position:static; z-index:auto; backdrop-filter:none; text-transform:none; letter-spacing:normal; }
+#glist-grid table.htCore thead th:first-child,
+#glist-grid table.htCore tbody td:first-child { width:auto; text-align:left; }
+#glist-grid table.htCore tbody tr:hover { background:none; }
+
+/* spreadsheet look */
+#glist-grid .handsontable { font-family:var(--sans); font-size:12px; color:var(--text); }
+#glist-grid .handsontable td, #glist-grid .handsontable th { border-color:#dfe3ea; }
+#glist-grid table.htCore td { padding:0 8px; line-height:23px; color:var(--text); background-color:#fff; }
+#glist-grid table.htCore td.htDimmed { color:var(--text); }
+#glist-grid table.htCore th { padding:0 6px; background-color:#f1f4f9; color:var(--t2); font-size:11px; font-weight:600; }
+#glist-grid table.htCore th.ht__highlight { background-color:#e0e4f1; color:var(--accent); }
+#glist-grid table.htCore th.ht__active_highlight { background-color:var(--accent); color:#fff; }
+#glist-grid table.htCore td.gl-cur-row,
+#glist-grid table.htCore td.gl-cur-col { background-color:rgba(34,45,101,.05); }
+#glist-grid .handsontable td.area::before { background:var(--accent); }
+#glist-grid .handsontable .wtBorder.current,
+#glist-grid .handsontable .wtBorder.area,
+#glist-grid .handsontable .wtBorder.corner { background-color:var(--accent) !important; }
+
+.glist-mono { font-family:var(--mono); font-size:11px; }
+.glist-meta { display:flex; align-items:center; gap:10px; color:var(--t3); font-size:10.5px; }
+.glist-empty { text-align:center; padding:42px 20px; color:var(--t3); }
+.glist-empty i { font-size:30px; margin-bottom:10px; display:block; }
+.glist-kpi-grid { margin-bottom:16px; }
+.glist-refreshing { opacity:.72; pointer-events:none; }
+
+/* G-LIST FOLDERS (grouped by list name) */
+.glist-folder-card { background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:12px; padding:16px; cursor:pointer; transition:all .15s; position:relative; }
+.glist-folder-card:hover { border-color:var(--accent); box-shadow:var(--shadow); transform:translateY(-2px); }
+.glist-folder-icon { width:38px; height:38px; border-radius:10px; background:rgba(34,45,101,0.09); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:10px; }
+.glist-folder-name { font-family:var(--display); font-weight:700; font-size:13.5px; color:var(--text); margin-bottom:4px; word-break:break-word; padding-right:24px; }
+.glist-folder-meta { font-size:10.5px; color:var(--t3); }
+.glist-folder-del { position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:7px; border:1px solid var(--border); background:rgba(255,255,255,0.9); color:var(--t3); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; transition:.15s; }
+.glist-folder-del:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.glist-back { display:inline-flex; align-items:center; gap:7px; }
+
+@media(max-width:900px){
+  #glist-grid { height:calc(100vh - 430px); min-height:360px; }
+  .glist-search { min-width:150px; flex:1; }
+}
+
 /* OVERLAY / POPUP */
 .overlay { display:none; position:fixed; inset:0; background:rgba(15,15,10,0.42); backdrop-filter:blur(8px); z-index:500; align-items:center; justify-content:center; padding:24px; }
 .overlay.open { display:flex; }
@@ -365,11 +420,14 @@ td.r { text-align:right; }
       <i class="fa-solid fa-bolt-lightning nav-ico"></i><span>Buyer's Action</span>
       <span class="nav-badge" id="nb-buyerAction">0</span>
     </button>
-    <button class="nav-item" onclick="go('staff')" id="n-staff">
-      <i class="fa-solid fa-users nav-ico"></i><span>Manage Staff</span>
-    </button>
     <button class="nav-item" onclick="go('history')" id="n-history">
       <i class="fa-solid fa-database nav-ico"></i><span>History</span>
+    </button>
+    <button class="nav-item" onclick="go('glist')" id="n-glist">
+      <i class="fa-solid fa-table nav-ico"></i><span>G-List</span>
+    </button>
+    <button class="nav-item" onclick="go('staff')" id="n-staff">
+      <i class="fa-solid fa-users nav-ico"></i><span>Manage Staff</span>
     </button>
   </div>
   <div class="sidebar-foot">
@@ -555,6 +613,104 @@ td.r { text-align:right; }
       </div>
     </div>
 
+    <!-- ══ G-LIST ══ -->
+    <div class="page" id="page-glist">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title"><i class="fa-solid fa-table" style="color:var(--accent)"></i> G-List</div>
+            <div class="panel-title-sub" id="glist-panel-sub">Create List From GalaEXP, Use For Any Purpose.</div>
+          </div>
+          <div class="glist-meta">
+            <span id="glist-store-label">—</span>
+            <span>•</span>
+            <span id="glist-last-refresh">Not loaded</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid glist-kpi-grid" id="kpi-glist"></div>
+
+      <!-- FOLDER VIEW: lists grouped by title -->
+      <div id="glist-folder-view">
+        <div class="filter-bar">
+          <div class="filter-bar-row">
+            <div class="fg" style="min-width:240px;flex:1">
+              <div class="fl">Search List Name</div>
+              <input class="form-input" id="glist-folder-search" type="search" placeholder="Search list name..." oninput="renderGListFolders()">
+            </div>
+            <button class="btn" onclick="refreshGList()" id="glist-refresh-btn" style="align-self:flex-end">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Lists</div>
+              <div class="panel-title-sub">Click a list to open its products</div>
+            </div>
+            <span class="panel-badge" id="glist-folder-badge">—</span>
+          </div>
+          <div class="panel-body" id="glist-folder-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;"></div>
+          <div id="glist-folder-empty" class="glist-empty" style="display:none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <div style="font-size:14px;font-weight:600;">No Lists Found</div>
+            <div style="font-size:12px;margin-top:4px;">No product lists currently exist for this store.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRID VIEW: products inside the opened list -->
+      <div id="glist-grid-view" style="display:none;">
+        <div class="filter-bar">
+          <div class="filter-bar-row">
+            <button class="rbtn glist-back" onclick="closeGListTitle()"><i class="fa-solid fa-arrow-left"></i> Back to Lists</button>
+            <div class="fg glist-search">
+              <div class="fl">Search Barcode</div>
+              <input class="form-input" id="glist-search-barcode" type="search" placeholder="Search barcode..." oninput="renderGList()">
+            </div>
+            <div class="fg" style="min-width:240px;flex:1">
+              <div class="fl">Search Description</div>
+              <input class="form-input" id="glist-search-description" type="search" placeholder="Search description..." oninput="renderGList()">
+            </div>
+            <div class="fg">
+              <div class="fl">Department</div>
+              <select class="fs" id="glist-dept" onchange="renderGList()">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+            <button class="rbtn" onclick="resetGListFilters()"><i class="fa-solid fa-xmark"></i> Reset</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title" id="glist-active-title">List</div>
+              <div class="panel-title-sub">Click a cell · drag to select · Ctrl+C to copy · click a header to sort · header arrow to filter</div>
+            </div>
+            <div class="glist-toolbar">
+              <button class="btn btn-green" onclick="exportAllVisibleBarcodes()"><i class="fa-solid fa-download"></i> Export Barcodes to Text File</button>
+              <button class="btn" onclick="copySelectedBarcodes()"><i class="fa-regular fa-copy"></i> Copy Barcodes</button>
+              <button class="btn btn-green" onclick="exportGListExcel()"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
+              <button class="btn btn-red" onclick="deleteCurrentGListTitle()"><i class="fa-solid fa-folder-minus"></i> Delete This List</button>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:10px;">
+            <div class="glist-grid-wrap">
+              <div id="glist-grid"></div>
+            </div>
+            <div id="glist-empty" class="glist-empty" style="display:none;">
+              <i class="fa-solid fa-box-open"></i>
+              <div style="font-size:14px;font-weight:600;">No Active Products Found</div>
+              <div style="font-size:12px;margin-top:4px;">No records currently exist for this list.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ MANAGE STAFF ══ -->
     <div class="page" id="page-staff">
       <div class="panel">
@@ -609,11 +765,15 @@ td.r { text-align:right; }
 
 <script>
 const API = "https://exp.galamarkets.workers.dev";
+// G-List reads/writes directly against a Google Apps Script Web App backed by Google Sheets.
+const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf_XLjWksb3dw_LZHtS6zcnR-TigZ7krP5edMasRylixVplq4q_vS1kDuqsYIWzy2RmA/exec";
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
 let storeCode='', storeName='', storeData=[], storeStaffs=[];
 let editCurrentRow=null, deleteRowIndex=null, reviewRows=[];
+let glistRows=[], glistGridApi=null, glistRefreshTimer=null;
+let glistTitleGroups=[], glistSelectedTitle=null;
 
 // ── TOAST ──
 function toast(msg,type='',ms=2600){
@@ -675,7 +835,9 @@ async function doLogin(){
 
 function logout(){
   sessionStorage.removeItem('sc'); sessionStorage.removeItem('sn'); sessionStorage.removeItem('ss'); sessionStorage.removeItem('pass');
-  storeCode=''; storeName=''; storeData=[]; storeStaffs=[];
+  stopGListAutoRefresh();
+  storeCode=''; storeName=''; storeData=[]; storeStaffs=[]; glistRows=[]; glistTitleGroups=[]; glistSelectedTitle=null;
+  if(glistGridApi){glistGridApi.destroy(); glistGridApi=null;}
   document.getElementById('login-page').style.display='flex';
   document.getElementById('app-page').style.display='none';
   if(!document.getElementById('remember-me').checked) {
@@ -690,6 +852,7 @@ function startApp(){
   document.getElementById('sb-store-label').textContent=storeCode+' · '+storeName;
   document.getElementById('ptitle-sub').textContent=storeName+' ('+storeCode+')';
   go('dashboard'); loadData();
+  startGListAutoRefresh();
   
   makeTableResizable('t-expired');
   makeTableResizable('t-exp7');
@@ -709,16 +872,17 @@ window.onload=()=>{
 };
 
 // ── NAV ──
-const TITLES={dashboard:'Overview',review:'Review / This Week',buyerAction:"Buyer's Action",history:'History',staff:'Manage Staff'};
+const TITLES={dashboard:'Overview',review:'Review / This Week',buyerAction:"Buyer's Action",history:'History',glist:'G-List',staff:'Manage Staff'};
 function go(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+n).classList.add('active');
   document.getElementById('n-'+n).classList.add('active');
   document.getElementById('ptitle').textContent=TITLES[n];
+  if(n==='glist') { if(glistRows.length===0) loadGListData(); else renderGListPage(); return; }
   if(storeData.length>0 || n==='staff') renderPage(n);
 }
-function renderPage(n){({dashboard:renderDashboard,review:renderReview,buyerAction:renderBuyerAction,history:renderHistory,staff:renderStaffPage})[n]?.();}
+function renderPage(n){({dashboard:renderDashboard,review:renderReview,buyerAction:renderBuyerAction,history:renderHistory,glist:renderGListPage,staff:renderStaffPage})[n]?.();}
 
 // ── LOAD DATA ──
 async function loadData(){
@@ -867,6 +1031,550 @@ function fillOpts(id,opts){
   if(opts.some(o=>o.val===cur))el.value=cur;
 }
 
+
+// ── G-LIST (Google Sheets via Apps Script Web App) ──
+
+// Columns shown inside an opened list (Handsontable). Title is the folder itself, so it is
+// intentionally left out of the row grid.
+const GLIST_COLUMNS = [
+  { data:'Article',       title:'Article',     width:125 },
+  { data:'Barcode',       title:'Barcode',     width:155, className:'glist-mono' },
+  { data:'Description',   title:'Description', width:380 },
+  { data:'Department',    title:'Department',  width:170 },
+  { data:'CreatedOnDisp', title:'Created On',  width:150 }
+];
+const GLIST_SORT_DEFAULT = { column:4, sortOrder:'desc' };
+
+function glistNormalizeRows(rows){
+  return (Array.isArray(rows) ? rows : []).map((r)=>{
+    const title=String(r.title ?? '').trim();
+    const store=String(r.storeCode ?? '').trim();
+    const article=String(r.article ?? '').trim();
+    const barcode=String(r.barcode ?? '').trim();
+    const description=String(r.description ?? '').trim();
+    const department=String(r.department ?? '').trim();
+    const status=String(r.status ?? '').trim();
+    const created=r.createdOn ?? '';
+    const rowNumber=r.rowNumber ?? null;
+    return {
+      _gkey:String(rowNumber ?? [store,title,article,barcode,created].join('|')),
+      rowNumber,
+      Title:title,
+      StoreCode:store,
+      Article:article,
+      Barcode:barcode,
+      Description:description,
+      Department:department,
+      Status:status,
+      CreatedOn:created,
+      CreatedOnDisp:glistFmtDateTime(created)
+    };
+  }).filter(r =>
+    r.StoreCode === String(storeCode).trim() &&
+    r.Status.toLowerCase() === 'active'
+  );
+}
+
+function glistDate(v){
+  if(!v) return null;
+  const d = new Date(v);
+  if(!isNaN(d)) return d;
+  const p = parseDate(v);
+  return p || null;
+}
+
+function glistFmtDateTime(v){
+  const d=glistDate(v); if(!d) return String(v??'');
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+
+function buildGListTitleGroups(){
+  const map=new Map();
+  glistRows.forEach(r=>{
+    const key=r.Title || '(Untitled)';
+    if(!map.has(key)) map.set(key,[]);
+    map.get(key).push(r);
+  });
+  glistTitleGroups=[...map.entries()].map(([title,rows])=>{
+    const dates=rows.map(r=>glistDate(r.CreatedOn)).filter(Boolean).sort((a,b)=>b-a);
+    return { title, rows, count:rows.length, lastUpdated: dates[0]||null };
+  }).sort((a,b)=> (b.lastUpdated?.getTime()||0) - (a.lastUpdated?.getTime()||0) || a.title.localeCompare(b.title));
+}
+
+function buildGListGrid(){
+  const el=document.getElementById('glist-grid');
+  if(!el || typeof Handsontable==='undefined' || glistGridApi) return;
+
+  glistGridApi=new Handsontable(el,{
+    licenseKey:'non-commercial-and-evaluation',
+    data:[],
+    columns:GLIST_COLUMNS,
+    colHeaders:true,
+    rowHeaders:true,
+    rowHeaderWidth:44,
+    width:'100%',
+    height:()=>el.clientHeight,
+    rowHeights:24,
+    readOnly:true,
+    copyPaste:true,
+    fillHandle:false,
+    selectionMode:'multiple',
+    outsideClickDeselects:false,
+    autoWrapRow:true,
+    autoWrapCol:true,
+    manualColumnResize:true,
+    columnSorting:{ indicator:true, headerAction:true, sortEmptyCells:true },
+    filters:true,
+    dropdownMenu:['filter_by_condition','filter_by_condition2','filter_operators','filter_by_value','filter_action_bar'],
+    contextMenu:['copy'],
+    currentRowClassName:'gl-cur-row',
+    currentColClassName:'gl-cur-col',
+    afterFilter:updateGListKpis,
+    afterColumnSort:updateGListKpis
+  });
+  updateGListKpis();
+}
+
+function glistVisibleRows(){
+  const hot=glistGridApi, out=[];
+  if(!hot || hot.isDestroyed) return out;
+  for(let i=0;i<hot.countRows();i++){
+    const d=hot.getSourceDataAtRow(hot.toPhysicalRow(i));
+    if(d) out.push(d);
+  }
+  return out;
+}
+
+function updateGListKpis(){
+  const k=document.getElementById('kpi-glist');
+  if(!k) return;
+
+  if(!glistSelectedTitle){
+    const totalRecords=glistRows.length;
+    const totalBarcodes=new Set(glistRows.map(r=>r.Barcode).filter(Boolean)).size;
+    const totalLists=glistTitleGroups.length;
+    const last=glistRows.map(r=>glistDate(r.CreatedOn)).filter(Boolean).sort((a,b)=>b-a)[0];
+    k.innerHTML=
+      KPI('Total Lists','acc',totalLists)+
+      KPI('Total Records','neu',totalRecords)+
+      KPI('Total Barcodes','blu',totalBarcodes)+
+      KPI('Last Updated','grn',last?last.toLocaleDateString('en-GB'):'—');
+    return;
+  }
+
+  const visible=glistVisibleRows();
+  const depts=new Set(visible.map(r=>r.Department).filter(Boolean));
+  const last=visible.map(r=>glistDate(r.CreatedOn)).filter(Boolean).sort((a,b)=>b-a)[0];
+  k.innerHTML=
+    KPI('Items In List','neu',visible.length)+
+    KPI('Barcodes','acc',new Set(visible.map(r=>r.Barcode).filter(Boolean)).size)+
+    KPI('Departments','blu',depts.size)+
+    KPI('Last Updated','grn',last?last.toLocaleDateString('en-GB'):'—');
+}
+
+// ── Folder (list) view ──
+function renderGListFolders(){
+  document.getElementById('glist-folder-view').style.display='block';
+  document.getElementById('glist-grid-view').style.display='none';
+
+  const search=(document.getElementById('glist-folder-search')?.value||'').trim().toLowerCase();
+  const filtered=glistTitleGroups.filter(g=>!search || g.title.toLowerCase().includes(search));
+
+  document.getElementById('glist-folder-badge').textContent=filtered.length+' list'+(filtered.length===1?'':'s');
+
+  const wrap=document.getElementById('glist-folder-grid');
+  wrap.innerHTML=filtered.map(g=>{
+    const safe=escapeHtml(g.title).replace(/'/g,"&#39;");
+    return `
+    <div class="glist-folder-card" onclick="openGListTitle('${safe}')">
+      <button class="glist-folder-del" title="Delete this list" onclick="event.stopPropagation();deleteGListTitle('${safe}')"><i class="fa-solid fa-trash"></i></button>
+      <div class="glist-folder-icon"><i class="fa-solid fa-folder"></i></div>
+      <div class="glist-folder-name">${escapeHtml(g.title)}</div>
+      <div class="glist-folder-meta">${g.count} item${g.count===1?'':'s'} · ${g.lastUpdated ? g.lastUpdated.toLocaleDateString('en-GB') : '—'}</div>
+    </div>`;
+  }).join('');
+
+  const empty=document.getElementById('glist-folder-empty');
+  empty.style.display=filtered.length?'none':'block';
+
+  updateGListKpis();
+}
+
+function openGListTitle(title){
+  glistSelectedTitle=title;
+  document.getElementById('glist-folder-view').style.display='none';
+  document.getElementById('glist-grid-view').style.display='block';
+  document.getElementById('glist-active-title').textContent=title;
+  resetGListFilters(true);
+  populateGListDepartments();
+  if(glistGridApi){ glistGridApi.destroy(); glistGridApi=null; }
+  buildGListGrid();
+  renderGList();
+  updateGListKpis();
+}
+
+function closeGListTitle(){
+  glistSelectedTitle=null;
+  if(glistGridApi){ glistGridApi.destroy(); glistGridApi=null; }
+  renderGListFolders();
+}
+
+function renderGListPage(){
+  if(glistSelectedTitle){
+    document.getElementById('glist-folder-view').style.display='none';
+    document.getElementById('glist-grid-view').style.display='block';
+    if(!glistGridApi) buildGListGrid();
+    renderGList();
+    setTimeout(()=>glistGridApi?.refreshDimensions(),0);
+  } else {
+    renderGListFolders();
+  }
+}
+
+function renderGList(){
+  if(!glistSelectedTitle) return;
+  if(!glistGridApi) buildGListGrid();
+  const hot=glistGridApi;
+  if(!hot) return;
+
+  const barcode=(document.getElementById('glist-search-barcode')?.value||'').trim().toLowerCase();
+  const desc=(document.getElementById('glist-search-description')?.value||'').trim().toLowerCase();
+  const dept=document.getElementById('glist-dept')?.value||'';
+
+  // Second-layer guard: only the logged-in store + Active rows + the open list may enter the grid.
+  const filtered=glistRows.filter(r=>{
+    if(r.Title!==glistSelectedTitle) return false;
+    if(String(r.StoreCode)!==String(storeCode)) return false;
+    if(String(r.Status).toLowerCase()!=='active') return false;
+    if(barcode && !r.Barcode.toLowerCase().includes(barcode)) return false;
+    if(desc && !r.Description.toLowerCase().includes(desc)) return false;
+    if(dept && r.Department!==dept) return false;
+    return true;
+  });
+
+  // Skip reload when nothing changed, so the 30s auto-refresh doesn't wipe selection/sort/filters.
+  const sig=filtered.map(r=>[r._gkey,r.Barcode,r.Description,r.Department,r.CreatedOn].join('~')).join('|');
+  if(hot._glSig!==sig){
+    const first=hot._glSig===undefined;
+    hot._glSig=sig;
+    const sorter=hot.getPlugin('columnSorting');
+    let cfg=first?GLIST_SORT_DEFAULT:sorter.getSortConfig();
+    if(Array.isArray(cfg)) cfg=cfg[0];
+    hot.loadData(filtered);
+    if(cfg) sorter.sort(cfg);
+  }
+  updateGListKpis();
+
+  const empty=document.getElementById('glist-empty');
+  if(empty) empty.style.display=filtered.length?'none':'block';
+}
+
+function populateGListDepartments(){
+  const el=document.getElementById('glist-dept');
+  if(!el) return;
+  const cur=el.value;
+  const scoped=glistSelectedTitle ? glistRows.filter(r=>r.Title===glistSelectedTitle) : glistRows;
+  const depts=[...new Set(scoped.map(r=>r.Department).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  el.innerHTML='<option value="">All Departments</option>'+
+    depts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  if(depts.includes(cur)) el.value=cur;
+}
+
+function escapeHtml(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Apps Script data calls (all GET — the deployed script only implements doGet) ──
+async function glistApiCall(action, extraParams){
+  const cleanStore=String(storeCode||'').trim();
+  if(!cleanStore) throw new Error('Store session is not available. Please sign in again.');
+  const p=new URLSearchParams({ action, storeCode:cleanStore, ...(extraParams||{}) });
+  const res=await fetch(APPSCRIPT_URL+'?'+p.toString(),{method:'GET',cache:'no-store'});
+  let data=null;
+  try{ data=await res.json(); }
+  catch(e){ throw new Error('G-List service returned an invalid response ('+res.status+').'); }
+  if(!data || data.ok===false){ throw new Error(data?.error || 'G-List service request failed.'); }
+  return data;
+}
+
+async function fetchGListProducts(){
+  const data=await glistApiCall('getProducts',{ _t:Date.now() });
+  const returnedStore=String(data.storeCode??'').trim();
+  if(returnedStore && returnedStore!==String(storeCode).trim()){
+    throw new Error('G-List service returned data for a different store.');
+  }
+  return Array.isArray(data.rows)?data.rows:[];
+}
+
+const GLIST_CACHE_PREFIX='gala_glist_cache_v1_';
+let glistCacheFetchedAt=0;
+
+function glistCacheKey(){
+  return GLIST_CACHE_PREFIX+String(storeCode||'').trim();
+}
+
+function saveGListCache(rows){
+  try{
+    const payload={
+      storeCode:String(storeCode||'').trim(),
+      fetchedAt:Date.now(),
+      rows:Array.isArray(rows)?rows:[]
+    };
+    localStorage.setItem(glistCacheKey(),JSON.stringify(payload));
+    glistCacheFetchedAt=payload.fetchedAt;
+  }catch(e){
+    // Caching is best-effort. Never let a storage/quota error break G-List loading.
+    console.warn('G-List cache write failed',e);
+  }
+}
+
+function loadGListCache(){
+  try{
+    const raw=localStorage.getItem(glistCacheKey());
+    if(!raw) return false;
+    const payload=JSON.parse(raw);
+    if(!payload ||
+       String(payload.storeCode||'').trim()!==String(storeCode||'').trim() ||
+       !Array.isArray(payload.rows)) return false;
+
+    glistRows=glistNormalizeRows(payload.rows);
+    glistCacheFetchedAt=Number(payload.fetchedAt)||0;
+    buildGListTitleGroups();
+    return true;
+  }catch(e){
+    console.warn('G-List cache read failed',e);
+    return false;
+  }
+}
+
+function updateGListRefreshLabel(source){
+  const label=document.getElementById('glist-store-label');
+  const refresh=document.getElementById('glist-last-refresh');
+  if(label) label.textContent=storeName+' ('+storeCode+')';
+  if(!refresh) return;
+
+  if(source==='cache' && glistCacheFetchedAt){
+    refresh.textContent='Cached '+new Date(glistCacheFetchedAt).toLocaleString([],{
+      day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'
+    });
+  }else if(source==='live'){
+    refresh.textContent='Updated '+new Date().toLocaleTimeString([],{
+      hour:'2-digit',minute:'2-digit'
+    });
+  }
+}
+
+function hydrateGListFromCache(){
+  const loaded=loadGListCache();
+  if(!loaded) return false;
+
+  updateGListRefreshLabel('cache');
+
+  if(glistSelectedTitle && !glistTitleGroups.some(g=>g.title===glistSelectedTitle)){
+    glistSelectedTitle=null;
+    if(glistGridApi){ glistGridApi.destroy(); glistGridApi=null; }
+  }
+
+  if(glistSelectedTitle){
+    populateGListDepartments();
+    if(!glistGridApi) buildGListGrid();
+    renderGList();
+  }else{
+    renderGListFolders();
+  }
+  updateGListKpis();
+  return true;
+}
+
+async function loadGListData(){
+  const refreshBtn=document.getElementById('glist-refresh-btn');
+  const grid=document.getElementById('glist-grid');
+  if(refreshBtn) refreshBtn.classList.add('glist-refreshing');
+  if(grid) grid.classList.add('glist-refreshing');
+
+  // Show the last successful dataset immediately while the fresh API request runs.
+  // This also makes the G-List usable when the network is unavailable.
+  if(!glistRows.length) hydrateGListFromCache();
+
+  try{
+    // Explicit refresh and the 30-second refresh both always attempt the API.
+    const rows=await fetchGListProducts();
+    glistRows=glistNormalizeRows(rows);
+
+    // Save the exact latest API response for offline use on the next load/refresh.
+    saveGListCache(rows);
+    buildGListTitleGroups();
+
+    // If the currently open list no longer exists, fall back to the folder view.
+    if(glistSelectedTitle && !glistTitleGroups.some(g=>g.title===glistSelectedTitle)){
+      glistSelectedTitle=null;
+      if(glistGridApi){ glistGridApi.destroy(); glistGridApi=null; }
+    }
+
+    // Refresh the actual visible folder/table view immediately.
+    if(glistSelectedTitle){
+      populateGListDepartments();
+      if(!glistGridApi) buildGListGrid();
+      renderGList();
+    }else{
+      renderGListFolders();
+    }
+    updateGListKpis();
+    updateGListRefreshLabel('live');
+    toast('G-List refreshed successfully.','success');
+  }catch(e){
+    // Never throw away good current/cache data because the network is unavailable.
+    const hadData=!!glistRows.length || hydrateGListFromCache();
+
+    if(hadData){
+      if(glistSelectedTitle) renderGList();
+      else renderGListFolders();
+      updateGListKpis();
+      updateGListRefreshLabel('cache');
+      toast('Network unavailable. Showing the latest cached G-List.','error');
+    }else{
+      renderGListFolders();
+      updateGListKpis();
+      const empty=document.getElementById('glist-folder-empty');
+      if(empty){
+        empty.style.display='block';
+        empty.innerHTML='<i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i>'+
+          '<div style="font-size:14px;font-weight:600;">Unable to Load G-List</div>'+
+          '<div style="font-size:12px;margin-top:4px;">'+escapeHtml(e.message)+'</div>';
+      }
+      toast(e.message||'Unable to load G-List','error');
+    }
+  }finally{
+    if(refreshBtn) refreshBtn.classList.remove('glist-refreshing');
+    if(grid) grid.classList.remove('glist-refreshing');
+  }
+}
+
+async function refreshGList(){
+  // Manual Refresh always hits the API, then redraws the current table/folder view.
+  await loadGListData();
+}
+
+// ── Delete operations ──
+async function deleteGListTitle(title){
+  if(!confirm('Delete the entire list "'+title+'" and all its items? This cannot be undone.')) return;
+  try{
+    await glistApiCall('deleteTitle', { title });
+    toast('List deleted','success');
+    if(glistSelectedTitle===title){
+      glistSelectedTitle=null;
+      if(glistGridApi){ glistGridApi.destroy(); glistGridApi=null; }
+    }
+    await loadGListData();
+  }catch(e){ toast(e.message||'Failed to delete list','error'); }
+}
+
+function deleteCurrentGListTitle(){
+  if(!glistSelectedTitle) return;
+  deleteGListTitle(glistSelectedTitle);
+}
+
+// ── Exports ──
+function exportBarcodesTxt(barcodes,filename){
+  const clean=[...new Set((barcodes||[]).map(v=>String(v||'').trim()).filter(Boolean))];
+  if(!clean.length){
+    toast('No barcodes available to export','error');
+    return;
+  }
+  const blob=new Blob([clean.join('\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename+'_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function getSelectedGListNodes(){
+  const hot=glistGridApi;
+  if(!hot || hot.isDestroyed) return [];
+  const seen=new Set(), out=[];
+  (hot.getSelected()||[]).forEach(([r1,,r2])=>{
+    const a=Math.max(0,Math.min(r1,r2)), b=Math.max(r1,r2);
+    for(let r=a;r<=b;r++){
+      if(seen.has(r)) continue; seen.add(r);
+      const d=hot.getSourceDataAtRow(hot.toPhysicalRow(r));
+      if(d) out.push(d);
+    }
+  });
+  return out;
+}
+
+function exportAllVisibleBarcodes(){
+  if(!glistGridApi){ toast('G-List is not loaded','error'); return; }
+  const rows=glistVisibleRows();
+  const label=(glistSelectedTitle||storeName).replace(/[^a-z0-9]+/gi,'_');
+  exportBarcodesTxt(rows.map(r=>r.Barcode), storeName+'_'+label+'_Visible_Barcodes');
+}
+
+async function copySelectedBarcodes(){
+  const rows=getSelectedGListNodes();
+  if(!rows.length){
+    toast('Select one or more rows first','error');
+    return;
+  }
+  const text=rows.map(r=>String(r.Barcode||'').trim()).filter(Boolean).join('\n');
+  if(!text){
+    toast('Selected rows contain no barcodes','error');
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Barcodes copied successfully.','success');
+  }catch(e){
+    const ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    toast('Barcodes copied successfully.','success');
+  }
+}
+
+function exportGListExcel(){
+  if(!glistSelectedTitle){ toast('Open a list first','error'); return; }
+  const rows=glistRows.filter(r=>r.Title===glistSelectedTitle);
+  if(!rows.length){ toast('No data to export','error'); return; }
+  const out=rows.map(r=>({
+    List:r.Title, Article:r.Article, Barcode:r.Barcode, Description:r.Description,
+    Department:r.Department, CreatedOn:fmtDate(r.CreatedOn)
+  }));
+  xlDown(out, storeName+'_GList_'+glistSelectedTitle.replace(/[^a-z0-9]+/gi,'_'));
+}
+
+function resetGListFilters(silent){
+  ['glist-search-barcode','glist-search-description'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const dept=document.getElementById('glist-dept');
+  if(dept) dept.value='';
+  if(!silent) renderGList();
+}
+
+function startGListAutoRefresh(){
+  if(glistRefreshTimer) clearInterval(glistRefreshTimer);
+  glistRefreshTimer=setInterval(()=>{
+    if(document.querySelector('.page.active')?.id==='page-glist') loadGListData();
+  },30000);
+}
+
+function stopGListAutoRefresh(){
+  if(glistRefreshTimer){
+    clearInterval(glistRefreshTimer);
+    glistRefreshTimer=null;
+  }
+}
+
 // ── MANAGE STAFF ──
 function renderStaffPage() {
   const listEl = document.getElementById('staff-list');
@@ -1006,7 +1714,7 @@ function renderDashboard(){
   document.getElementById('dash-wk-badge').textContent=weeks.length+' weeks';
   document.getElementById('dash-wk').innerHTML=wkTotals.map((w,i)=>{
     const prev=wkTotals[i-1];
-    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):''; // Fixed missing empty string
+    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):'';
     const trend=prev?(w.count>prev.count?'↑ Rising':w.count<prev.count?'↓ Falling':'→ Same'):'';
     return`<div class="wk-cell ${cls}"><div class="wk-cell-label">${w.week}</div><div class="wk-cell-val">${w.count}</div><div class="wk-cell-trend">${trend}</div></div>`;
   }).join('');
@@ -1209,7 +1917,7 @@ function renderHistory(){
   document.getElementById('hist-wk-badge').textContent=weeks.length+' weeks';
   document.getElementById('hist-wk').innerHTML=wkTotals.map((w,i)=>{
     const prev=wkTotals[i-1];
-    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):''; // Fixed missing empty string
+    const cls=prev?(w.count>prev.count?'up':w.count<prev.count?'dn':''):'';
     const trend=prev?(w.count>prev.count?'↑ Rising':w.count<prev.count?'↓ Falling':'→ Same'):'';
     return`<div class="wk-cell ${cls}"><div class="wk-cell-label">${w.week}</div><div class="wk-cell-val">${w.count}</div><div class="wk-cell-trend">${trend}</div></div>`;
   }).join('');
