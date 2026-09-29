@@ -2459,18 +2459,22 @@ function applyPreviouslyActioned(){
     const actionDate=parseDate(r['Action Date']);
     const endDate=parseDate(r.End);
     const ts=r._tsDate instanceof Date ? r._tsDate : null;
-    groups.get(key).push({
-      row:r,index,action,end:r.End||'',endDate,
-      start:r.Start||'',rtcPrice:r['RTC Price']||'',
-      transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',
-      actionDate,ts
-    });
+    // RowIndex is the database id. It is used only as a deterministic tie-breaker
+    // when two submissions have the same timestamp/date.
+    const rowId=Number(r.RowIndex||r._idx||index)||index;
+    groups.get(key).push({row:r,index,action,end:r.End||'',endDate,start:r.Start||'',rtcPrice:r['RTC Price']||'',transferTo:r['Transfer To']||'',transferQty:r['Transfer Qty']||'',actionDate,ts,rowId});
   });
 
-  // Use the actual chronology of the action/record, not the RTC end date,
-  // to determine which RTC is the latest one.  The latest RTC's end date
-  // controls whether the current article's RTC validity has expired.
-  const timeOf=a=>a.ts?.getTime() ?? a.actionDate?.getTime() ?? a.endDate?.getTime() ?? a.index;
+  // Chronological ordering: timestamp first, database row id second.
+  // This prevents an already-actioned row and a later submission with the same
+  // timestamp from being treated as unrelated.
+  const timeOf=a=>{
+    const t=a.ts?.getTime();
+    if(Number.isFinite(t))return t*1000000+a.rowId;
+    const ad=a.actionDate?.getTime();
+    if(Number.isFinite(ad))return ad*1000000+a.rowId;
+    return a.rowId;
+  };
 
   const historyFor=past=>{
     const pa=[],pp=[];
@@ -2490,20 +2494,17 @@ function applyPreviouslyActioned(){
   };
 
   groups.forEach(items=>{
-    const actioned=items.filter(a=>a.action);
+    const actioned=items.filter(a=>a.action).sort((a,b)=>timeOf(a)-timeOf(b));
     if(!actioned.length)return;
-    actioned.sort((a,b)=>timeOf(a)-timeOf(b));
 
-    // IMPORTANT: latest RTC means the most recently recorded RTC action,
-    // not the RTC with the furthest End date.
-    const rtc=actioned
-      .filter(a=>a.action.includes('RTC Price Change')&&a.endDate)
-      .sort((a,b)=>timeOf(b)-timeOf(a));
+    const rtc=actioned.filter(a=>a.action.includes('RTC Price Change')&&a.endDate);
+    rtc.sort((a,b)=>b.endDate-a.endDate);
     const latestRTC=rtc[0]||null;
     const latestEnd=latestRTC?.endDate||null;
-    const validityExpired=!!(latestEnd&&latestEnd<TODAY);
+    const validity=!!(latestEnd&&latestEnd<TODAY);
 
-    // For every row, show only actions that occurred before that row.
+    // Build previous-action information for every row from actions that occurred
+    // before that exact submission. This keeps current and historical batches distinct.
     items.forEach(item=>{
       const prior=actioned.filter(a=>timeOf(a)<timeOf(item));
       const h=historyFor(prior);
@@ -2511,44 +2512,42 @@ function applyPreviouslyActioned(){
       item.row['Previous Price Info']=h.pp;
     });
 
-    // Find the latest current/pending record first. This is the row that
-    // represents the article in the current submission period/week.
-    const pending=items
-      .filter(a=>a.row['Action Status']==='Pending Action')
-      .sort((a,b)=>timeOf(b)-timeOf(a))[0];
+    // A pending submission that has an earlier action for the same Store + Article
+    // (or Barcode) + ExpiryDate is a previously-actioned batch, not a new pending item.
+    const pendingRows=items.filter(a=>a.row['Action Status']==='Pending Action')
+      .sort((a,b)=>timeOf(b)-timeOf(a));
 
-    // If there is no pending row, use the latest row with stock remaining
-    // and an unexpired article. This keeps an already-actioned row visible
-    // as Validity Expired when its RTC validity subsequently ends.
-    const validityRow=pending || items
-      .filter(a=>parseFloat(a.row.Stock)>0 && Number(a.row.DaysLeft)>0)
-      .sort((a,b)=>timeOf(b)-timeOf(a))[0];
+    pendingRows.forEach(pending=>{
+      const priorActions=actioned.filter(a=>timeOf(a)<timeOf(pending));
+      const h=historyFor(priorActions);
+      pending.row['Previous Action Info']=h.pa;
+      pending.row['Previous Price Info']=h.pp;
 
-    if(validityRow){
-      const prior=actioned.filter(a=>timeOf(a)<timeOf(validityRow));
-      const h=historyFor(prior);
+      // Do not allow an action from a later submission to affect this row.
+      const priorRTC=priorActions
+        .filter(a=>a.action.includes('RTC Price Change')&&a.endDate)
+        .sort((a,b)=>b.endDate-a.endDate)[0]||null;
+      const priorEnd=priorRTC?.endDate||null;
+      const priorValidity=!!(priorEnd&&priorEnd<TODAY);
 
-      if(validityRow.row['Action Status']==='Pending Action'){
-        validityRow.row['Previous Action Info']=h.pa;
-        validityRow.row['Previous Price Info']=h.pp;
+      pending.row['Latest RTC End']=priorRTC?.end||'';
+      pending.row['Latest RTC Info']=priorRTC?`RTC given till ${formatDateToStr(priorEnd)||priorRTC.end}`:'';
+
+      if(priorValidity&&parseFloat(pending.row.Stock)>0&&Number(pending.row.DaysLeft)>0){
+        pending.row['Action Status']='Validity Expired';
+      }else if(h.pa){
+        pending.row['Action Status']='Previously Actioned';
       }
+    });
 
-      validityRow.row['Latest RTC End']=latestRTC?.end||'';
-      validityRow.row['Latest RTC Info']=latestRTC
-        ? `RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`
-        : '';
-
-      const stock=parseFloat(validityRow.row.Stock)||0;
-      const daysLeft=Number(validityRow.row.DaysLeft);
-
-      // VALIDITY EXPIRED definition:
-      // 1. Latest RTC validity End date is before today
-      // 2. Stock is still available
-      // 3. The article itself has not expired
-      if(validityExpired && stock>0 && Number.isFinite(daysLeft) && daysLeft>0){
-        validityRow.row['Action Status']='Validity Expired';
-      }else if(validityRow.row['Action Status']==='Pending Action' && h.pa){
-        validityRow.row['Action Status']='Previously Actioned';
+    // If there is no newer pending submission, a historical actioned row can itself
+    // become Validity Expired when its latest RTC validity has ended.
+    if(!pendingRows.length&&validity){
+      const latest=actioned[actioned.length-1];
+      if(latest&&parseFloat(latest.row.Stock)>0&&Number(latest.row.DaysLeft)>0){
+        latest.row['Action Status']='Validity Expired';
+        latest.row['Latest RTC End']=latestRTC?.end||'';
+        latest.row['Latest RTC Info']=latestRTC?`RTC given till ${formatDateToStr(latestEnd)||latestRTC.end}`:'';
       }
     }
   });
@@ -3080,7 +3079,7 @@ const BUYER_SETTINGS_KEY='gala_expiry_buyer_notify_settings';
 const DEFAULT_BUYER_SETTINGS={
   cc:'',
   subject:'Expiry Actions Updated – {STORE} – {WEEK}',
-  body:'Dear Manager,\n\nPlease find the updated expiry actions for {STORE}.\nWeek: {WEEK}\nMonth: {MONTH}\nItems: {ITEM_COUNT}\n\n{BODY}\n',
+  body:'Dear Manager,\n\nPlease find the updated expiry actions for {STORE}.\nWeek: {WEEK}\nMonth: {MONTH}\nItems: {ITEM_COUNT}\n\n{BODY}\n\nRegards,\nGala Markets',
   confirm:true,
   rememberActions:true,
   rtc:true,
